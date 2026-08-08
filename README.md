@@ -1,6 +1,8 @@
-# WhatsMine Login Credentials
+# WhatsMine
 
-This file contains the generated login credentials for the WhatsMine application.
+* **Production URL:** `https://whatsmine.techworldproduct.com`
+
+## Login Credentials
 
 ## 1. Super Admin User
 * **Access URL:** `http://localhost:8005/admin` (or click Admin Login)
