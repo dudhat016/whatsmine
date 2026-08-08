@@ -34,7 +34,17 @@ jobs:
           npm ci || npm install
           npm run build
 
-      - name: Execute Deployment Commands on Hostinger via SSH
+      - name: Upload Project Files to Hostinger via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          source: ".,!node_modules,.env.example"
+          target: ${{ secrets.HOSTINGER_TARGET_DIR || 'public_html/whatsmine' }}
+
+      - name: Execute Post-Deployment Commands on Hostinger
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -42,51 +52,20 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            echo "=========================================="
-            echo "SSH User Home Directory: $HOME"
-            echo "Current Path: $(pwd)"
-            echo "Directory listing of Home:"
-            ls -la $HOME
-            echo "=========================================="
-
-            # Auto-detect target directory or deployment paths
-            CUSTOM_TARGET="${{ secrets.HOSTINGER_TARGET_DIR }}"
-            
-            if [ -n "$CUSTOM_TARGET" ]; then
-              TARGET_PATHS=("$HOME/$CUSTOM_TARGET" "$CUSTOM_TARGET")
-            else
-              TARGET_PATHS=(
-                "$HOME/public_html/whatsmine"
-                "$HOME/domains/techworldproduct.com/public_html/whatsmine"
-              )
+            TARGET_DIR="${{ secrets.HOSTINGER_TARGET_DIR }}"
+            if [ -z "$TARGET_DIR" ]; then
+              TARGET_DIR="public_html/whatsmine"
             fi
-
-            for TARGET_DIR in "${TARGET_PATHS[@]}"; do
-              echo ">>> Deploying to: $TARGET_DIR"
-              mkdir -p "$TARGET_DIR" || true
-              if cd "$TARGET_DIR" 2>/dev/null; then
-                echo "Successfully entered: $(pwd)"
-                if [ ! -d ".git" ]; then
-                  echo "Cloning repository into $(pwd)..."
-                  git clone https://github.com/dudhat016/whatsmine.git .
-                else
-                  echo "Updating repository in $(pwd)..."
-                  git fetch origin main
-                  git reset --hard origin/main
-                fi
-                if [ ! -f ".env" ]; then
-                  echo "Creating .env in $(pwd)..."
-                  cp .env.example .env
-                  php artisan key:generate --force
-                fi
-                composer install --no-dev --optimize-autoloader --no-interaction
-                php artisan migrate --force || true
-                php artisan config:cache || true
-                php artisan route:cache || true
-                php artisan view:cache || true
-                php artisan storage:link || true
-                echo "Successfully deployed to $(pwd)"
-              else
-                echo "Could not enter directory: $TARGET_DIR"
-              fi
-            done
+            cd "$TARGET_DIR"
+            echo "Current Path: $(pwd)"
+            if [ ! -f ".env" ]; then
+              echo "Creating .env in $(pwd)..."
+              cp .env.example .env
+              php artisan key:generate --force
+            fi
+            php artisan migrate --force || true
+            php artisan config:cache || true
+            php artisan route:cache || true
+            php artisan view:cache || true
+            php artisan storage:link || true
+            echo "Deployment to $(pwd) completed successfully!"
