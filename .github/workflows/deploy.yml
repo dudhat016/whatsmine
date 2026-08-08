@@ -22,7 +22,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT || 65002 }}
+          port: 65002
           script: |
             TARGET_DIR="${{ secrets.HOSTINGER_TARGET_DIR }}"
             if [ -z "$TARGET_DIR" ]; then
