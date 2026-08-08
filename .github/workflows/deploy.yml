@@ -52,6 +52,9 @@ jobs:
             cp -f .env.example .env
             php artisan key:generate --force
 
+            echo "Setting folder permissions..."
+            chmod -R 775 storage bootstrap/cache || true
+
             echo "Installing composer dependencies..."
             composer install --no-dev --optimize-autoloader --no-interaction
 
