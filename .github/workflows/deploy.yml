@@ -48,20 +48,23 @@ jobs:
               git reset --hard origin/main
             fi
 
-            if [ ! -f ".env" ]; then
-              echo "Setting up .env..."
-              cp .env.example .env
-              php artisan key:generate --force
-            fi
+            echo "Ensuring production .env file..."
+            cp .env.example .env
+            php artisan key:generate --force
 
             echo "Installing composer dependencies..."
             composer install --no-dev --optimize-autoloader --no-interaction
 
-            echo "Running Laravel database migrations & cache refresh..."
+            echo "Clearing stale config caches..."
+            php artisan config:clear || true
+            php artisan route:clear || true
+            php artisan view:clear || true
+
+            echo "Running Laravel database migrations & refreshing production cache..."
             php artisan migrate --force || true
             php artisan config:cache || true
             php artisan route:cache || true
             php artisan view:cache || true
-            php artisan storage:link || true
+            php artisan storage:link --relative 2>/dev/null || true
 
             echo "Deployment completed successfully at $(pwd)"
