@@ -10,62 +10,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, dom, fileinfo, mysql, pdo_mysql, gd, bcmath, zip
-          coverage: none
-
-      - name: Install Composer Dependencies
-        run: |
-          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install NPM Dependencies & Build Assets
-        run: |
-          npm ci || npm install
-          npm run build
-
-      - name: Upload Project Files to Hostinger via SCP
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT }}
-          source: ".,!node_modules,.env.example"
-          target: ${{ secrets.HOSTINGER_TARGET_DIR || 'public_html/whatsmine' }}
-
-      - name: Execute Post-Deployment Commands on Hostinger
+      - name: Execute Deployment Commands on Hostinger via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          port: ${{ secrets.SSH_PORT }}
+          port: ${{ secrets.SSH_PORT || 65002 }}
           script: |
             TARGET_DIR="${{ secrets.HOSTINGER_TARGET_DIR }}"
             if [ -z "$TARGET_DIR" ]; then
               TARGET_DIR="public_html/whatsmine"
             fi
+            echo "Target Deployment Folder: $TARGET_DIR"
+            mkdir -p "$TARGET_DIR"
             cd "$TARGET_DIR"
-            echo "Current Path: $(pwd)"
+            echo "Current Directory: $(pwd)"
+            
+            REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+            
+            if [ ! -d ".git" ]; then
+              echo "Repository not initialized in $(pwd). Cloning..."
+              git clone $REPO_URL .
+            else
+              echo "Pulling latest changes in $(pwd)..."
+              git remote set-url origin $REPO_URL 2>/dev/null || git remote add origin $REPO_URL
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
             if [ ! -f ".env" ]; then
-              echo "Creating .env in $(pwd)..."
+              echo "Setting up .env..."
               cp .env.example .env
               php artisan key:generate --force
             fi
+
+            echo "Installing composer dependencies..."
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            echo "Building frontend assets..."
+            npm install
+            npm run build
+
+            echo "Running Laravel database migrations & cache refresh..."
             php artisan migrate --force || true
             php artisan config:cache || true
             php artisan route:cache || true
             php artisan view:cache || true
             php artisan storage:link || true
-            echo "Deployment to $(pwd) completed successfully!"
+
+            echo "Deployment completed successfully at $(pwd)"
