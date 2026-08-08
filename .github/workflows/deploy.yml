@@ -5,41 +5,16 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, dom, fileinfo, mysql, pdo_mysql, gd, bcmath, zip
-          coverage: none
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Build Frontend Assets
-        run: |
-          npm ci || npm install
-          npm run build
-
-      - name: Commit Built Assets if Modified
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f public/build
-          if ! git diff-index --quiet HEAD; then
-            git commit -m "Auto-build assets for deployment [skip ci]"
-            git push origin main
-          fi
-        continue-on-error: true
 
       - name: Execute Deployment Commands on Hostinger via SSH
         uses: appleboy/ssh-action@master
@@ -68,7 +43,7 @@ jobs:
               git reset --hard origin/main
             else
               echo "Pulling latest changes in $(pwd)..."
-              git remote set-url origin $REPO_URL 2>/dev/null || git remote add origin $REPO_URL
+              git remote set-url origin $REPO_URL 2>/dev/null || git remote set-url origin $REPO_URL
               git fetch origin main
               git reset --hard origin/main
             fi
