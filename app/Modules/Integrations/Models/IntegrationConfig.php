@@ -193,11 +193,54 @@ class IntegrationConfig extends Model
         return [
             'enabled' => 'boolean',
             'is_default' => 'boolean',
-            'credentials' => 'encrypted:array',
-            'webhook_secret' => 'encrypted',
             'meta_json' => 'array',
             'last_tested_at' => 'datetime',
         ];
+    }
+
+    public function getCredentialsAttribute(): ?array
+    {
+        $raw = $this->attributes['credentials'] ?? null;
+        if (! $raw) {
+            return [];
+        }
+        try {
+            $decrypted = decrypt($raw);
+            return is_array($decrypted) ? $decrypted : (json_decode($decrypted, true) ?? []);
+        } catch (\Throwable) {
+            return is_string($raw) ? (json_decode($raw, true) ?? []) : [];
+        }
+    }
+
+    public function setCredentialsAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['credentials'] = null;
+        } else {
+            $this->attributes['credentials'] = encrypt(is_array($value) ? json_encode($value) : $value);
+        }
+    }
+
+    public function getWebhookSecretAttribute(): ?string
+    {
+        $raw = $this->attributes['webhook_secret'] ?? null;
+        if (! $raw) {
+            return null;
+        }
+        try {
+            return decrypt($raw);
+        } catch (\Throwable) {
+            return $raw;
+        }
+    }
+
+    public function setWebhookSecretAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['webhook_secret'] = null;
+        } else {
+            $this->attributes['webhook_secret'] = encrypt($value);
+        }
     }
 
     public static function forProvider(string $provider, string $mode = 'live'): ?self
