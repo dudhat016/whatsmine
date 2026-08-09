@@ -202,5 +202,7 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+        <!-- WhatsApp Floating Chat Widget -->
+        <script src="https://whatsmine.techworldproduct.com/widgets/whatsapp/ZQqE846h0dApMMZBkdtwcsJcwJbGrhaV.js" async defer></script>
     </body>
 </html>
