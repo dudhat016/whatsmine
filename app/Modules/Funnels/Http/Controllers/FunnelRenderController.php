@@ -374,6 +374,36 @@ class FunnelRenderController extends Controller
         $cssRules[] = ".funnel-divider { border:none; border-top:var(--brand-divider-width, 1px) var(--brand-divider-style, solid) var(--brand-divider-color, #e5e7eb); margin:var(--brand-divider-margin-top, 24px) 0 var(--brand-divider-margin-bottom, 24px) 0; }";
         $cssRules[] = ".funnel-spacer { height:var(--brand-spacer-height, 40px); }";
         $cssRules[] = ".funnel-timer { padding:var(--brand-timer-padding, 16px); background:var(--brand-timer-bg-color, #fef2f2); border:1px solid var(--brand-timer-border-color, #fca5a5); border-radius:var(--brand-timer-border-radius, 12px); text-align:center; font-weight:var(--brand-timer-font-weight, 700); color:var(--brand-timer-text-color, #dc2626); font-family:monospace; font-size:var(--brand-timer-font-size, 24px); margin:0 0 16px 0; letter-spacing:2px; }";
+        $cssRules[] = ".funnel-audio-wrap { padding:14px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:var(--brand-field-border-radius, 8px); margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-icon-box { padding:20px; text-align:center; background:#ffffff; border:1px solid #f3f4f6; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-icon-box h3 { margin:0 0 8px 0; font-size:16px; color:var(--brand-body-color, #111827); }";
+        $cssRules[] = ".funnel-icon-box p { margin:0; color:#6b7280; font-size:14px; }";
+        $cssRules[] = ".funnel-progress-wrap { margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-progress-bar { width:100%; height:14px; background:#e5e7eb; border-radius:9999px; overflow:hidden; }";
+        $cssRules[] = ".funnel-social-wrap { display:flex; gap:8px; justify-content:center; margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-social-wrap a { padding:8px 14px; color:#ffffff; border-radius:6px; text-decoration:none; font-size:12px; font-weight:700; display:inline-flex; align-items:center; }";
+        $cssRules[] = ".funnel-social-fb { background:#1877F2; }";
+        $cssRules[] = ".funnel-social-tw { background:#000000; }";
+        $cssRules[] = ".funnel-social-wa { background:#25D366; }";
+        $cssRules[] = ".funnel-star-rating { text-align:center; margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-custom-code { margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-rich-text { margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-order-bump { border:2px dashed #f87171; background:#fef2f2; padding:16px; border-radius:12px; margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-order-bump .bump-badge { background:#dc2626; color:#ffffff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; text-transform:uppercase; }";
+        $cssRules[] = ".funnel-order-bump .bump-price { font-weight:800; color:#991b1b; font-size:14px; }";
+        $cssRules[] = ".funnel-order-bump label { display:flex; gap:10px; cursor:pointer; align-items:flex-start; }";
+        $cssRules[] = ".funnel-order-bump input[type=\"checkbox\"] { margin-top:3px; width:18px; height:18px; }";
+        $cssRules[] = ".funnel-faq-accordion { margin:0 0 16px 0; }";
+        $cssRules[] = ".funnel-faq-accordion .faq-item { border:1px solid #e5e7eb; border-radius:8px; margin-bottom:8px; overflow:hidden; background:#ffffff; }";
+        $cssRules[] = ".funnel-faq-accordion .faq-toggle { width:100%; padding:14px 16px; text-align:left; background:none; border:none; font-weight:700; font-size:14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; color:var(--brand-body-color, #111827); }";
+        $cssRules[] = ".funnel-faq-accordion .faq-answer { display:none; padding:0 16px 14px 16px; font-size:13px; color:#4b5563; line-height:1.6; border-top:1px solid #f3f4f6; }";
+        $cssRules[] = ".funnel-testimonial-slider { position:relative; margin:0 0 24px 0; }";
+        $cssRules[] = ".funnel-testimonial-slider .testimonial-card { padding:28px 24px; background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05); transition:all 0.3s ease; }";
+        $cssRules[] = ".funnel-testimonial-slider .slider-prev, .funnel-testimonial-slider .slider-next { position:absolute; top:45%; transform:translateY(-50%); width:32px; height:32px; border-radius:50%; background:#ffffff; border:1px solid #e5e7eb; box-shadow:0 2px 8px rgba(0,0,0,0.1); cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; z-index:2; color:#374151; }";
+        $cssRules[] = ".funnel-testimonial-slider .slider-prev { left:-14px; }";
+        $cssRules[] = ".funnel-testimonial-slider .slider-next { right:-14px; }";
+        $cssRules[] = ".funnel-testimonial-slider .slider-dots { display:flex; justify-content:center; gap:6px; margin-top:12px; }";
+        $cssRules[] = ".funnel-testimonial-slider .slider-dot { height:8px; border-radius:9999px; border:none; padding:0; cursor:pointer; transition:all 0.3s; }";
         $cssRules[] = "img { max-width:100%; height:auto; }";
 
         // ── Mobile Base Breakpoints ──────────────────────────────────────────
@@ -423,6 +453,69 @@ class FunnelRenderController extends Controller
 {$bodyHtml}
 </main>
 {$footerCode}
+<script>
+(function(){
+  document.querySelectorAll('.funnel-timer').forEach(function(el){
+    var days = parseInt(el.getAttribute('data-days')||'0', 10);
+    var hrs = parseInt(el.getAttribute('data-hours')||'2', 10);
+    var mins = parseInt(el.getAttribute('data-minutes')||'15', 10);
+    var secs = parseInt(el.getAttribute('data-seconds')||'0', 10);
+    var action = el.getAttribute('data-action')||'show_message';
+    var redirect = el.getAttribute('data-redirect')||'#';
+    var message = el.getAttribute('data-message')||'OFFER EXPIRED!';
+    var totalSecs = (days * 86400) + (hrs * 3600) + (mins * 60) + secs;
+    var disp = el.querySelector('.timer-display') || el;
+    function updateTimer(){
+      if(totalSecs <= 0){
+        if(action === 'hide') { el.style.display = 'none'; }
+        else if(action === 'redirect' && redirect !== '#') { window.location.href = redirect; }
+        else { disp.textContent = message; }
+        return;
+      }
+      totalSecs--;
+      var d = Math.floor(totalSecs / 86400);
+      var h = Math.floor((totalSecs % 86400) / 3600);
+      var m = Math.floor((totalSecs % 3600) / 60);
+      var s = totalSecs % 60;
+      var str = (d > 0 ? String(d).padStart(2,'0') + 'd : ' : '') + String(h).padStart(2,'0') + ' : ' + String(m).padStart(2,'0') + ' : ' + String(s).padStart(2,'0');
+      disp.textContent = str;
+    }
+    setInterval(updateTimer, 1000);
+  });
+  document.querySelectorAll('.funnel-faq-accordion .faq-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var ans = this.nextElementSibling;
+      var icon = this.querySelector('.faq-icon');
+      var isOpen = ans.style.display === 'block';
+      ans.style.display = isOpen ? 'none' : 'block';
+      if(icon) icon.textContent = isOpen ? '▼' : '▲';
+    });
+  });
+  document.querySelectorAll('.funnel-testimonial-slider').forEach(function(slider){
+    var slides = slider.querySelectorAll('.testimonial-card');
+    var dots = slider.querySelectorAll('.slider-dot');
+    var prevBtn = slider.querySelector('.slider-prev');
+    var nextBtn = slider.querySelector('.slider-next');
+    if (!slides.length) return;
+    var current = 0;
+    function showSlide(idx){
+      current = (idx + slides.length) % slides.length;
+      slides.forEach(function(s, i){ s.style.display = (i === current) ? 'block' : 'none'; });
+      dots.forEach(function(d, i){
+        d.style.background = (i === current) ? 'var(--color-primary, #467235)' : '#e5e7eb';
+        d.style.width = (i === current) ? '20px' : '8px';
+      });
+    }
+    if (prevBtn) prevBtn.addEventListener('click', function(e){ e.preventDefault(); showSlide(current - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function(e){ e.preventDefault(); showSlide(current + 1); });
+    dots.forEach(function(d, i){ d.addEventListener('click', function(e){ e.preventDefault(); showSlide(i); }); });
+    showSlide(0);
+    if (slides.length > 1) {
+      setInterval(function(){ showSlide(current + 1); }, 5000);
+    }
+  });
+})();
+</script>
 </body>
 </html>
 HTML;
@@ -445,6 +538,17 @@ HTML;
                 'paragraph' => $textProps,
                 'bullets' => $textProps,
                 'quote' => $textProps,
+                'rich_text' => $textProps,
+                'icon_box' => $textProps,
+                'star_rating' => $textProps,
+                'custom_code' => $textProps,
+                'order_bump' => $inputProps,
+                'faq_accordion' => $inputProps,
+                'testimonial_slider' => $inputProps,
+                'timer' => $inputProps,
+                'progress_bar' => $inputProps,
+                'social' => $inputProps,
+                'audio' => $inputProps,
                 'input_email' => $inputProps,
                 'input_name' => $inputProps,
                 'input_phone' => $inputProps,
@@ -707,6 +811,46 @@ HTML;
             $cssRules[] = "#{$id} { " . implode('; ', $dedupedBase) . "; }";
         }
 
+        // Sub-component rules
+        if (($item['type'] ?? '') === 'faq_accordion') {
+            if (!empty($item['itemBorderColor'])) $cssRules[] = "#{$id} .faq-item { border-color: " . e($item['itemBorderColor']) . "; }";
+            if (!empty($item['qColor']))          $cssRules[] = "#{$id} .faq-toggle { color: " . e($item['qColor']) . "; }";
+            if (!empty($item['qBgColor']))        $cssRules[] = "#{$id} .faq-toggle { background: " . e($item['qBgColor']) . "; }";
+            if (!empty($item['qFontSize']))       $cssRules[] = "#{$id} .faq-toggle { font-size: " . (int)$item['qFontSize'] . "px; }";
+            if (!empty($item['qFontWeight']))     $cssRules[] = "#{$id} .faq-toggle { font-weight: " . e($item['qFontWeight']) . "; }";
+            if (!empty($item['aColor']))          $cssRules[] = "#{$id} .faq-answer { color: " . e($item['aColor']) . "; }";
+            if (!empty($item['aBgColor']))        $cssRules[] = "#{$id} .faq-answer { background: " . e($item['aBgColor']) . "; }";
+            if (!empty($item['aFontSize']))       $cssRules[] = "#{$id} .faq-answer { font-size: " . (int)$item['aFontSize'] . "px; }";
+            if (!empty($item['aLineHeight']))     $cssRules[] = "#{$id} .faq-answer { line-height: " . (float)$item['aLineHeight'] . "; }";
+            if (!empty($item['iconColor']))       $cssRules[] = "#{$id} .faq-icon { color: " . e($item['iconColor']) . "; }";
+        }
+
+        if (($item['type'] ?? '') === 'testimonial_slider') {
+            if (!empty($item['cardBgColor']))     $cssRules[] = "#{$id} .testimonial-card { background: " . e($item['cardBgColor']) . "; }";
+            if (!empty($item['cardBorderColor'])) $cssRules[] = "#{$id} .testimonial-card { border-color: " . e($item['cardBorderColor']) . "; }";
+            if (!empty($item['quoteColor']))       $cssRules[] = "#{$id} blockquote { color: " . e($item['quoteColor']) . "; }";
+            if (!empty($item['quoteFontSize']))    $cssRules[] = "#{$id} blockquote { font-size: " . (int)$item['quoteFontSize'] . "px; }";
+            if (!empty($item['authorColor']))      $cssRules[] = "#{$id} p { color: " . e($item['authorColor']) . "; }";
+            if (!empty($item['authorFontSize']))   $cssRules[] = "#{$id} p { font-size: " . (int)$item['authorFontSize'] . "px; }";
+            if (!empty($item['arrowBgColor']))     $cssRules[] = "#{$id} .slider-prev, #{$id} .slider-next { background: " . e($item['arrowBgColor']) . "; }";
+        }
+
+        if (($item['type'] ?? '') === 'order_bump') {
+            if (!empty($item['boxBgColor']))      $cssRules[] = "#{$id}.funnel-order-bump { background: " . e($item['boxBgColor']) . "; }";
+            if (!empty($item['boxBorderColor']))  $cssRules[] = "#{$id}.funnel-order-bump { border-color: " . e($item['boxBorderColor']) . "; }";
+            if (!empty($item['badgeBgColor']))    $cssRules[] = "#{$id} .bump-badge { background: " . e($item['badgeBgColor']) . "; }";
+            if (!empty($item['badgeTextColor']))  $cssRules[] = "#{$id} .bump-badge { color: " . e($item['badgeTextColor']) . "; }";
+            if (!empty($item['titleColor']))      $cssRules[] = "#{$id} h4 { color: " . e($item['titleColor']) . "; }";
+            if (!empty($item['priceColor']))      $cssRules[] = "#{$id} .bump-price { color: " . e($item['priceColor']) . "; }";
+        }
+
+        if (($item['type'] ?? '') === 'icon_box') {
+            if (!empty($item['boxBgColor']))      $cssRules[] = "#{$id}.funnel-icon-box { background: " . e($item['boxBgColor']) . "; }";
+            if (!empty($item['boxBorderColor']))  $cssRules[] = "#{$id}.funnel-icon-box { border-color: " . e($item['boxBorderColor']) . "; }";
+            if (!empty($item['titleColor']))      $cssRules[] = "#{$id} h3 { color: " . e($item['titleColor']) . "; }";
+            if (!empty($item['descColor']))       $cssRules[] = "#{$id} p { color: " . e($item['descColor']) . "; }";
+        }
+
         // Hover Rules
         $buildHoverRules = function(array $h): array {
             $r = [];
@@ -856,7 +1000,14 @@ HTML;
             $url  = e($item['url'] ?? '');
             $alt  = e($item['alt'] ?? '');
             $maxW = isset($item['maxWidth']) ? "style=\"max-width:{$item['maxWidth']}%\"" : '';
-            return "<div id=\"{$id}\" class=\"funnel-image-wrap\"><img src=\"{$url}\" alt=\"{$alt}\" {$maxW} /></div>";
+            $imgTag = "<img src=\"{$url}\" alt=\"{$alt}\" {$maxW} />";
+            if (!empty($item['linkUrl'])) {
+                $linkUrl = e($item['linkUrl']);
+                $inner = "<a href=\"{$linkUrl}\" target=\"_blank\" rel=\"noopener\">{$imgTag}</a>";
+            } else {
+                $inner = $imgTag;
+            }
+            return "<div id=\"{$id}\" class=\"funnel-image-wrap\">{$inner}</div>";
         }
 
         if ($type === 'video') {
@@ -883,7 +1034,8 @@ HTML;
             $targetUrl = e($item['targetUrl'] ?? '#');
             $typeAttr = ($btnType === 'url') ? "onclick=\"window.location.href='{$targetUrl}'\"" : "type=\"button\"";
 
-            return "<div class=\"funnel-btn-wrap\"><button id=\"{$id}\" {$typeAttr}>{$btnLabel}</button></div>";
+            $subtextHtml = !empty($item['subtext']) ? "<span style=\"display:block;font-size:" . (int)($item['subtextFontSize'] ?? 11) . "px;color:" . e($item['subtextColor'] ?? 'rgba(255,255,255,0.85)') . ";font-weight:400;margin-top:2px;\">" . e($item['subtext']) . "</span>" : '';
+            return "<div class=\"funnel-btn-wrap\"><button id=\"{$id}\" {$typeAttr}><span>{$btnLabel}</span>{$subtextHtml}</button></div>";
         }
 
         if ($type === 'input_email') {
@@ -907,32 +1059,162 @@ HTML;
         }
 
         if ($type === 'audio') {
-            $title = e($item['title'] ?? 'Listen to Audio');
-            return "<div id=\"{$id}\" class=\"funnel-input-wrap\" style=\"padding:16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;display:flex;align-items:center;gap:12px;\"><span style=\"font-size:20px;\">🎧</span><span style=\"font-weight:600;\">{$title}</span></div>";
+            $title = e($item['title'] ?? 'Audio Track');
+            $url   = e($item['url'] ?? '');
+            return "<div id=\"{$id}\" class=\"funnel-audio-wrap\"><p style=\"margin:0 0 8px 0;font-weight:600;\">{$title}</p><audio controls style=\"width:100%;\" src=\"{$url}\"></audio></div>";
         }
 
         if ($type === 'icon_box') {
             $title = e($item['title'] ?? 'Feature Title');
             $desc  = e($item['desc'] ?? 'Feature description...');
-            return "<div id=\"{$id}\" style=\"padding:20px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.05);\"><h4 style=\"margin:0 0 8px 0;font-size:18px;\">⚡ {$title}</h4><p style=\"margin:0;font-size:14px;color:var(--brand-color-text);\">{$desc}</p></div>";
+            return "<div id=\"{$id}\" class=\"funnel-icon-box\"><h3>{$title}</h3><p>{$desc}</p></div>";
         }
 
         if ($type === 'progress_bar') {
-            $pct = (int) ($item['percent'] ?? 80);
-            return "<div id=\"{$id}\" style=\"width:100%;background:#e5e7eb;border-radius:999px;height:12px;overflow:hidden;margin:16px 0;\"><div style=\"width:{$pct}%;background:var(--brand-color-primary);height:100%;border-radius:999px;transition:width 0.5s;\"></div></div>";
+            $label = e($item['label'] ?? '');
+            $pct   = (int) ($item['percent'] ?? 80);
+            $col   = e($item['barColor'] ?? 'var(--color-primary, #467235)');
+            $labelHtml = $label ? "<p style=\"margin:0 0 4px 0;font-size:12px;font-weight:600;\">{$label}</p>" : '';
+            return "<div id=\"{$id}\" class=\"funnel-progress-wrap\">{$labelHtml}<div class=\"funnel-progress-bar\"><div style=\"width:{$pct}%;height:100%;background:{$col};transition:width 0.5s;\"></div></div></div>";
         }
 
         if ($type === 'social') {
-            return "<div id=\"{$id}\" style=\"display:flex;gap:12px;margin:16px 0;\"><button style=\"padding:8px 16px;background:#1877f2;color:#fff;border:none;border-radius:6px;font-weight:600;\">Share on Facebook</button><button style=\"padding:8px 16px;background:#1da1f2;color:#fff;border:none;border-radius:6px;font-weight:600;\">Share on Twitter</button></div>";
+            $u = urlencode($item['shareUrl'] ?? '');
+            return "<div id=\"{$id}\" class=\"funnel-social-wrap\">
+                <a href=\"https://www.facebook.com/sharer/sharer.php?u={$u}\" target=\"_blank\" rel=\"noopener\" class=\"funnel-social-fb\">f Share</a>
+                <a href=\"https://twitter.com/intent/tweet?url={$u}\" target=\"_blank\" rel=\"noopener\" class=\"funnel-social-tw\">𝕏 Tweet</a>
+                <a href=\"https://api.whatsapp.com/send?text={$u}\" target=\"_blank\" rel=\"noopener\" class=\"funnel-social-wa\">✉ Share</a>
+            </div>";
+        }
+
+        if ($type === 'star_rating') {
+            $starChar = '★';
+            $numStars = (int)($item['stars'] ?? 5);
+            $color = e($item['starColor'] ?? '#f59e0b');
+            $starsHtml = "<span style=\"color:{$color};font-size:20px;letter-spacing:2px;\">" . str_repeat($starChar, $numStars) . "</span>";
+            $subtext = !empty($item['ratingText']) ? "<p style=\"margin:4px 0 0 0;font-size:12px;color:#6b7280;font-weight:600;\">" . e($item['ratingText']) . "</p>" : '';
+            return "<div id=\"{$id}\" class=\"funnel-star-rating\">{$starsHtml}{$subtext}</div>";
+        }
+
+        if ($type === 'custom_code') {
+            return "<div id=\"{$id}\" class=\"funnel-custom-code\">" . ($item['code'] ?? '') . "</div>";
+        }
+
+        if ($type === 'rich_text') {
+            return "<div id=\"{$id}\" class=\"funnel-rich-text\">" . ($item['htmlContent'] ?? ($item['content'] ?? '')) . "</div>";
+        }
+
+        if ($type === 'order_bump') {
+            $badge = e($item['badgeText'] ?? 'YES! ADD THIS TO MY ORDER');
+            $title = e($item['title'] ?? 'ONE TIME OFFER: Add Checklist');
+            $desc  = e($item['desc'] ?? 'Check this box to instantly include this offer.');
+            $price = (float)($item['price'] ?? 17);
+            return "<div id=\"{$id}\" class=\"funnel-order-bump\">
+                <div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;\">
+                    <span class=\"bump-badge\">{$badge}</span>
+                    <span class=\"bump-price\">\${$price}</span>
+                </div>
+                <label>
+                    <input type=\"checkbox\" />
+                    <div>
+                        <h4 style=\"margin:0;font-size:14px;font-weight:700;color:#111827;\">{$title}</h4>
+                        <p style=\"margin:4px 0 0 0;font-size:12px;color:#4b5563;\">{$desc}</p>
+                    </div>
+                </label>
+            </div>";
+        }
+
+        if ($type === 'faq_accordion') {
+            $items = $item['items'] ?? [];
+            $faqHtml = '';
+            foreach ($items as $faq) {
+                $q = e($faq['q'] ?? 'Question?');
+                $a = e($faq['a'] ?? '');
+                $faqHtml .= "
+                <div class=\"faq-item\">
+                    <button type=\"button\" class=\"faq-toggle\">
+                        <span>{$q}</span>
+                        <span class=\"faq-icon\">▼</span>
+                    </button>
+                    <div class=\"faq-answer\">
+                        {$a}
+                    </div>
+                </div>";
+            }
+            return "<div id=\"{$id}\" class=\"funnel-faq-accordion\">{$faqHtml}</div>";
+        }
+
+        if ($type === 'testimonial_slider') {
+            $items = $item['items'] ?? [];
+            $slidesHtml = '';
+            $dotsHtml   = '';
+            $count      = count($items);
+
+            foreach ($items as $idx => $t) {
+                $q  = e($t['quote'] ?? '');
+                $au = e($t['author'] ?? '');
+                $ro = e($t['role'] ?? '');
+                $disp = ($idx === 0) ? 'block' : 'none';
+                $av  = !empty($t['avatar']) ? "<img src=\"" . e($t['avatar']) . "\" alt=\"{$au}\" style=\"width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid #e5e7eb;\" />" : '';
+                $slidesHtml .= "
+                <div class=\"testimonial-card\" style=\"display:{$disp};\">
+                    <div style=\"color:#f59e0b;font-size:16px;margin-bottom:8px;\">★★★★★</div>
+                    <blockquote style=\"font-style:italic;font-size:14px;color:#1f2937;margin:0 0 12px 0;line-height:1.6;\">\"{$q}\"</blockquote>
+                    <div style=\"display:flex;align-items:center;justify-content:center;gap:8px;\">
+                        {$av}
+                        <div style=\"text-align:left;\">
+                            <p style=\"margin:0;font-weight:700;font-size:13px;color:#111827;line-height:1.2;\">{$au}</p>
+                            <p style=\"margin:0;font-weight:400;font-size:11px;color:#6b7280;\">{$ro}</p>
+                        </div>
+                    </div>
+                </div>";
+
+                $dotW = ($idx === 0) ? '20px' : '8px';
+                $dotBg = ($idx === 0) ? 'var(--color-primary, #467235)' : '#e5e7eb';
+                $dotsHtml .= "<button type=\"button\" class=\"slider-dot\" data-idx=\"{$idx}\" style=\"width:{$dotW};background:{$dotBg};\"></button>";
+            }
+
+            $navArrows = ($count > 1) ? "
+            <button type=\"button\" class=\"slider-prev\">‹</button>
+            <button type=\"button\" class=\"slider-next\">›</button>
+            " : "";
+
+            $dotsWrap = ($count > 1) ? "<div class=\"slider-dots\">{$dotsHtml}</div>" : "";
+
+            return "<div id=\"{$id}\" class=\"funnel-testimonial-slider\">
+                <div class=\"slider-slides-wrap\">{$slidesHtml}</div>
+                {$navArrows}
+                {$dotsWrap}
+            </div>";
         }
 
         if ($type === 'divider') return "<hr id=\"{$id}\" class=\"funnel-divider\" />";
-        if ($type === 'spacer')  return "<div id=\"{$id}\" class=\"funnel-spacer\"></div>";
+        if ($type === 'spacer')  {
+            $h = isset($item['spacerHeight']) ? (int)$item['spacerHeight'] : (((int)($item['paddingY'] ?? 20)) * 2);
+            return "<div id=\"{$id}\" class=\"funnel-spacer\" style=\"height:{$h}px;\"></div>";
+        }
 
         if ($type === 'timer') {
-            $h = $item['hours']   ?? 2;
-            $m = str_pad($item['minutes'] ?? 15, 2, '0', STR_PAD_LEFT);
-            return "<div id=\"{$id}\" class=\"funnel-timer\">⏱ 0{$h}:{$m}:45</div>";
+            $d = (int)($item['days'] ?? 0);
+            $h = (int)($item['hours'] ?? 2);
+            $m = (int)($item['minutes'] ?? 15);
+            $s = (int)($item['seconds'] ?? 0);
+            $action = e($item['timerAction'] ?? 'show_message');
+            $redirectUrl = e($item['redirectUrl'] ?? '#');
+            $expireMsg = e($item['expireMessage'] ?? 'OFFER EXPIRED!');
+            $theme = $item['timerTheme'] ?? 'red_urgent';
+
+            $themeStyles = [
+                'red_urgent' => 'background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;',
+                'brand' => 'background:rgba(99,102,241,0.08);border:1px solid var(--color-primary, #6EC1E4);color:var(--color-primary, #467235);',
+                'dark' => 'background:#111827;border:1px solid #374151;color:#ffffff;',
+                'light' => 'background:#ffffff;border:1px solid #e5e7eb;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,0.05);',
+                'minimal' => 'background:transparent;border:none;color:var(--color-primary, #111827);padding:0;',
+            ];
+            $styleStr = $themeStyles[$theme] ?? $themeStyles['red_urgent'];
+            $timeText = ($d > 0 ? sprintf('%02dd : ', $d) : '') . sprintf('%02dh : %02dm : %02ds', $h, $m, $s);
+
+            return "<div id=\"{$id}\" class=\"funnel-timer\" style=\"padding:14px;border-radius:12px;text-align:center;font-weight:700;font-family:monospace;font-size:18px;margin-bottom:16px;letter-spacing:1px;{$styleStr}\" data-days=\"{$d}\" data-hours=\"{$h}\" data-minutes=\"{$m}\" data-seconds=\"{$s}\" data-action=\"{$action}\" data-redirect=\"{$redirectUrl}\" data-message=\"{$expireMsg}\">⏰ <span class=\"timer-display\">{$timeText}</span></div>";
         }
 
         return '';

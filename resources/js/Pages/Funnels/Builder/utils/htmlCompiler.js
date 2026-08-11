@@ -33,17 +33,20 @@ export const renderItemToHtmlScoped = (rawItem) => {
     }
 
     if (item.type === 'headline') {
-        const tag = item.tag || 'h2';
-        return `<${tag} id="${id}">${item.text || 'Headline Text'}</${tag}>`;
+        // Bug 11 Fix: builder stores heading level as `item.headingTag`, content as `item.content`.
+        const tag = item.headingTag || 'h2';
+        return `<${tag} id="${id}">${item.content || item.text || 'Headline Text'}</${tag}>`;
     }
 
     if (item.type === 'subheadline') {
-        const tag = item.tag || 'h3';
-        return `<${tag} id="${id}">${item.text || 'Subheadline Text'}</${tag}>`;
+        // Bug 13 Fix: same field name corrections as headline.
+        const tag = item.headingTag || 'h3';
+        return `<${tag} id="${id}">${item.content || item.text || 'Subheadline Text'}</${tag}>`;
     }
 
     if (item.type === 'paragraph') {
-        return `<p id="${id}">${item.text || 'Paragraph content goes here...'}</p>`;
+        // Bug 12 Fix: builder stores paragraph text as `item.content`.
+        return `<p id="${id}">${item.content || item.text || 'Paragraph content goes here...'}</p>`;
     }
 
     if (item.type === 'bullets') {
@@ -54,12 +57,17 @@ export const renderItemToHtmlScoped = (rawItem) => {
     }
 
     if (item.type === 'quote') {
-        return `<blockquote id="${id}" class="funnel-quote"><p>“${item.text || 'Quote snippet here'}”</p><cite>— ${item.author || 'Author'}</cite></blockquote>`;
+        // Bug 5 Fix: use item.quote || item.content (settings panel writes to `quote`).
+        return `<blockquote id="${id}" class="funnel-quote"><p>“${item.quote || item.content || item.text || 'Quote snippet here'}”</p><cite>— ${item.author || 'Author'}</cite></blockquote>`;
     }
 
     if (item.type === 'image') {
         const maxW = item.maxWidth ? `${item.maxWidth}%` : '100%';
-        return `<div id="${id}" class="funnel-image-wrap"><img src="${item.url || ''}" alt="${item.alt || ''}" style="max-width:${maxW};" /></div>`;
+        const imgTag = `<img src="${item.url || ''}" alt="${item.alt || ''}" style="max-width:${maxW};" />`;
+        const inner = item.linkUrl
+            ? `<a href="${item.linkUrl}" target="_blank" rel="noopener">${imgTag}</a>`
+            : imgTag;
+        return `<div id="${id}" class="funnel-image-wrap">${inner}</div>`;
     }
 
     if (item.type === 'video') {
@@ -76,8 +84,15 @@ export const renderItemToHtmlScoped = (rawItem) => {
             ? (iconPos === 'left' ? `${iconChar} ${item.text || 'Submit'}` : `${item.text || 'Submit'} ${iconChar}`)
             : (item.text || 'Submit →');
 
-        const btnTypeAttr = item.btnType === 'url' ? `onclick="window.location.href='${item.targetUrl || '#'}'"` : 'type="button"';
-        return `<div class="funnel-btn-wrap"><button id="${id}" ${btnTypeAttr}>${btnLabel}</button></div>`;
+        // Bug 20 Fix: escape targetUrl before embedding in onclick to prevent stored XSS.
+        const safeUrl = (item.targetUrl || '#')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        const subtextHtml = item.subtext ? `<span style="display:block;font-size:${item.subtextFontSize || 11}px;color:${item.subtextColor || 'rgba(255,255,255,0.85)'};font-weight:400;margin-top:2px;">${item.subtext}</span>` : '';
+        return `<div class="funnel-btn-wrap"><button id="${id}" ${btnTypeAttr}><span>${btnLabel}</span>${subtextHtml}</button></div>`;
     }
 
     if (item.type === 'input_email') {
@@ -93,12 +108,142 @@ export const renderItemToHtmlScoped = (rawItem) => {
     }
 
     if (item.type === 'checkbox') {
-        return `<div class="funnel-input-wrap"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="${id}" /> <span>${item.text || ''}</span></label></div>`;
+        return `<div class="funnel-input-wrap"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="${id}" /> <span>${item.text || 'I agree'}</span></label></div>`;
+    }
+
+    if (item.type === 'audio') {
+        return `<div id="${id}" class="funnel-audio-wrap"><p style="margin:0 0 8px 0;font-weight:600;">${item.title || 'Audio Track'}</p><audio controls style="width:100%;" src="${item.url || ''}"></audio></div>`;
+    }
+
+    if (item.type === 'icon_box') {
+        return `<div id="${id}" class="funnel-icon-box"><h3>${item.title || 'Feature'}</h3><p>${item.desc || ''}</p></div>`;
+    }
+
+    if (item.type === 'progress_bar') {
+        const pct = item.percent || 80;
+        const col = item.barColor || 'var(--color-primary, #467235)';
+        return `<div id="${id}" class="funnel-progress-wrap">${item.label ? `<p style="margin:0 0 4px 0;font-size:12px;font-weight:600;">${item.label}</p>` : ''}<div class="funnel-progress-bar"><div style="width:${pct}%;height:100%;background:${col};transition:width 0.5s;"></div></div></div>`;
+    }
+
+    if (item.type === 'social') {
+        const u = encodeURIComponent(item.shareUrl || '');
+        return `<div id="${id}" class="funnel-social-wrap">
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${u}" target="_blank" rel="noopener" class="funnel-social-fb">f Share</a>
+            <a href="https://twitter.com/intent/tweet?url=${u}" target="_blank" rel="noopener" class="funnel-social-tw">𝕏 Tweet</a>
+            <a href="https://api.whatsapp.com/send?text=${u}" target="_blank" rel="noopener" class="funnel-social-wa">✉ Share</a>
+        </div>`;
+    }
+
+    if (item.type === 'star_rating') {
+        const starChar = '★';
+        const numStars = item.stars || 5;
+        const color = item.starColor || '#f59e0b';
+        const starsHtml = `<span style="color:${color};font-size:20px;letter-spacing:2px;">${starChar.repeat(numStars)}</span>`;
+        const subtext = item.ratingText ? `<p style="margin:4px 0 0 0;font-size:12px;color:#6b7280;font-weight:600;">${item.ratingText}</p>` : '';
+        return `<div id="${id}" class="funnel-star-rating">${starsHtml}${subtext}</div>`;
+    }
+
+    if (item.type === 'custom_code') {
+        return `<div id="${id}" class="funnel-custom-code">${item.code || ''}</div>`;
+    }
+
+    if (item.type === 'rich_text') {
+        return `<div id="${id}" class="funnel-rich-text">${item.htmlContent || item.content || ''}</div>`;
+    }
+
+    if (item.type === 'order_bump') {
+        const badge = item.badgeText || 'YES! ADD THIS TO MY ORDER';
+        const title = item.title || 'ONE TIME OFFER: Add Checklist';
+        const desc = item.desc || 'Check this box to instantly include this offer.';
+        const price = item.price || 17;
+        return `<div id="${id}" class="funnel-order-bump">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span class="bump-badge">${badge}</span>
+                <span class="bump-price">$${price}</span>
+            </div>
+            <label>
+                <input type="checkbox" />
+                <div>
+                    <h4 style="margin:0;font-size:14px;font-weight:700;color:#111827;">${title}</h4>
+                    <p style="margin:4px 0 0 0;font-size:12px;color:#4b5563;">${desc}</p>
+                </div>
+            </label>
+        </div>`;
+    }
+
+    if (item.type === 'faq_accordion') {
+        const items = item.items || [];
+        const faqHtml = items.map((faq, idx) => `
+            <div class="faq-item">
+                <button type="button" class="faq-toggle">
+                    <span>${faq.q || 'Question?'}</span>
+                    <span class="faq-icon">▼</span>
+                </button>
+                <div class="faq-answer">
+                    ${faq.a || ''}
+                </div>
+            </div>
+        `).join('');
+        return `<div id="${id}" class="funnel-faq-accordion">${faqHtml}</div>`;
+    }
+
+    if (item.type === 'testimonial_slider') {
+        const items = item.items || [];
+        const slidesHtml = items.map((t, idx) => `
+            <div class="testimonial-card" style="display:${idx === 0 ? 'block' : 'none'};">
+                <div style="color:#f59e0b;font-size:16px;margin-bottom:8px;">★★★★★</div>
+                <blockquote style="font-style:italic;font-size:14px;color:#1f2937;margin:0 0 12px 0;line-height:1.6;">"${t.quote || ''}"</blockquote>
+                <p style="margin:0;font-weight:700;font-size:13px;color:#111827;">${t.author || ''} <span style="font-weight:400;color:#6b7280;">(${t.role || ''})</span></p>
+            </div>
+        `).join('');
+
+        const dotsHtml = items.map((_, idx) => `
+            <button type="button" class="slider-dot" data-idx="${idx}" style="width:${idx === 0 ? '20px' : '8px'};background:${idx === 0 ? 'var(--color-primary, #467235)' : '#e5e7eb'};"></button>
+        `).join('');
+
+        const navArrows = items.length > 1 ? `
+            <button type="button" class="slider-prev">‹</button>
+            <button type="button" class="slider-next">›</button>
+        ` : '';
+
+        return `<div id="${id}" class="funnel-testimonial-slider">
+            <div class="slider-slides-wrap">${slidesHtml}</div>
+            ${navArrows}
+            ${items.length > 1 ? `<div class="slider-dots">${dotsHtml}</div>` : ''}
+        </div>`;
     }
 
     if (item.type === 'divider')  return `<hr id="${id}" class="funnel-divider" />`;
-    if (item.type === 'spacer')   return `<div id="${id}" class="funnel-spacer"></div>`;
-    if (item.type === 'timer')    return `<div id="${id}" class="funnel-timer">02 : 15 : 00</div>`;
+
+    if (item.type === 'spacer') {
+        // Bug 7 Fix: dynamic spacer height
+        const h = item.spacerHeight !== undefined ? item.spacerHeight : ((item.paddingY || 20) * 2);
+        return `<div id="${id}" class="funnel-spacer" style="height:${h}px;"></div>`;
+    }
+
+    if (item.type === 'timer') {
+        const d = item.days !== undefined ? item.days : 0;
+        const h = item.hours !== undefined ? item.hours : 2;
+        const m = item.minutes !== undefined ? item.minutes : 15;
+        const s = item.seconds !== undefined ? item.seconds : 0;
+        const action = item.timerAction || 'show_message';
+        const redirectUrl = (item.redirectUrl || '#').replace(/"/g, '&quot;');
+        const expireMsg = (item.expireMessage || 'OFFER EXPIRED!').replace(/"/g, '&quot;');
+        const theme = item.timerTheme || 'red_urgent';
+
+        const themeStyles = {
+            red_urgent: 'background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;',
+            brand: 'background:rgba(99,102,241,0.08);border:1px solid var(--color-primary, #6EC1E4);color:var(--color-primary, #467235);',
+            dark: 'background:#111827;border:1px solid #374151;color:#ffffff;',
+            light: 'background:#ffffff;border:1px solid #e5e7eb;color:#111827;box-shadow:0 1px 3px rgba(0,0,0,0.05);',
+            minimal: 'background:transparent;border:none;color:var(--color-primary, #111827);padding:0;'
+        };
+
+        const styleStr = themeStyles[theme] || themeStyles.red_urgent;
+        const timeText = (d > 0 ? `${String(d).padStart(2,'0')}d : ` : '') + `${String(h).padStart(2,'0')} : ${String(m).padStart(2,'0')} : ${String(s).padStart(2,'0')}`;
+
+        return `<div id="${id}" class="funnel-timer" style="padding:14px;border-radius:12px;text-align:center;font-weight:700;font-family:monospace;font-size:18px;margin-bottom:16px;letter-spacing:1px;${styleStr}" data-days="${d}" data-hours="${h}" data-minutes="${m}" data-seconds="${s}" data-action="${action}" data-redirect="${redirectUrl}" data-message="${expireMsg}">⏰ <span class="timer-display">${timeText}</span></div>`;
+    }
 
     return '';
 };
@@ -151,6 +296,36 @@ export const renderSectionsHtml = (secList, styleObj, seoObj, codeObj, funnelNam
     cssRules.push(`.funnel-divider { border:none; border-top:var(--brand-divider-width, 1px) var(--brand-divider-style, solid) var(--brand-divider-color, #e5e7eb); margin:var(--brand-divider-margin-top, 24px) 0 var(--brand-divider-margin-bottom, 24px) 0; }`);
     cssRules.push(`.funnel-spacer { height:var(--brand-spacer-height, 40px); }`);
     cssRules.push(`.funnel-timer { padding:var(--brand-timer-padding, 16px); background:var(--brand-timer-bg-color, #fef2f2); border:1px solid var(--brand-timer-border-color, #fca5a5); border-radius:var(--brand-timer-border-radius, 12px); text-align:center; font-weight:var(--brand-timer-font-weight, 700); color:var(--brand-timer-text-color, #dc2626); font-family:monospace; font-size:var(--brand-timer-font-size, 24px); margin:0 0 16px 0; letter-spacing:2px; }`);
+    cssRules.push(`.funnel-audio-wrap { padding:14px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:var(--brand-field-border-radius, 8px); margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-icon-box { padding:20px; text-align:center; background:#ffffff; border:1px solid #f3f4f6; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.05); margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-icon-box h3 { margin:0 0 8px 0; font-size:16px; color:var(--brand-body-color, #111827); }`);
+    cssRules.push(`.funnel-icon-box p { margin:0; color:#6b7280; font-size:14px; }`);
+    cssRules.push(`.funnel-progress-wrap { margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-progress-bar { width:100%; height:14px; background:#e5e7eb; border-radius:9999px; overflow:hidden; }`);
+    cssRules.push(`.funnel-social-wrap { display:flex; gap:8px; justify-content:center; margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-social-wrap a { padding:8px 14px; color:#ffffff; border-radius:6px; text-decoration:none; font-size:12px; font-weight:700; display:inline-flex; align-items:center; }`);
+    cssRules.push(`.funnel-social-fb { background:#1877F2; }`);
+    cssRules.push(`.funnel-social-tw { background:#000000; }`);
+    cssRules.push(`.funnel-social-wa { background:#25D366; }`);
+    cssRules.push(`.funnel-star-rating { text-align:center; margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-custom-code { margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-rich-text { margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-order-bump { border:2px dashed #f87171; background:#fef2f2; padding:16px; border-radius:12px; margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-order-bump .bump-badge { background:#dc2626; color:#ffffff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; text-transform:uppercase; }`);
+    cssRules.push(`.funnel-order-bump .bump-price { font-weight:800; color:#991b1b; font-size:14px; }`);
+    cssRules.push(`.funnel-order-bump label { display:flex; gap:10px; cursor:pointer; align-items:flex-start; }`);
+    cssRules.push(`.funnel-order-bump input[type="checkbox"] { margin-top:3px; width:18px; height:18px; }`);
+    cssRules.push(`.funnel-faq-accordion { margin:0 0 16px 0; }`);
+    cssRules.push(`.funnel-faq-accordion .faq-item { border:1px solid #e5e7eb; border-radius:8px; margin-bottom:8px; overflow:hidden; background:#ffffff; }`);
+    cssRules.push(`.funnel-faq-accordion .faq-toggle { width:100%; padding:14px 16px; text-align:left; background:none; border:none; font-weight:700; font-size:14px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; color:var(--brand-body-color, #111827); }`);
+    cssRules.push(`.funnel-faq-accordion .faq-answer { display:none; padding:0 16px 14px 16px; font-size:13px; color:#4b5563; line-height:1.6; border-top:1px solid #f3f4f6; }`);
+    cssRules.push(`.funnel-testimonial-slider { position:relative; margin:0 0 24px 0; }`);
+    cssRules.push(`.funnel-testimonial-slider .testimonial-card { padding:28px 24px; background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.05); transition:all 0.3s ease; }`);
+    cssRules.push(`.funnel-testimonial-slider .slider-prev, .funnel-testimonial-slider .slider-next { position:absolute; top:45%; transform:translateY(-50%); width:32px; height:32px; border-radius:50%; background:#ffffff; border:1px solid #e5e7eb; box-shadow:0 2px 8px rgba(0,0,0,0.1); cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; z-index:2; color:#374151; }`);
+    cssRules.push(`.funnel-testimonial-slider .slider-prev { left:-14px; }`);
+    cssRules.push(`.funnel-testimonial-slider .slider-next { right:-14px; }`);
+    cssRules.push(`.funnel-testimonial-slider .slider-dots { display:flex; justify-content:center; gap:6px; margin-top:12px; }`);
+    cssRules.push(`.funnel-testimonial-slider .slider-dot { height:8px; border-radius:9999px; border:none; padding:0; cursor:pointer; transition:all 0.3s; }`);
     cssRules.push(`img { max-width:100%; height:auto; }`);
 
     mobileRules.push(`.funnel-row { grid-template-columns:1fr !important; }`);
@@ -194,6 +369,72 @@ ${headerCode}
 ${bodyHtml}
 </main>
 ${footerCode}
+<script>
+// Bug 8 Fix: Live countdown script for timer elements
+(function(){
+  document.querySelectorAll('.funnel-timer').forEach(function(el){
+    var days = parseInt(el.getAttribute('data-days')||'0', 10);
+    var hrs = parseInt(el.getAttribute('data-hours')||'2', 10);
+    var mins = parseInt(el.getAttribute('data-minutes')||'15', 10);
+    var secs = parseInt(el.getAttribute('data-seconds')||'0', 10);
+    var action = el.getAttribute('data-action')||'show_message';
+    var redirect = el.getAttribute('data-redirect')||'#';
+    var message = el.getAttribute('data-message')||'OFFER EXPIRED!';
+    var totalSecs = (days * 86400) + (hrs * 3600) + (mins * 60) + secs;
+    var disp = el.querySelector('.timer-display') || el;
+    function updateTimer(){
+      if(totalSecs <= 0){
+        if(action === 'hide') { el.style.display = 'none'; }
+        else if(action === 'redirect' && redirect !== '#') { window.location.href = redirect; }
+        else { disp.textContent = message; }
+        return;
+      }
+      totalSecs--;
+      var d = Math.floor(totalSecs / 86400);
+      var h = Math.floor((totalSecs % 86400) / 3600);
+      var m = Math.floor((totalSecs % 3600) / 60);
+      var s = totalSecs % 60;
+      var str = (d > 0 ? String(d).padStart(2,'0') + 'd : ' : '') + String(h).padStart(2,'0') + ' : ' + String(m).padStart(2,'0') + ' : ' + String(s).padStart(2,'0');
+      disp.textContent = str;
+    }
+    setInterval(updateTimer, 1000);
+  });
+  // Live FAQ Accordion toggle script
+  document.querySelectorAll('.funnel-faq-accordion .faq-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var ans = this.nextElementSibling;
+      var icon = this.querySelector('.faq-icon');
+      var isOpen = ans.style.display === 'block';
+      ans.style.display = isOpen ? 'none' : 'block';
+      if(icon) icon.textContent = isOpen ? '▼' : '▲';
+    });
+  });
+  // Live Testimonial Slider script
+  document.querySelectorAll('.funnel-testimonial-slider').forEach(function(slider){
+    var slides = slider.querySelectorAll('.testimonial-card');
+    var dots = slider.querySelectorAll('.slider-dot');
+    var prevBtn = slider.querySelector('.slider-prev');
+    var nextBtn = slider.querySelector('.slider-next');
+    if (!slides.length) return;
+    var current = 0;
+    function showSlide(idx){
+      current = (idx + slides.length) % slides.length;
+      slides.forEach(function(s, i){ s.style.display = (i === current) ? 'block' : 'none'; });
+      dots.forEach(function(d, i){
+        d.style.background = (i === current) ? 'var(--color-primary, #467235)' : '#e5e7eb';
+        d.style.width = (i === current) ? '20px' : '8px';
+      });
+    }
+    if (prevBtn) prevBtn.addEventListener('click', function(e){ e.preventDefault(); showSlide(current - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function(e){ e.preventDefault(); showSlide(current + 1); });
+    dots.forEach(function(d, i){ d.addEventListener('click', function(e){ e.preventDefault(); showSlide(i); }); });
+    showSlide(0);
+    if (slides.length > 1) {
+      setInterval(function(){ showSlide(current + 1); }, 5000);
+    }
+  });
+})();
+</script>
 </body>
 </html>`;
 };

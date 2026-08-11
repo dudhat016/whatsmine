@@ -24,7 +24,7 @@ import {
 import {
     isContainer, wrapInStandardHierarchy, insertNestedItem,
     insertExistingNestedItem, deleteNestedElement, updateNestedElement,
-    sanitizeElementForBrandInheritance
+    sanitizeElementForBrandInheritance, deepAssignNewIds
 } from './Builder/utils/treeUtils';
 
 import { buildBrandVars, collectElementCss, compileFullStyleTag } from './Builder/utils/cssCompiler';
@@ -280,201 +280,9 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
         }
     };
 
-    // ── Helper to guarantee strict Section -> Row -> Element structure ──────────
-    const wrapInStandardHierarchy = (itemData) => {
-        if (itemData.type === 'section') {
-            const { id: templateId, ...cleanItemProps } = itemData;
-            return {
-                ...cleanItemProps,
-                id: 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                elements: itemData.elements || [],
-                columns: itemData.columns || [[], [], [], []],
-            };
-        }
-
-        if (['col_1', 'col_2', 'col_3', 'col_4', 'col_sidebar'].includes(itemData.type)) {
-            const { id: templateId, ...cleanItemProps } = itemData;
-            const rowItem = {
-                ...cleanItemProps,
-                id: 'row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                columns: itemData.columns || [[], [], [], []],
-                elements: [],
-            };
-            return {
-                id: 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                type: 'section',
-                name: 'Layout Section',
-                title: 'Page Section',
-                bgColor: '#ffffff',
-                elements: [rowItem],
-                columns: [[], [], [], []],
-            };
-        }
-
-        const cleanItemProps = JSON.parse(JSON.stringify(itemData));
-        delete cleanItemProps.id;
-
-        const containerItem = {
-            ...cleanItemProps,
-            id: 'el_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-            elements: cleanItemProps.elements || [],
-            columns: cleanItemProps.columns || [[], [], [], []],
-        };
-
-        if (['flex_container', 'grid_container'].includes(itemData.type)) {
-            return {
-                id: 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-                type: 'section',
-                name: 'Layout Section',
-                title: 'Page Section',
-                containerWidth: '1200',
-                paddingY: 48,
-                paddingX: 24,
-                elements: [containerItem],
-                columns: [[], [], [], []],
-                mobile: { paddingY: 32, paddingX: 16 }
-            };
-        }
-
-        const rowItem = {
-            id: 'row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-            type: 'col_1',
-            name: '1 Column (Full Width)',
-            colsCount: 1,
-            columns: [[containerItem], [], [], []],
-            elements: [],
-        };
-
-        return {
-            id: 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-            type: 'section',
-            name: 'Layout Section',
-            title: 'Page Section',
-            containerWidth: '1200',
-            paddingY: 48,
-            paddingX: 24,
-            elements: [rowItem],
-            columns: [[], [], [], []],
-            mobile: { paddingY: 32, paddingX: 16 }
-        };
-    };
-
-    const isContainer = (type) => ['section', 'flex_container', 'grid_container'].includes(type);
-
-    const insertNestedItem = (itemList, targetId, colIdx, newItem) => {
-        return itemList.map(item => {
-            if (item.id === targetId) {
-                if (colIdx !== null) {
-                    const columns = [...(item.columns || [[], [], [], []])];
-                    columns[colIdx] = [...(columns[colIdx] || []), newItem];
-                    return { ...item, columns };
-                } else if (item.type === 'section' || item.type === 'flex_container') {
-                    const elements = [...(item.elements || []), newItem];
-                    return { ...item, elements };
-                } else if (['grid_container', 'col_1', 'col_2', 'col_3', 'col_4', 'col_sidebar'].includes(item.type)) {
-                    const columns = [...(item.columns || [[], [], [], []])];
-                    const targetCol = 0;
-                    columns[targetCol] = [...(columns[targetCol] || []), newItem];
-                    return { ...item, columns };
-                } else if (item.elements !== undefined) {
-                    const elements = [...(item.elements || []), newItem];
-                    return { ...item, elements };
-                }
-            }
-
-            let updatedItem = { ...item };
-            let modified = false;
-
-            if (item.elements && item.elements.length > 0) {
-                const targetIdx = item.elements.findIndex(el => el.id === targetId);
-                if (targetIdx !== -1) {
-                    const elements = [...item.elements];
-                    elements.splice(targetIdx + 1, 0, newItem);
-                    return { ...item, elements };
-                }
-                const updatedEls = insertNestedItem(item.elements, targetId, colIdx, newItem);
-                if (updatedEls !== item.elements) {
-                    updatedItem.elements = updatedEls;
-                    modified = true;
-                }
-            }
-
-            if (item.columns && item.columns.length > 0) {
-                const updatedCols = item.columns.map(col => {
-                    if (!col) return col;
-                    const targetIdx = col.findIndex(el => el.id === targetId);
-                    if (targetIdx !== -1) {
-                        const newCol = [...col];
-                        newCol.splice(targetIdx + 1, 0, newItem);
-                        return newCol;
-                    }
-                    return insertNestedItem(col, targetId, colIdx, newItem);
-                });
-                updatedItem.columns = updatedCols;
-                modified = true;
-            }
-
-            return modified ? updatedItem : item;
-        });
-    };
-
-    // ── Helper to insert an existing element adjacent to target or inside target container ────────
-    const insertExistingNestedItem = (itemList, targetId, colIdx, itemToMove) => {
-        return itemList.map(item => {
-            if (item.id === targetId) {
-                if (colIdx !== null) {
-                    const columns = [...(item.columns || [[], [], [], []])];
-                    columns[colIdx] = [...(columns[colIdx] || []), itemToMove];
-                    return { ...item, columns };
-                } else if (item.type === 'section' || item.type === 'flex_container') {
-                    const elements = [...(item.elements || []), itemToMove];
-                    return { ...item, elements };
-                } else if (['grid_container', 'col_1', 'col_2', 'col_3', 'col_4', 'col_sidebar'].includes(item.type)) {
-                    const columns = [...(item.columns || [[], [], [], []])];
-                    const targetCol = 0;
-                    columns[targetCol] = [...(columns[targetCol] || []), itemToMove];
-                    return { ...item, columns };
-                } else if (item.elements !== undefined) {
-                    const elements = [...(item.elements || []), itemToMove];
-                    return { ...item, elements };
-                }
-            }
-
-            let updatedItem = { ...item };
-            let modified = false;
-
-            if (item.elements && item.elements.length > 0) {
-                const targetIdx = item.elements.findIndex(el => el.id === targetId);
-                if (targetIdx !== -1) {
-                    const elements = [...item.elements];
-                    elements.splice(targetIdx + 1, 0, itemToMove);
-                    return { ...item, elements };
-                }
-                const updatedEls = insertExistingNestedItem(item.elements, targetId, colIdx, itemToMove);
-                if (updatedEls !== item.elements) {
-                    updatedItem.elements = updatedEls;
-                    modified = true;
-                }
-            }
-
-            if (item.columns && item.columns.length > 0) {
-                const updatedCols = item.columns.map(col => {
-                    if (!col) return col;
-                    const targetIdx = col.findIndex(el => el.id === targetId);
-                    if (targetIdx !== -1) {
-                        const newCol = [...col];
-                        newCol.splice(targetIdx + 1, 0, itemToMove);
-                        return newCol;
-                    }
-                    return insertExistingNestedItem(col, targetId, colIdx, itemToMove);
-                });
-                updatedItem.columns = updatedCols;
-                modified = true;
-            }
-
-            return modified ? updatedItem : item;
-        });
-    };
+    // ─── NOTE: wrapInStandardHierarchy, isContainer, insertNestedItem,
+    // insertExistingNestedItem are imported from utils/treeUtils.js above.
+    // Do NOT redefine them here — local definitions shadow the imports (Bug 2/3/4 fix).
 
     const handleCanvasElementDragStart = (e, item) => {
         e.stopPropagation();
@@ -507,6 +315,20 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
             }
             const existingObj = findNestedElement(sections, existingId);
             if (!existingObj) {
+                setDraggingElement(null);
+                return;
+            }
+
+            // Bug 6 Fix: Guard against dropping a parent element into its own descendant.
+            // Find if targetId lives anywhere inside existingObj's subtree.
+            const isDescendant = !!findNestedElement(
+                existingObj.elements || [],
+                targetId
+            ) || (existingObj.columns || []).some(col =>
+                Array.isArray(col) && !!findNestedElement(col, targetId)
+            );
+            if (isDescendant) {
+                showToast('Cannot move a parent element into its own child.', 'error');
                 setDraggingElement(null);
                 return;
             }
@@ -601,13 +423,10 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
     };
 
     const handleAddAdminBlock = (template) => {
-        const { id: tmplId, ...cleanProps } = template.data;
-        const newBlock = {
-            ...cleanProps,
-            id: 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-            elements: [],
-            columns: [[], [], [], []],
-        };
+        // Use deepAssignNewIds so inserting the same template twice never creates duplicate IDs
+        // (bug 11 fix: also ensures template data is a proper element tree, not custom-type placeholders)
+        const cloned = JSON.parse(JSON.stringify(template.data));
+        const newBlock = deepAssignNewIds(cloned);
         const updated = [...sections, newBlock];
         setSections(updated);
         setSelectedSectionId(newBlock.id);
@@ -619,12 +438,11 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
         axios.get(route('client.funnels.sections.show', savedBlock.id))
             .then(res => {
                 const canvas = res.data.canvas_json || {};
-                const { id: canvasId, ...cleanCanvas } = canvas;
-                const newBlock = {
-                    ...cleanCanvas,
-                    id: 'sec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                };
-                const updated = [...sections, newBlock];
+                // Bug 19 Fix: deep-assign fresh IDs to every node in the saved block tree.
+                // Without this, re-inserting the same saved block creates duplicate element IDs
+                // which breaks drag-drop selection and CSS targeting.
+                const freshBlock = deepAssignNewIds(canvas);
+                const updated = [...sections, freshBlock];
                 setSections(updated);
                 triggerAutoSave(updated, styleGuide, seoSettings, customCode);
                 showToast(`Inserted saved block "${savedBlock.name}"`, 'success');
@@ -693,8 +511,15 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
         if (!confirm('Delete this step and all its pages?')) return;
         axios.delete(route('client.funnels.steps.destroy', [funnel.uuid, stepId]))
         .then(() => {
-            setFunnel(prev => ({ ...prev, steps: prev.steps.filter(s => s.id !== stepId) }));
-            if (activeStepId === stepId) setActiveStepId(funnel.steps?.[0]?.id ?? null);
+            setFunnel(prev => {
+                const remainingSteps = prev.steps.filter(s => s.id !== stepId);
+                // Bug 5 Fix: use the updated (post-deletion) steps list for the fallback,
+                // not the stale pre-deletion funnel.steps.
+                if (activeStepId === stepId) {
+                    setActiveStepId(remainingSteps[0]?.id ?? null);
+                }
+                return { ...prev, steps: remainingSteps };
+            });
             showToast('Step deleted', 'info');
         })
         .catch(() => showToast('Failed to delete step', 'error'));
@@ -719,6 +544,17 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
     };
 
     const saveTimerRef = useRef(null);
+    /**
+     * triggerAutoSave — debounced canvas persistence.
+     *
+     * Bug 1 & 9 Fix:
+     * - Debounce raised from 500ms → 1500ms so that typing a sentence
+     *   doesn't fire 3–6 API calls per second.
+     * - html_cache is intentionally OMITTED from auto-save. The HTML
+     *   renderer is synchronous and expensive (it walks the full element tree).
+     *   Running it on every keystroke can freeze the UI for 100–300ms on
+     *   large pages. html_cache is regenerated on explicit Publish only.
+     */
     const triggerAutoSave = (secList, styleObj, seoObj, codeObj) => {
         setSyncState('saving');
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -734,14 +570,14 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                     seoSettings: seoObj,
                     customCode: codeObj
                 },
-                html_cache: renderSectionsHtml(secList, styleObj, seoObj, codeObj),
+                // html_cache omitted — regenerated only on Publish (see handlePublish).
                 meta_title: seoObj?.metaTitle || null,
                 meta_description: seoObj?.metaDescription || null,
                 og_image_url: seoObj?.ogImage || null,
             })
             .then(() => setSyncState('synced'))
             .catch(() => setSyncState('unsaved'));
-        }, 500);
+        }, 1500);
     };
 
 
@@ -771,6 +607,141 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
     const isPublished = funnel.status === 'published';
 
     // ── UNIVERSAL RECURSIVE RRENDERER WITH REAL-TIME PROPERTY INJECTION ────────
+    const CanvasFaqAccordion = ({ item, items, inlineStyles }) => {
+        const [openIndices, setOpenIndices] = useState([0]);
+        const toggle = (idx) => {
+            setOpenIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
+        };
+        const itemObj = item || {};
+        return (
+            <div style={inlineStyles} className="w-full space-y-2">
+                {(items || []).map((faq, fIdx) => {
+                    const isOpen = openIndices.includes(fIdx);
+                    return (
+                        <div
+                            key={fIdx}
+                            style={{ borderColor: itemObj.itemBorderColor || '#e5e7eb' }}
+                            className="rounded-xl border bg-white overflow-hidden shadow-sm transition"
+                        >
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); toggle(fIdx); }}
+                                style={{
+                                    color: itemObj.qColor || '#111827',
+                                    background: itemObj.qBgColor || '#ffffff',
+                                    fontSize: itemObj.qFontSize ? `${itemObj.qFontSize}px` : undefined,
+                                    fontWeight: itemObj.qFontWeight || '700',
+                                }}
+                                className="w-full p-4 flex items-center justify-between text-left transition hover:brightness-95"
+                            >
+                                <span>{faq.q || 'Question?'}</span>
+                                <span style={{ color: itemObj.iconColor || '#9ca3af' }} className="text-xs transition-transform">{isOpen ? '▲' : '▼'}</span>
+                            </button>
+                            {isOpen && (
+                                <p
+                                    style={{
+                                        color: itemObj.aColor || '#4b5563',
+                                        background: itemObj.aBgColor || '#ffffff',
+                                        fontSize: itemObj.aFontSize ? `${itemObj.aFontSize}px` : undefined,
+                                        lineHeight: itemObj.aLineHeight || 1.6,
+                                    }}
+                                    className="px-4 pb-4 border-t border-neutral-100 pt-2.5"
+                                >
+                                    {faq.a || 'Answer text...'}
+                                </p>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    const CanvasTestimonialSlider = ({ item, items, inlineStyles }) => {
+        const [activeIdx, setActiveIdx] = useState(0);
+        const list = items?.length > 0 ? items : [{ quote: 'Sample quote', author: 'Author', role: 'Role' }];
+        const count = list.length;
+        const current = list[activeIdx] || list[0];
+        const itemObj = item || {};
+
+        const prev = (e) => {
+            e.stopPropagation();
+            setActiveIdx(i => (i - 1 + count) % count);
+        };
+        const next = (e) => {
+            e.stopPropagation();
+            setActiveIdx(i => (i + 1) % count);
+        };
+
+        return (
+            <div style={inlineStyles} className="w-full relative group">
+                <div
+                    style={{
+                        background: itemObj.cardBgColor || '#ffffff',
+                        borderColor: itemObj.cardBorderColor || '#e5e7eb',
+                    }}
+                    className="w-full rounded-2xl border p-6 shadow-md text-center space-y-3 relative overflow-hidden transition-all"
+                >
+                    <div style={{ color: itemObj.starColor || '#f59e0b' }} className="flex justify-center gap-1 text-sm">★★★★★</div>
+                    <blockquote
+                        style={{
+                            color: itemObj.quoteColor || '#1f2937',
+                            fontSize: itemObj.quoteFontSize ? `${itemObj.quoteFontSize}px` : undefined,
+                        }}
+                        className="italic font-medium max-w-xl mx-auto min-h-[48px] flex items-center justify-center"
+                    >
+                        "{current.quote || 'This platform completely transformed our marketing performance!'}"
+                    </blockquote>
+                    <div className="flex items-center justify-center gap-2 pt-1">
+                        {current.avatar && (
+                            <img src={current.avatar} alt={current.author || 'Avatar'} className="h-9 w-9 rounded-full object-cover border border-neutral-200 shadow-sm" />
+                        )}
+                        <div
+                            style={{
+                                color: itemObj.authorColor || '#111827',
+                                fontSize: itemObj.authorFontSize ? `${itemObj.authorFontSize}px` : undefined,
+                            }}
+                            className="font-bold text-left"
+                        >
+                            <p className="m-0 leading-tight">{current.author || 'Client Name'}</p>
+                            <p className="m-0 opacity-70 font-normal text-[11px]">{current.role || 'Verified Customer'}</p>
+                        </div>
+                    </div>
+
+                    {/* Prev / Next Arrows */}
+                    {count > 1 && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={prev}
+                                className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-neutral-200 shadow-sm flex items-center justify-center text-neutral-600 hover:bg-neutral-50 hover:text-black transition"
+                            >‹</button>
+                            <button
+                                type="button"
+                                onClick={next}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-neutral-200 shadow-sm flex items-center justify-center text-neutral-600 hover:bg-neutral-50 hover:text-black transition"
+                            >›</button>
+                        </>
+                    )}
+
+                    {/* Dots */}
+                    {count > 1 && (
+                        <div className="flex justify-center items-center gap-1.5 pt-2">
+                            {list.map((_, dotIdx) => (
+                                <button
+                                    key={dotIdx}
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setActiveIdx(dotIdx); }}
+                                    className={`h-2 rounded-full transition-all ${dotIdx === activeIdx ? 'w-6 bg-brand-600' : 'w-2 bg-neutral-200 hover:bg-neutral-300'}`}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     const renderElementBlock = (item, parentId, cIdx = null) => {
         if (!item) return null;
         // Merge active viewport overrides (mobile/tablet) into effective properties for canvas real-time preview
@@ -857,7 +828,13 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
             textAlign: eff.alignment || 'left',
         };
 
-        const visibilityClasses = `${eff.visibleDesktop === false ? 'hidden sm:hidden' : ''} ${eff.visibleMobile === false ? 'hidden max-sm:hidden' : ''}`;
+        // Bug 10 Fix: corrected Tailwind responsive visibility classes.
+        // 'max-sm:hidden' = hide on mobile, show on desktop (sm and above).
+        // 'sm:hidden'     = hide on desktop (sm and above), show on mobile.
+        const visibilityClasses = [
+            eff.visibleDesktop === false ? 'max-sm:hidden' : '',
+            eff.visibleMobile  === false ? 'sm:hidden'     : '',
+        ].filter(Boolean).join(' ');
 
         return (
             <div
@@ -1043,9 +1020,20 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                             <button
                                 type="button"
                                 style={inlineStyles}
-                                className="funnel-builder-btn w-full transition-all rounded-xl cursor-pointer"
+                                className="funnel-builder-btn w-full transition-all rounded-xl cursor-pointer flex flex-col items-center justify-center gap-0.5"
                             >
-                                {btnLabel}
+                                <span>{btnLabel}</span>
+                                {eff.subtext && (
+                                    <span
+                                        style={{
+                                            color: eff.subtextColor || 'rgba(255,255,255,0.85)',
+                                            fontSize: eff.subtextFontSize ? `${eff.subtextFontSize}px` : '11px',
+                                        }}
+                                        className="font-normal tracking-normal"
+                                    >
+                                        {eff.subtext}
+                                    </span>
+                                )}
                             </button>
                         </div>
                     );
@@ -1061,12 +1049,178 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                     </div>
                 )}
                 {eff.type === 'divider' && <hr style={inlineStyles} className="border-neutral-300 my-4" />}
-                {eff.type === 'spacer' && <div style={inlineStyles} className="h-10 border border-dashed border-neutral-200 rounded flex items-center justify-center text-[10px] text-neutral-400">Spacer (40px)</div>}
-                {eff.type === 'timer' && (
-                    <div style={inlineStyles} className="p-3 bg-red-50 border border-red-200 rounded-xl text-center flex justify-center items-center gap-4 text-red-600 font-mono font-bold text-sm">
-                        <Clock className="h-4 w-4" />
-                        <span>0{eff.hours || 2} Hours : {eff.minutes || 15} Minutes : 45 Seconds</span>
+                {eff.type === 'spacer' && (
+                    // Bug 7 Fix: derive height from element data — removed hardcoded h-10 (40px)
+                    // which overrode any user-set padding/height from the SizePanel.
+                    <div
+                        style={{
+                            ...inlineStyles,
+                            height: eff.spacerHeight !== undefined
+                                ? `${eff.spacerHeight}px`
+                                : `${(eff.paddingY || 20) * 2}px`,
+                        }}
+                        className="border border-dashed border-neutral-200 rounded flex items-center justify-center text-[10px] text-neutral-400"
+                    >
+                        Spacer
                     </div>
+                )}
+                {eff.type === 'timer' && (() => {
+                    const d = eff.days !== undefined ? eff.days : 0;
+                    const h = eff.hours !== undefined ? eff.hours : 2;
+                    const m = eff.minutes !== undefined ? eff.minutes : 15;
+                    const s = eff.seconds !== undefined ? eff.seconds : 0;
+                    const theme = eff.timerTheme || 'red_urgent';
+
+                    const themeClasses = {
+                        red_urgent: 'bg-red-50 border-red-200 text-red-600',
+                        brand: 'bg-brand-50 border-brand-200 text-brand-700',
+                        dark: 'bg-neutral-900 border-neutral-800 text-white',
+                        light: 'bg-white border-neutral-200 text-neutral-900 shadow-sm',
+                        minimal: 'bg-transparent border-0 text-brand-600'
+                    };
+
+                    return (
+                        <div style={inlineStyles} className={`p-3.5 border rounded-xl text-center flex justify-center items-center gap-3 font-mono font-bold text-sm transition-all ${themeClasses[theme] || themeClasses.red_urgent}`}>
+                            <Clock className="h-4 w-4 shrink-0 animate-pulse" />
+                            <span>
+                                {d > 0 && `${String(d).padStart(2, '0')}d : `}
+                                {String(h).padStart(2, '0')}h : {String(m).padStart(2, '0')}m : {String(s).padStart(2, '0')}s
+                            </span>
+                        </div>
+                    );
+                })()}
+                {/* Bug 1 Fix: audio renderer */}
+                {eff.type === 'audio' && (
+                    <div style={inlineStyles} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Music className="h-4 w-4 text-brand-600 shrink-0" />
+                            <span className="text-sm font-semibold text-neutral-700 truncate">{eff.title || 'Audio Track'}</span>
+                        </div>
+                        {eff.url ? (
+                            <audio controls className="w-full h-10" src={eff.url} />
+                        ) : (
+                            <div className="h-10 rounded-lg border border-dashed border-neutral-300 bg-white flex items-center justify-center text-[11px] text-neutral-400">
+                                Set Audio URL in settings panel →
+                            </div>
+                        )}
+                    </div>
+                )}
+                {/* Bug 2 Fix: icon_box renderer */}
+                {eff.type === 'icon_box' && (
+                    <div style={inlineStyles} className="w-full rounded-xl border border-neutral-100 bg-white p-5 shadow-sm text-center space-y-2">
+                        <div className="mx-auto h-12 w-12 rounded-full bg-brand-50 flex items-center justify-center">
+                            <Sparkles className="h-6 w-6 text-brand-600" />
+                        </div>
+                        <p className="font-bold text-neutral-900 text-sm">{eff.title || 'Feature Title'}</p>
+                        <p className="text-xs text-neutral-500 leading-relaxed">{eff.desc || 'Feature description goes here.'}</p>
+                    </div>
+                )}
+                {/* Bug 12 Fix: checkbox renderer */}
+                {eff.type === 'checkbox' && (
+                    <div style={inlineStyles} className="funnel-input-wrap">
+                        <label className="flex items-start gap-2.5 cursor-default select-none">
+                            <input type="checkbox" disabled className="mt-0.5 h-4 w-4 rounded accent-brand-600 shrink-0" />
+                            <span className="text-sm text-neutral-700">{eff.text || 'I agree to the Terms of Service and Privacy Policy.'}</span>
+                        </label>
+                    </div>
+                )}
+                {/* Bug 3 Fix: progress_bar renderer */}
+                {eff.type === 'progress_bar' && (
+                    <div style={inlineStyles} className="w-full space-y-1">
+                        {eff.label && <p className="text-xs font-semibold text-neutral-600">{eff.label}</p>}
+                        <div className="w-full h-4 rounded-full bg-neutral-200 overflow-hidden">
+                            <div
+                                className="h-full rounded-full transition-all duration-500"
+                                style={{
+                                    width: `${eff.percent || 80}%`,
+                                    backgroundColor: eff.barColor || styleGuide.systemColors?.primary || '#467235',
+                                }}
+                            />
+                        </div>
+                        {eff.showPercent !== false && (
+                            <p className="text-[11px] font-bold text-right" style={{ color: eff.barColor || styleGuide.systemColors?.primary || '#467235' }}>
+                                {eff.percent || 80}%
+                            </p>
+                        )}
+                    </div>
+                )}
+                {/* Bug 4 Fix: social share renderer */}
+                {eff.type === 'social' && (
+                    <div style={inlineStyles} className="flex flex-wrap gap-2 justify-center">
+                        {[
+                            { name: 'Facebook', color: '#1877F2', label: 'f Share' },
+                            { name: 'Twitter/X', color: '#000000', label: '𝕏 Tweet' },
+                            { name: 'WhatsApp', color: '#25D366', label: '✉ Share' },
+                            { name: 'LinkedIn', color: '#0A66C2', label: 'in Share' },
+                        ].map(s => (
+                            <button key={s.name} type="button" disabled
+                                className="rounded-lg px-3.5 py-2 text-xs font-bold text-white cursor-default"
+                                style={{ backgroundColor: s.color }}
+                            >{s.label}</button>
+                        ))}
+                    </div>
+                )}
+
+                {/* star_rating renderer */}
+                {eff.type === 'star_rating' && (
+                    <div style={inlineStyles} className="flex flex-col items-center gap-1 py-1">
+                        <div className="flex items-center gap-1">
+                            {[...Array(eff.stars || 5)].map((_, i) => (
+                                <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" style={{ color: eff.starColor || '#f59e0b', fill: eff.starColor || '#f59e0b' }} />
+                            ))}
+                        </div>
+                        {eff.ratingText && (
+                            <p className="text-xs font-semibold text-neutral-600">{eff.ratingText}</p>
+                        )}
+                    </div>
+                )}
+
+                {/* custom_code renderer */}
+                {eff.type === 'custom_code' && (
+                    <div style={inlineStyles} className="w-full rounded-xl border border-dashed border-purple-300 bg-purple-50/50 p-4 font-mono text-xs text-purple-900 overflow-x-auto space-y-1">
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-purple-600 uppercase tracking-wider mb-2">
+                            <Code className="h-3.5 w-3.5" /> Custom HTML / Script Embed
+                        </div>
+                        <pre className="whitespace-pre-wrap break-all text-[11px] text-neutral-700 bg-white p-2.5 rounded border border-purple-100">{eff.code || '<!-- Enter custom HTML or script in settings -->'}</pre>
+                    </div>
+                )}
+
+                {/* rich_text renderer */}
+                {eff.type === 'rich_text' && (
+                    <div
+                        style={inlineStyles}
+                        className="w-full prose prose-sm max-w-none transition-all"
+                        dangerouslySetInnerHTML={{ __html: eff.htmlContent || eff.content || '<p>Enter rich text HTML in settings...</p>' }}
+                    />
+                )}
+
+                {/* order_bump renderer */}
+                {eff.type === 'order_bump' && (
+                    <div style={inlineStyles} className="w-full rounded-xl border-2 border-dashed border-red-400 bg-red-50/60 p-4 space-y-2 relative shadow-sm">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="inline-block rounded-md bg-red-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                                {eff.badgeText || 'YES! ADD THIS TO MY ORDER'}
+                            </span>
+                            <span className="font-mono text-sm font-extrabold text-red-700">${eff.price || 17}</span>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <input type="checkbox" disabled className="mt-1 h-5 w-5 rounded accent-red-600 shrink-0" />
+                            <div>
+                                <h4 className="text-sm font-bold text-neutral-900">{eff.title || 'ONE TIME OFFER: Add Checklist'}</h4>
+                                <p className="text-xs text-neutral-600 leading-relaxed mt-0.5">{eff.desc || 'Check this box to instantly include this offer.'}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* faq_accordion renderer */}
+                {eff.type === 'faq_accordion' && (
+                    <CanvasFaqAccordion item={eff} items={eff.items} inlineStyles={inlineStyles} />
+                )}
+
+                {/* testimonial_slider renderer */}
+                {eff.type === 'testimonial_slider' && (
+                    <CanvasTestimonialSlider item={eff} items={eff.items} inlineStyles={inlineStyles} />
                 )}
             </div>
         );
@@ -1148,8 +1302,10 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                     <h1 className="text-sm font-semibold text-neutral-900 truncate max-w-xs">{funnel.name}</h1>
                     <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[funnel.status] ?? ''}`}>{funnel.status}</span>
                     <div className="flex items-center gap-1.5 text-xs text-neutral-400 pl-2">
-                        {syncState === 'saving' && <span className="flex items-center gap-1 text-amber-500"><RefreshCw className="h-3 w-3 animate-spin" /> Saving…</span>}
-                        {syncState === 'synced' && <span className="flex items-center gap-1 text-green-600 font-medium"><span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" /> Real-time Synced</span>}
+                        {syncState === 'saving'   && <span className="flex items-center gap-1 text-amber-500"><RefreshCw className="h-3 w-3 animate-spin" /> Saving…</span>}
+                        {syncState === 'synced'   && <span className="flex items-center gap-1 text-green-600 font-medium"><span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" /> Real-time Synced</span>}
+                        {/* Bug 18 Fix: show a visible warning when the last auto-save failed */}
+                        {syncState === 'unsaved'  && <span className="flex items-center gap-1 text-red-600 font-semibold"><AlertTriangle className="h-3.5 w-3.5" /> Unsaved — check network</span>}
                     </div>
                 </div>
 
@@ -1341,12 +1497,18 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                 handleConfirmSaveBlock={handleSaveSectionToMyBlocks}
             />
 
-            {/* Toast */}
-            {toast && (
-                <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg">
-                    <CheckCircle className="h-4 w-4" /> {toast.msg}
-                </div>
-            )}
+            {/* Toast — Bug 16 Fix: use toast.type to pick correct color and icon */}
+            {toast && (() => {
+                const isError = toast.type === 'error';
+                const isInfo  = toast.type === 'info';
+                const bg = isError ? 'bg-red-600' : isInfo ? 'bg-neutral-700' : 'bg-green-600';
+                const Icon = isError ? AlertTriangle : CheckCircle;
+                return (
+                    <div className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg ${bg} px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-all`}>
+                        <Icon className="h-4 w-4 shrink-0" /> {toast.msg}
+                    </div>
+                );
+            })()}
         </ClientLayout>
     );
 }

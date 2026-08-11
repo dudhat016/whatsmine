@@ -132,6 +132,15 @@ export const ELEMENT_CATEGORIES = [
                 marginBottom: 16,
                 visibleDesktop: true,
                 visibleMobile: true
+            },
+            {
+                id: 'el_rich_text',
+                name: 'Rich Text Block',
+                type: 'rich_text',
+                htmlContent: '<p>Edit this <strong>Rich Text</strong> content to add <em>formatting</em>, lists, and links.</p>',
+                marginBottom: 16,
+                visibleDesktop: true,
+                visibleMobile: true
             }
         ]
     },
@@ -228,6 +237,18 @@ export const ELEMENT_CATEGORIES = [
                 marginBottom: 12,
                 visibleDesktop: true,
                 visibleMobile: true
+            },
+            {
+                id: 'el_order_bump',
+                name: 'Order Bump Offer',
+                type: 'order_bump',
+                title: 'ONE TIME OFFER: Add Master Implementation Checklist ($17)',
+                desc: 'Check this box to instantly add our step-by-step master checklist to your order today.',
+                price: 17,
+                badgeText: 'YES! ADD THIS',
+                marginBottom: 16,
+                visibleDesktop: true,
+                visibleMobile: true
             }
         ]
     },
@@ -235,16 +256,46 @@ export const ELEMENT_CATEGORIES = [
         category: 'Other',
         icon: Sliders,
         items: [
+            { id: 'el_star_rating', name: 'Star Rating', type: 'star_rating', stars: 5, ratingText: '5.0 out of 5 stars (1,240+ reviews)', starColor: '#f59e0b', marginBottom: 16, visibleDesktop: true, visibleMobile: true },
+            {
+                id: 'el_faq_accordion',
+                name: 'FAQ Accordion',
+                type: 'faq_accordion',
+                items: [
+                    { q: 'How fast can I get my funnel running?', a: 'You can launch in under 10 minutes using our pre-built templates.' },
+                    { q: 'Is there a money-back guarantee?', a: 'Yes! We offer a full 30-day money-back guarantee with no questions asked.' },
+                    { q: 'Can I connect a custom domain?', a: 'Absolutely! You can map any custom domain or subdomain in workspace settings.' }
+                ],
+                marginBottom: 16,
+                visibleDesktop: true,
+                visibleMobile: true
+            },
+            {
+                id: 'el_testimonial_slider',
+                name: 'Testimonial Slider',
+                type: 'testimonial_slider',
+                items: [
+                    { quote: 'This funnel builder doubled our conversion rate in the first week!', author: 'Sarah Jenkins', role: 'Agency Owner' },
+                    { quote: 'The 1-click order bumps added $12,000 in extra revenue last month alone.', author: 'Michael Chen', role: 'E-commerce Lead' }
+                ],
+                marginBottom: 16,
+                visibleDesktop: true,
+                visibleMobile: true
+            },
             { id: 'el_divider', name: 'Divider Line', type: 'divider', marginBottom: 16, visibleDesktop: true, visibleMobile: true },
             { id: 'el_spacer', name: 'Vertical Spacer', type: 'spacer', paddingY: 20, visibleDesktop: true, visibleMobile: true },
-            { id: 'el_timer', name: 'Countdown Timer', type: 'timer', hours: 2, minutes: 15, marginBottom: 16, visibleDesktop: true, visibleMobile: true },
+            { id: 'el_timer', name: 'Countdown Timer', type: 'timer', days: 0, hours: 2, minutes: 15, seconds: 0, timerTheme: 'red_urgent', timerAction: 'show_message', expireMessage: 'SPECIAL OFFER HAS EXPIRED!', marginBottom: 16, visibleDesktop: true, visibleMobile: true },
             { id: 'el_progress', name: 'Progress Bar', type: 'progress_bar', percent: 80, marginBottom: 16, visibleDesktop: true, visibleMobile: true },
-            { id: 'el_social', name: 'Social Share Buttons', type: 'social', marginBottom: 16, visibleDesktop: true, visibleMobile: true }
+            { id: 'el_social', name: 'Social Share Buttons', type: 'social', marginBottom: 16, visibleDesktop: true, visibleMobile: true },
+            { id: 'el_custom_code', name: 'Custom HTML / Embed', type: 'custom_code', code: '<div style="padding:10px;background:#eef2ff;border-radius:6px;text-align:center;">Custom HTML Embed Code</div>', marginBottom: 16, visibleDesktop: true, visibleMobile: true }
         ]
     }
 ];
 
 // ─── 3. ADMIN CREATED BLOCK TEMPLATES ─────────────────────────────────────────
+// ─── 3. ADMIN CREATED BLOCK TEMPLATES ─────────────────────────────────────────
+// Bug 11 Fix: Templates must be valid Section trees composed of standard element types
+// (headline, subheadline, paragraph, submit_button, video, input_name, input_email, quote, etc.)
 export const ADMIN_BLOCK_TEMPLATES = [
     {
         id: 'hero',
@@ -253,11 +304,16 @@ export const ADMIN_BLOCK_TEMPLATES = [
         icon: LayoutTemplate,
         badge: 'Popular',
         data: {
-            type: 'hero',
-            headline: 'Transform Your Business With Our High-Converting Platform',
-            subheadline: 'Join over 10,000+ businesses growing faster every day with automated funnels.',
-            ctaText: 'Claim Your Free Trial Now',
-            ctaSubtext: 'No credit card required · Instant access',
+            type: 'section',
+            name: 'Hero Section',
+            paddingY: 48,
+            paddingX: 24,
+            elements: [
+                { type: 'headline', headingTag: 'h1', content: 'Transform Your Business With Our High-Converting Platform', marginBottom: 12 },
+                { type: 'subheadline', headingTag: 'h2', content: 'Join over 10,000+ businesses growing faster every day with automated funnels.', marginBottom: 24 },
+                { type: 'submit_button', text: 'Claim Your Free Trial Now →', btnType: 'primary', marginBottom: 16 }
+            ],
+            columns: [[], [], [], []]
         }
     },
     {
@@ -267,11 +323,17 @@ export const ADMIN_BLOCK_TEMPLATES = [
         icon: Play,
         badge: 'High CVR',
         data: {
-            type: 'vsl',
-            title: 'Watch This 5-Minute Video To Discover The Secret Strategy',
-            videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-            ctaText: 'Yes! Unlock Full Access Now',
-            guaranteeText: '30-Day 100% Money-Back Guarantee',
+            type: 'section',
+            name: 'VSL Section',
+            paddingY: 48,
+            paddingX: 24,
+            elements: [
+                { type: 'headline', headingTag: 'h1', content: 'Watch This 5-Minute Video To Discover The Secret Strategy', marginBottom: 20 },
+                { type: 'video', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', marginBottom: 24 },
+                { type: 'submit_button', text: 'Yes! Unlock Full Access Now →', btnType: 'primary', marginBottom: 12 },
+                { type: 'paragraph', content: '🔒 30-Day 100% Money-Back Guarantee · No Risk', marginBottom: 16 }
+            ],
+            columns: [[], [], [], []]
         }
     },
     {
@@ -281,11 +343,17 @@ export const ADMIN_BLOCK_TEMPLATES = [
         icon: MousePointerClick,
         badge: 'Leads',
         data: {
-            type: 'optin',
-            title: 'Enter Your Email Below To Get Instant Access',
-            buttonText: 'Get Free Access Now →',
-            placeholderName: 'Your Full Name',
-            placeholderEmail: 'Your Best Email Address',
+            type: 'section',
+            name: 'Lead Capture Section',
+            paddingY: 48,
+            paddingX: 24,
+            elements: [
+                { type: 'headline', headingTag: 'h2', content: 'Enter Your Email Below To Get Instant Access', marginBottom: 16 },
+                { type: 'input_name', placeholder: 'Your Full Name...', marginBottom: 12 },
+                { type: 'input_email', placeholder: 'Your Best Email Address...', marginBottom: 16 },
+                { type: 'submit_button', text: 'Get Free Access Now →', btnType: 'primary', marginBottom: 12 }
+            ],
+            columns: [[], [], [], []]
         }
     },
     {
@@ -295,10 +363,15 @@ export const ADMIN_BLOCK_TEMPLATES = [
         icon: Sparkles,
         badge: '+34% Revenue',
         data: {
-            type: 'order_bump',
-            title: 'ONE TIME OFFER: Add Complete Implementation Checklist for just $17',
-            description: 'Check this box to instantly include our step-by-step master checklist in your order today.',
-            price: 17,
+            type: 'section',
+            name: 'Order Bump Section',
+            paddingY: 24,
+            paddingX: 24,
+            elements: [
+                { type: 'checkbox', text: 'ONE TIME OFFER: Add Complete Implementation Checklist for just $17', marginBottom: 8 },
+                { type: 'paragraph', content: 'Check this box to instantly include our step-by-step master checklist in your order today.', marginBottom: 12 }
+            ],
+            columns: [[], [], [], []]
         }
     },
     {
@@ -308,12 +381,17 @@ export const ADMIN_BLOCK_TEMPLATES = [
         icon: Zap,
         badge: '1-Click',
         data: {
-            type: 'upsell',
-            headline: 'WAIT! Your Order Is Not Complete...',
-            subheadline: 'Add The Masterclass Upgrade To Your Order With 70% Off Today Only!',
-            yesButtonText: 'Yes! Add Masterclass For Only $47',
-            noButtonText: 'No thanks, I will pass on this special offer.',
-            price: 47,
+            type: 'section',
+            name: '1-Click Upsell Section',
+            paddingY: 48,
+            paddingX: 24,
+            elements: [
+                { type: 'headline', headingTag: 'h1', content: 'WAIT! Your Order Is Not Complete...', marginBottom: 12 },
+                { type: 'subheadline', headingTag: 'h2', content: 'Add The Masterclass Upgrade To Your Order With 70% Off Today Only!', marginBottom: 24 },
+                { type: 'submit_button', text: 'Yes! Add Masterclass For Only $47 →', btnType: 'primary', marginBottom: 12 },
+                { type: 'paragraph', content: 'No thanks, I will pass on this special offer.', marginBottom: 16 }
+            ],
+            columns: [[], [], [], []]
         }
     },
     {
@@ -322,12 +400,16 @@ export const ADMIN_BLOCK_TEMPLATES = [
         category: 'Trust',
         icon: Star,
         data: {
-            type: 'testimonials',
-            title: 'Loved By Thousands Of Marketers Worldwide',
-            reviews: [
-                { name: 'Sarah Jenkins', role: 'Agency Owner', text: 'This funnel builder increased our conversion rate by 42% in the first week!' },
-                { name: 'Michael Chen', role: 'E-commerce Director', text: 'The 1-click upsells alone added $12,000 in extra revenue last month.' },
-            ]
+            type: 'section',
+            name: 'Testimonials Section',
+            paddingY: 48,
+            paddingX: 24,
+            elements: [
+                { type: 'headline', headingTag: 'h2', content: 'Loved By Thousands Of Marketers Worldwide', marginBottom: 24 },
+                { type: 'quote', quote: 'This funnel builder doubled our conversion rate in the first week!', author: 'Sarah Jenkins, Agency Owner', marginBottom: 16 },
+                { type: 'quote', quote: 'The 1-click upsells alone added $12,000 in extra revenue last month.', author: 'Michael Chen, E-commerce Director', marginBottom: 16 }
+            ],
+            columns: [[], [], [], []]
         }
     },
     {
@@ -336,12 +418,18 @@ export const ADMIN_BLOCK_TEMPLATES = [
         category: 'Content',
         icon: HelpCircle,
         data: {
-            type: 'faq',
-            title: 'Frequently Asked Questions',
-            items: [
-                { q: 'How fast can I get my funnel running?', a: 'You can launch in under 10 minutes using our pre-built templates.' },
-                { q: 'Is there a money-back guarantee?', a: 'Yes! We offer a full 30-day money-back guarantee with no questions asked.' },
-            ]
+            type: 'section',
+            name: 'FAQ Section',
+            paddingY: 48,
+            paddingX: 24,
+            elements: [
+                { type: 'headline', headingTag: 'h2', content: 'Frequently Asked Questions', marginBottom: 24 },
+                { type: 'subheadline', headingTag: 'h3', content: 'How fast can I get my funnel running?', marginBottom: 4 },
+                { type: 'paragraph', content: 'You can launch in under 10 minutes using our pre-built templates.', marginBottom: 16 },
+                { type: 'subheadline', headingTag: 'h3', content: 'Is there a money-back guarantee?', marginBottom: 4 },
+                { type: 'paragraph', content: 'Yes! We offer a full 30-day money-back guarantee with no questions asked.', marginBottom: 16 }
+            ],
+            columns: [[], [], [], []]
         }
     },
     {
@@ -350,10 +438,15 @@ export const ADMIN_BLOCK_TEMPLATES = [
         category: 'Footer',
         icon: AlignLeft,
         data: {
-            type: 'footer',
-            companyName: 'WhatsMine Inc.',
-            copyright: '© 2026 WhatsMine. All Rights Reserved.',
-            links: ['Privacy Policy', 'Terms of Service', 'Support']
+            type: 'section',
+            name: 'Footer Section',
+            paddingY: 32,
+            paddingX: 24,
+            elements: [
+                { type: 'divider', marginBottom: 16 },
+                { type: 'paragraph', content: '© 2026 WhatsMine Inc. All Rights Reserved. · Privacy Policy · Terms of Service · Support', marginBottom: 12 }
+            ],
+            columns: [[], [], [], []]
         }
     }
 ];

@@ -4,7 +4,11 @@ import ColorPickerInput from '../ColorPicker';
 import { TabSwitcher, ShadowControl, BorderControl, FourSideInput } from '../StyleControls';
 import GradientEditor from './GradientEditor';
 
-const TEXT_TYPES = ['headline', 'subheadline', 'paragraph', 'quote', 'submit_button'];
+const TEXT_TYPES = [
+    'headline', 'subheadline', 'paragraph', 'quote', 'submit_button',
+    'bullets', 'rich_text', 'icon_box', 'star_rating', 'custom_code',
+    'order_bump', 'faq_accordion', 'testimonial_slider', 'timer', 'progress_bar'
+];
 
 export default function StylePanel({
     element, val, styleGuide, handleUpdateElementSetting, handleResetElementCategory,

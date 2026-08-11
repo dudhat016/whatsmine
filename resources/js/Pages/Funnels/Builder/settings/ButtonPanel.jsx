@@ -31,6 +31,35 @@ export default function ButtonPanel({ element, val, styleGuide, handleUpdateElem
                 </div>
             )}
 
+            {/* Subtext / Micro-copy line */}
+            <div className="space-y-1 pt-1 border-t border-neutral-100">
+                <FieldLabel>Subtext Micro-Copy (under button)</FieldLabel>
+                <input
+                    type="text"
+                    value={val('subtext', '')}
+                    onChange={e => update('subtext', e.target.value)}
+                    className="w-full rounded-soft border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                    placeholder="Instant Access • 100% Secure Guarantee"
+                />
+                {val('subtext') && (
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                        <div>
+                            <FieldLabel>Subtext Color</FieldLabel>
+                            <ColorPickerInput value={val('subtextColor', 'rgba(255,255,255,0.85)')} onChange={v => update('subtextColor', v)} styleGuide={styleGuide} />
+                        </div>
+                        <div>
+                            <FieldLabel>Subtext Size (px)</FieldLabel>
+                            <input
+                                type="number"
+                                value={val('subtextFontSize', 11)}
+                                onChange={e => update('subtextFontSize', Number(e.target.value))}
+                                className="w-full rounded-soft border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* Size & Icon */}
             <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-0.5">

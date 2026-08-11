@@ -106,12 +106,14 @@ class FunnelController extends Controller
                 'canvas_json'    => [
                     'sections' => [
                         [
-                            'id'       => 'sec_' . time(),
+                            // Bug 14 Fix: use uniqid() (microsecond precision) instead of time()
+                            // to prevent section and element from sharing the same ID.
+                            'id'       => 'sec_' . uniqid('', true),
                             'type'     => 'section',
                             'title'    => 'Hero Section',
                             'elements' => [
                                 [
-                                    'id'        => 'el_' . time(),
+                                    'id'        => 'el_' . uniqid('', true),
                                     'type'      => 'headline',
                                     'content'   => 'Welcome to ' . $validated['name'],
                                     'fontSize'  => 36,
@@ -150,12 +152,13 @@ class FunnelController extends Controller
                     'canvas_json'    => [
                         'sections' => [
                             [
-                                'id'       => 'sec_' . time(),
+                                // Bug 15 Fix: same uniqid() fix for the auto-fix path.
+                                'id'       => 'sec_' . uniqid('', true),
                                 'type'     => 'section',
                                 'title'    => 'Main Section',
                                 'elements' => [
                                     [
-                                        'id'        => 'el_' . time(),
+                                        'id'        => 'el_' . uniqid('', true),
                                         'type'      => 'headline',
                                         'content'   => 'Welcome to ' . $funnel->name,
                                         'fontSize'  => 32,

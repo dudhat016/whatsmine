@@ -234,7 +234,41 @@ export const updateNestedElement = (itemList, targetId, updater) => {
     });
 };
 
+/**
+ * deepAssignNewIds — Bug 19 Fix.
+ * Recursively walks an element tree and assigns a brand-new unique ID to every node.
+ * Used when inserting a saved block so re-inserting the same block doesn't create
+ * duplicate IDs across elements, columns, and nested children.
+ *
+ * @param {object} item — any element/section node from the canvas tree
+ * @returns {object} — a deep-cloned version with all IDs replaced
+ */
+export const deepAssignNewIds = (item) => {
+    if (!item) return item;
+
+    const prefix = item.type === 'section' ? 'sec'
+        : ['col_1','col_2','col_3','col_4','col_sidebar','flex_container','grid_container'].includes(item.type) ? 'row'
+        : 'el';
+
+    const newId = `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`;
+
+    const updated = { ...item, id: newId };
+
+    if (item.elements && item.elements.length > 0) {
+        updated.elements = item.elements.map(child => deepAssignNewIds(child));
+    }
+
+    if (item.columns && item.columns.length > 0) {
+        updated.columns = item.columns.map(col =>
+            Array.isArray(col) ? col.map(child => deepAssignNewIds(child)) : col
+        );
+    }
+
+    return updated;
+};
+
 export const sanitizeElementForBrandInheritance = (item) => {
+
     if (!item) return item;
     let clean = { ...item };
 
@@ -250,6 +284,17 @@ export const sanitizeElementForBrandInheritance = (item) => {
             paragraph: textProps,
             bullets: textProps,
             quote: textProps,
+            rich_text: textProps,
+            icon_box: textProps,
+            star_rating: textProps,
+            custom_code: textProps,
+            order_bump: inputProps,
+            faq_accordion: inputProps,
+            testimonial_slider: inputProps,
+            timer: inputProps,
+            progress_bar: inputProps,
+            social: inputProps,
+            audio: inputProps,
             input_email: inputProps,
             input_name: inputProps,
             input_phone: inputProps,

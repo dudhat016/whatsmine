@@ -315,6 +315,46 @@ export const collectElementCss = (rawItem, cssRules, tabletRules, mobileRules) =
         cssRules.push(`#${id} { ${desktopRules.join('; ')}; }`);
     }
 
+    // Sub-component rules
+    if (item.type === 'faq_accordion') {
+        if (item.itemBorderColor) cssRules.push(`#${id} .faq-item { border-color: ${item.itemBorderColor}; }`);
+        if (item.qColor)          cssRules.push(`#${id} .faq-toggle { color: ${item.qColor}; }`);
+        if (item.qBgColor)        cssRules.push(`#${id} .faq-toggle { background: ${item.qBgColor}; }`);
+        if (item.qFontSize)       cssRules.push(`#${id} .faq-toggle { font-size: ${item.qFontSize}px; }`);
+        if (item.qFontWeight)     cssRules.push(`#${id} .faq-toggle { font-weight: ${item.qFontWeight}; }`);
+        if (item.aColor)          cssRules.push(`#${id} .faq-answer { color: ${item.aColor}; }`);
+        if (item.aBgColor)        cssRules.push(`#${id} .faq-answer { background: ${item.aBgColor}; }`);
+        if (item.aFontSize)       cssRules.push(`#${id} .faq-answer { font-size: ${item.aFontSize}px; }`);
+        if (item.aLineHeight)     cssRules.push(`#${id} .faq-answer { line-height: ${item.aLineHeight}; }`);
+        if (item.iconColor)       cssRules.push(`#${id} .faq-icon { color: ${item.iconColor}; }`);
+    }
+
+    if (item.type === 'testimonial_slider') {
+        if (item.cardBgColor)     cssRules.push(`#${id} .testimonial-card { background: ${item.cardBgColor}; }`);
+        if (item.cardBorderColor) cssRules.push(`#${id} .testimonial-card { border-color: ${item.cardBorderColor}; }`);
+        if (item.quoteColor)       cssRules.push(`#${id} blockquote { color: ${item.quoteColor}; }`);
+        if (item.quoteFontSize)    cssRules.push(`#${id} blockquote { font-size: ${item.quoteFontSize}px; }`);
+        if (item.authorColor)      cssRules.push(`#${id} p { color: ${item.authorColor}; }`);
+        if (item.authorFontSize)   cssRules.push(`#${id} p { font-size: ${item.authorFontSize}px; }`);
+        if (item.arrowBgColor)     cssRules.push(`#${id} .slider-prev, #${id} .slider-next { background: ${item.arrowBgColor}; }`);
+    }
+
+    if (item.type === 'order_bump') {
+        if (item.boxBgColor)      cssRules.push(`#${id}.funnel-order-bump { background: ${item.boxBgColor}; }`);
+        if (item.boxBorderColor)  cssRules.push(`#${id}.funnel-order-bump { border-color: ${item.boxBorderColor}; }`);
+        if (item.badgeBgColor)    cssRules.push(`#${id} .bump-badge { background: ${item.badgeBgColor}; }`);
+        if (item.badgeTextColor)  cssRules.push(`#${id} .bump-badge { color: ${item.badgeTextColor}; }`);
+        if (item.titleColor)      cssRules.push(`#${id} h4 { color: ${item.titleColor}; }`);
+        if (item.priceColor)      cssRules.push(`#${id} .bump-price { color: ${item.priceColor}; }`);
+    }
+
+    if (item.type === 'icon_box') {
+        if (item.boxBgColor)      cssRules.push(`#${id}.funnel-icon-box { background: ${item.boxBgColor}; }`);
+        if (item.boxBorderColor)  cssRules.push(`#${id}.funnel-icon-box { border-color: ${item.boxBorderColor}; }`);
+        if (item.titleColor)      cssRules.push(`#${id} h3 { color: ${item.titleColor}; }`);
+        if (item.descColor)       cssRules.push(`#${id} p { color: ${item.descColor}; }`);
+    }
+
     // Tablet
     if (item.tablet) {
         const tRules = buildDeviceRuleList(item.tablet);
