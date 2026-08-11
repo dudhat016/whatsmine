@@ -194,10 +194,9 @@
             src="https://connect.facebook.net/en_US/sdk.js"></script>
         @endif
 
-        <!-- Scripts -->
         @routes
         @viteReactRefresh
-        @vite(['resources/js/app.jsx', 'resources/js/Pages/' . (isset($page['component']) ? $page['component'] : 'Dashboard') . '.jsx'])
+        @vite('resources/js/app.jsx')
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
