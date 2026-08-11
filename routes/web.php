@@ -9,11 +9,25 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\WebhookController;
 use App\Models\CmsPage;
+use App\Modules\Funnels\Http\Controllers\FunnelRenderController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+// ─── Public Funnel Pages ──────────────────────────────────────────────────────
+// Format: /f/{workspace_slug}/{funnel_slug}
+// Serves pre-compiled HTML cache — no auth required, no Inertia overhead.
+Route::get('/f/{workspaceSlug}/{funnelSlug}', [FunnelRenderController::class, 'show'])
+    ->name('funnel.public')
+    ->middleware('throttle:120,1');
+
+// Funnel Share Preview (public, no auth)
+Route::get('/funnels/share/{shareToken}', [FunnelRenderController::class, 'sharePreview'])
+    ->name('funnels.share.preview');
+
+
 
 // Home / Landing
 Route::get('/', [LandingController::class, 'index'])->name('home');

@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\TaxRateController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\PusherSettingsController;
+use App\Http\Controllers\Admin\AdminFunnelController;
 use App\Modules\Integrations\Http\Controllers\IntegrationConfigController;
 use Illuminate\Support\Facades\Route;
 
@@ -193,3 +194,13 @@ Route::post('/admins', [AdminUserController::class, 'store'])->name('admins.stor
 Route::put('/admins/{adminUser}', [AdminUserController::class, 'update'])->name('admins.update')->middleware('permission:update_admins');
 Route::delete('/admins/{adminUser}', [AdminUserController::class, 'destroy'])->name('admins.destroy')->middleware('permission:delete_admins');
 Route::post('/admins/{adminUser}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('admins.toggle-status')->middleware('permission:update_admins');
+
+// ─── Admin Funnel Management ──────────────────────────────────────────────────
+Route::get('/funnels', [AdminFunnelController::class, 'index'])->name('funnels.index')->middleware('permission:view_system_funnels');
+Route::post('/funnels/{funnel}/suspend', [AdminFunnelController::class, 'suspend'])->name('funnels.suspend')->middleware('permission:view_system_funnels');
+Route::post('/funnels/{funnel}/restore', [AdminFunnelController::class, 'restore'])->name('funnels.restore')->middleware('permission:view_system_funnels');
+Route::post('/funnels/{funnel}/make-template', [AdminFunnelController::class, 'makeSystemTemplate'])->name('funnels.make-template')->middleware('permission:view_system_funnels');
+Route::delete('/funnels/{funnel}/remove-template', [AdminFunnelController::class, 'removeSystemTemplate'])->name('funnels.remove-template')->middleware('permission:view_system_funnels');
+Route::get('/funnels/templates', [AdminFunnelController::class, 'templates'])->name('funnels.templates')->middleware('permission:view_system_funnels');
+Route::delete('/funnels/{funnel}', [AdminFunnelController::class, 'destroy'])->name('funnels.destroy')->middleware('permission:view_system_funnels');
+Route::get('/funnels/policy-scanner', [AdminFunnelController::class, 'policyScanner'])->name('funnels.policy-scanner')->middleware('permission:view_system_funnels');

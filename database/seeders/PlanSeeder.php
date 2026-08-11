@@ -45,6 +45,11 @@ class PlanSeeder extends Seeder
                     'lead_credits_per_month' => 200,
                     // Automations
                     'automations' => 3,
+                    // Funnels & Page Builder
+                    'funnels' => 3,           // Max 3 funnels
+                    'funnel_steps' => 5,      // Max 5 steps per funnel
+                    'funnel_ab_tests' => 0,   // A/B testing disabled on Starter
+                    'funnel_affiliates' => 0, // Affiliate portal disabled on Starter
                 ],
                 'white_label_enabled' => false,
                 'sort_order' => 1,
@@ -80,6 +85,11 @@ class PlanSeeder extends Seeder
                     'social_posts_per_month' => 200,
                     'lead_credits_per_month' => 2000,
                     'automations' => 20,
+                    // Funnels & Page Builder
+                    'funnels' => 15,          // Max 15 funnels on Pro
+                    'funnel_steps' => 15,     // Max 15 steps per funnel
+                    'funnel_ab_tests' => 1,   // A/B testing enabled
+                    'funnel_affiliates' => 5, // Up to 5 affiliates per workspace
                 ],
                 'white_label_enabled' => false,
                 'sort_order' => 2,
@@ -115,6 +125,11 @@ class PlanSeeder extends Seeder
                     'social_posts_per_month' => null,
                     'lead_credits_per_month' => null,
                     'automations' => null,
+                    // Funnels & Page Builder
+                    'funnels' => null,           // Unlimited funnels on Business
+                    'funnel_steps' => null,      // Unlimited steps
+                    'funnel_ab_tests' => null,   // A/B testing enabled
+                    'funnel_affiliates' => null, // Unlimited affiliates
                 ],
                 'white_label_enabled' => true,
                 'sort_order' => 3,

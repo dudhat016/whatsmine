@@ -44,8 +44,8 @@ class SettingsController extends Controller
                 'theme' => $user->theme ?? 'light',
                 'timezone' => $user->timezone ?? 'Asia/Dhaka',
             ],
-            'supportedLocales' => $supportedLocales->map(fn ($l) => ['code' => $l->code, 'name' => $l->name]),
-            'supportedCurrencies' => $supportedCurrencies->map(fn ($c) => ['code' => $c->code, 'name' => $c->code, 'symbol' => $c->symbol ?? $c->code]),
+            'supportedLocales' => $supportedLocales->map(fn ($l) => ['code' => data_get($l, 'code'), 'name' => data_get($l, 'name')]),
+            'supportedCurrencies' => $supportedCurrencies->map(fn ($c) => ['code' => data_get($c, 'code'), 'name' => data_get($c, 'code'), 'symbol' => data_get($c, 'symbol', data_get($c, 'code'))]),
             'client' => $client,
             'digestEnabled' => $user->client_id
                 ? ClientSetting::get($user->client_id, 'weekly_digest_enabled', '1') !== '0'

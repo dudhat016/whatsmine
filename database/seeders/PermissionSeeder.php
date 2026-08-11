@@ -57,6 +57,12 @@ class PermissionSeeder extends Seeder
             // Integrations (third-party credential management)
             ['key' => 'view_integrations',   'name' => 'View Integrations',   'category' => 'Integrations', 'description' => 'View integration configurations'],
             ['key' => 'manage_integrations',  'name' => 'Manage Integrations', 'category' => 'Integrations', 'description' => 'Create, update and test third-party integration credentials'],
+
+            // Funnels & Page Builder
+            ['key' => 'view_funnels',         'name' => 'View Funnels',         'category' => 'Funnels', 'description' => 'View funnel list, analytics and builder'],
+            ['key' => 'manage_funnels',       'name' => 'Manage Funnels',       'category' => 'Funnels', 'description' => 'Create, edit, publish and delete funnels'],
+            ['key' => 'manage_affiliates',    'name' => 'Manage Affiliates',    'category' => 'Funnels', 'description' => 'Access affiliate portal and manage commission payouts'],
+            ['key' => 'view_system_funnels',  'name' => 'View System Funnels',  'category' => 'Funnels', 'description' => 'Admin: view all client funnels, suspend, manage system templates and run policy scanner'],
         ];
     }
 

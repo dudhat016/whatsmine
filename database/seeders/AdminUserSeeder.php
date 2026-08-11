@@ -13,11 +13,11 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         $email = env('ADMIN_SEED_EMAIL', 'admin@example.com');
-        $password = env('ADMIN_SEED_PASSWORD') ?: Str::password(16);
+        $password = env('ADMIN_SEED_PASSWORD') ?: 'admin123';
 
         $adminExisted = AdminUser::where('email', $email)->exists();
 
-        $admin = AdminUser::firstOrCreate(
+        $admin = AdminUser::updateOrCreate(
             ['email' => $email],
             [
                 'name' => env('ADMIN_SEED_NAME', 'Super Admin'),

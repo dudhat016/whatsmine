@@ -22,6 +22,13 @@ use App\Http\Controllers\Client\WebPushController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkspaceController;
+use App\Modules\Funnels\Http\Controllers\FunnelAffiliateController;
+use App\Modules\Funnels\Http\Controllers\FunnelController;
+use App\Modules\Funnels\Http\Controllers\FunnelPageController;
+use App\Modules\Funnels\Http\Controllers\FunnelPopupController;
+use App\Modules\Funnels\Http\Controllers\FunnelSavedSectionController;
+use App\Modules\Funnels\Http\Controllers\FunnelShareController;
+use App\Modules\Funnels\Http\Controllers\FunnelStepController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -127,4 +134,59 @@ Route::middleware(['verified'])->group(function () {
     // Web Push subscriptions
     Route::post('/push/subscribe', [WebPushController::class, 'subscribe'])->name('push.subscribe');
     Route::post('/push/unsubscribe', [WebPushController::class, 'unsubscribe'])->name('push.unsubscribe');
+
+    // ─── Funnels Module ────────────────────────────────────────────────────────
+
+    // Slug uniqueness check (debounced, called from builder)
+    Route::post('/funnels/check-slug', [FunnelController::class, 'checkSlug'])->name('funnels.check-slug');
+
+    // Funnel CRUD + publish/unpublish
+    Route::get('/funnels', [FunnelController::class, 'index'])->name('funnels.index');
+    Route::post('/funnels', [FunnelController::class, 'store'])->name('funnels.store');
+    Route::get('/funnels/{funnel}/edit', [FunnelController::class, 'edit'])->name('funnels.edit');
+    Route::put('/funnels/{funnel}', [FunnelController::class, 'update'])->name('funnels.update');
+    Route::delete('/funnels/{funnel}', [FunnelController::class, 'destroy'])->name('funnels.destroy');
+    Route::post('/funnels/{funnel}/publish', [FunnelController::class, 'publish'])->name('funnels.publish');
+    Route::post('/funnels/{funnel}/unpublish', [FunnelController::class, 'unpublish'])->name('funnels.unpublish');
+
+    // Funnel Steps (add/rename/reorder/delete)
+    Route::post('/funnels/{funnel}/steps', [FunnelStepController::class, 'store'])->name('funnels.steps.store');
+    Route::put('/funnels/{funnel}/steps/{step}', [FunnelStepController::class, 'update'])->name('funnels.steps.update');
+    Route::post('/funnels/{funnel}/steps/reorder', [FunnelStepController::class, 'reorder'])->name('funnels.steps.reorder');
+    Route::delete('/funnels/{funnel}/steps/{step}', [FunnelStepController::class, 'destroy'])->name('funnels.steps.destroy');
+
+    // Funnel Pages (canvas save, publish, revisions, A/B)
+    Route::post('/funnels/{funnel}/pages/{page}/save', [FunnelPageController::class, 'save'])->name('funnels.pages.save');
+    Route::post('/funnels/{funnel}/pages/{page}/publish', [FunnelPageController::class, 'publish'])->name('funnels.pages.publish');
+    Route::get('/funnels/{funnel}/pages/{page}/revisions', [FunnelPageController::class, 'revisions'])->name('funnels.pages.revisions');
+    Route::post('/funnels/{funnel}/pages/{page}/revisions/{revision}/rollback', [FunnelPageController::class, 'rollback'])->name('funnels.pages.rollback');
+    Route::post('/funnels/{funnel}/steps/{step}/variant', [FunnelPageController::class, 'createVariant'])->name('funnels.steps.variant');
+
+    // Funnel Popups (exit-intent, time-delay, scroll-depth, on-click)
+    Route::get('/funnels/{funnel}/pages/{page}/popups', [FunnelPopupController::class, 'index'])->name('funnels.popups.index');
+    Route::post('/funnels/{funnel}/pages/{page}/popups', [FunnelPopupController::class, 'store'])->name('funnels.popups.store');
+    Route::put('/funnels/{funnel}/pages/{page}/popups/{popup}', [FunnelPopupController::class, 'update'])->name('funnels.popups.update');
+    Route::delete('/funnels/{funnel}/pages/{page}/popups/{popup}', [FunnelPopupController::class, 'destroy'])->name('funnels.popups.destroy');
+
+    // Saved Section Library
+    Route::get('/funnels/sections', [FunnelSavedSectionController::class, 'index'])->name('funnels.sections.index');
+    Route::post('/funnels/sections', [FunnelSavedSectionController::class, 'store'])->name('funnels.sections.store');
+    Route::get('/funnels/sections/{section}', [FunnelSavedSectionController::class, 'show'])->name('funnels.sections.show');
+    Route::put('/funnels/sections/{section}', [FunnelSavedSectionController::class, 'update'])->name('funnels.sections.update');
+    Route::delete('/funnels/sections/{section}', [FunnelSavedSectionController::class, 'destroy'])->name('funnels.sections.destroy');
+
+    // Affiliate Portal
+    Route::get('/affiliates', [FunnelAffiliateController::class, 'index'])->name('affiliates.index');
+    Route::post('/affiliates', [FunnelAffiliateController::class, 'store'])->name('affiliates.store');
+    Route::put('/affiliates/{affiliate}', [FunnelAffiliateController::class, 'update'])->name('affiliates.update');
+    Route::delete('/affiliates/{affiliate}', [FunnelAffiliateController::class, 'destroy'])->name('affiliates.destroy');
+    Route::get('/affiliates/{affiliate}/commissions', [FunnelAffiliateController::class, 'commissions'])->name('affiliates.commissions');
+    Route::post('/affiliates/{affiliate}/commissions/{commission}/mark-paid', [FunnelAffiliateController::class, 'markPaid'])->name('affiliates.commissions.mark-paid');
+
+    // Share / Import Funnel
+    Route::post('/funnels/{funnel}/share/token', [FunnelShareController::class, 'generateToken'])->name('funnels.share.token');
+    Route::delete('/funnels/{funnel}/share/token', [FunnelShareController::class, 'revokeToken'])->name('funnels.share.revoke');
+    Route::post('/funnels/import/{shareToken}', [FunnelShareController::class, 'import'])->name('funnels.import');
+    Route::get('/funnels/preview/{shareToken}', [FunnelShareController::class, 'preview'])->name('funnels.preview');
 });
+

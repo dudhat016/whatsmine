@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Key, BookOpen, Image, Radio, Inbox, Bot, Database,
     Zap, Share2, MapPin, Tag, LifeBuoy, ExternalLink, Mail, MessageSquare,
-    ShoppingBag,
+    ShoppingBag, Funnel, Users2,
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -116,12 +116,20 @@ export default function useClientNav() {
         { label: t('nav.stores'),   href: safeRoute('client.ecommerce.stores.index'),   icon: <ShoppingBag className={iconClass} />, activePattern: 'client.ecommerce.stores.*' },
     ];
 
+    // ─── Funnels & Page Builder ───────────────────────────────────────────────
+    const funnelItems = [
+        { label: t('nav.funnels'),    href: safeRoute('client.funnels.index'),    icon: <Funnel className={iconClass} />,  activePattern: 'client.funnels.*' },
+        { label: t('nav.affiliates'), href: safeRoute('client.affiliates.index'), icon: <Users2 className={iconClass} />, activePattern: 'client.affiliates.*' },
+    ];
+
+
     const reportsItems = [
         { label: t('nav.reports_inbox'),       href: safeRoute('client.reports.inbox.index'),       icon: <Inbox className={iconClass} />,  activePattern: 'client.reports.inbox.*' },
         { label: t('nav.campaigns'),           href: safeRoute('client.reports.campaigns.index'),   icon: <Radio className={iconClass} />,  activePattern: 'client.reports.campaigns.*' },
         { label: t('nav.automations'),         href: safeRoute('client.reports.automations.index'), icon: <Zap className={iconClass} />,    activePattern: 'client.reports.automations.*' },
         { label: t('nav.ai_usage'),            href: safeRoute('client.reports.ai.index'),          icon: <Bot className={iconClass} />,    activePattern: 'client.reports.ai.*' },
         { label: t('nav.social'),              href: safeRoute('client.reports.social.index'),      icon: <Share2 className={iconClass} />, activePattern: 'client.reports.social.*' },
+        { label: t('nav.funnel_reports'),      href: safeRoute('client.reports.funnels.index'),     icon: <Funnel className={iconClass} />, activePattern: 'client.reports.funnels.*' },
     ];
 
     // Group order: daily operations first, then growth tools, periodic review, then account-adjacent config (usage-frequency–based).
@@ -133,6 +141,7 @@ export default function useClientNav() {
         { type: 'group', label: t('nav.group_contacts'),      items: contactsItems },
         { type: 'group', label: t('nav.group_broadcasting'),  items: broadcastItems },
         { type: 'group', label: t('nav.group_automations'),   items: automationItems },
+        { type: 'group', label: t('nav.group_funnels'),        items: funnelItems },
         { type: 'group', label: t('nav.group_ecommerce'),    items: ecommerceItems },
         { type: 'group', label: t('nav.group_ai'),            items: aiItems },
         { type: 'group', label: t('nav.group_leads'),         items: leadsItems },

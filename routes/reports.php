@@ -4,6 +4,7 @@ use App\Http\Controllers\Client\Reports\AiReportController;
 use App\Http\Controllers\Client\Reports\AutomationReportController;
 use App\Http\Controllers\Client\Reports\CampaignReportController;
 use App\Http\Controllers\Client\Reports\ExportController;
+use App\Http\Controllers\Client\Reports\FunnelReportController;
 use App\Http\Controllers\Client\Reports\InboxReportController;
 use App\Http\Controllers\Client\Reports\SocialReportController;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,10 @@ Route::middleware(['web', 'client-app'])->prefix('app/reports')->name('client.re
     Route::get('/inbox', InboxReportController::class)->name('inbox.index');
     Route::get('/automations', AutomationReportController::class)->name('automations.index');
     Route::get('/social', SocialReportController::class)->name('social.index');
+
+    // Funnel reports
+    Route::get('/funnels', [FunnelReportController::class, 'index'])->name('funnels.index');
+    Route::get('/funnels/{funnel}', [FunnelReportController::class, 'show'])->name('funnels.show');
 });
 
 // ─── CSV Exports ──────────────────────────────────────────────────────────────

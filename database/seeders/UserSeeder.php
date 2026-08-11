@@ -18,46 +18,56 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $email = env('CLIENT_SEED_EMAIL', 'client@example.com');
-        $password = env('CLIENT_SEED_PASSWORD') ?: Str::password(16);
-
-        $client = Client::firstOrCreate(
-            ['email' => $email],
+        $clients = [
             [
-                'name' => 'Demo Client',
-                'status' => Client::STATUS_ACTIVE,
-                'base_currency' => 'USD',
-                'currency_symbol' => '$',
-                'currency_position' => 'before',
-            ]
-        );
-
-        $userExisted = User::where('email', $email)->exists();
-
-        $user = User::updateOrCreate(
-            ['email' => $email],
+                'email' => env('CLIENT_SEED_EMAIL', 'client@example.com'),
+                'password' => env('CLIENT_SEED_PASSWORD') ?: 'client123',
+                'name' => 'Seed Client',
+                'client_name' => 'Seed Organization',
+            ],
             [
-                'name' => 'Client User',
-                'password' => $password,
-                'role' => User::ROLE_CLIENT,
-                'status' => User::STATUS_ACTIVE,
-                'client_id' => $client->id,
-                'client_role' => User::CLIENT_ROLE_ADMINISTRATOR,
-            ]
-        );
+                'email' => 'client@spagreen.net',
+                'password' => '12345678',
+                'name' => 'SpaGreen Wellness',
+                'client_name' => 'SpaGreen Wellness',
+            ],
+        ];
 
-        if (! $userExisted && ! env('CLIENT_SEED_PASSWORD')) {
-            $this->command?->warn("Demo client created: {$email} / {$password}");
-            $this->command?->warn('Save this password now — it will not be shown again. Set CLIENT_SEED_PASSWORD to choose your own.');
+        foreach ($clients as $cData) {
+            $email = $cData['email'];
+            $password = $cData['password'];
+
+            $client = Client::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $cData['client_name'],
+                    'status' => Client::STATUS_ACTIVE,
+                    'base_currency' => 'USD',
+                    'currency_symbol' => '$',
+                    'currency_position' => 'before',
+                ]
+            );
+
+            $user = User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $cData['name'],
+                    'password' => \Illuminate\Support\Facades\Hash::make($password),
+                    'role' => User::ROLE_CLIENT,
+                    'status' => User::STATUS_ACTIVE,
+                    'client_id' => $client->id,
+                    'client_role' => User::CLIENT_ROLE_ADMINISTRATOR,
+                ]
+            );
+
+            if (! $user->hasVerifiedEmail()) {
+                $user->markEmailAsVerified();
+            }
+
+            app(ClientWorkspaceService::class)->syncClientUser($user->fresh());
         }
 
-        if (! $user->hasVerifiedEmail()) {
-            $user->markEmailAsVerified();
-        }
-
-        app(ClientWorkspaceService::class)->syncClientUser($user->fresh());
-
-        $workspaceId = $user->fresh()->workspace_id;
+        $workspaceId = User::where('email', 'client@example.com')->first()?->workspace_id;
         if (! $workspaceId) {
             return;
         }
