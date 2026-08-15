@@ -35,6 +35,10 @@ class AdminUser extends Authenticatable
     /** Permission keys this admin has (via all roles). */
     public function permissionKeys(): array
     {
+        if ($this->isSuperAdmin()) {
+            return Permission::pluck('key')->all();
+        }
+
         $keys = $this->roles()
             ->with('permissions')
             ->get()

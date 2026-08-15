@@ -17,9 +17,31 @@ class ChannelAccount extends Model
     protected function casts(): array
     {
         return [
-            'credentials' => 'encrypted:array',
             'meta_json' => 'array',
         ];
+    }
+
+    public function getCredentialsAttribute(): array
+    {
+        $raw = $this->attributes['credentials'] ?? null;
+        if (! $raw) {
+            return [];
+        }
+        try {
+            $decrypted = decrypt($raw);
+            return is_array($decrypted) ? $decrypted : (json_decode((string) $decrypted, true) ?? []);
+        } catch (\Throwable) {
+            return is_string($raw) ? (json_decode($raw, true) ?? []) : [];
+        }
+    }
+
+    public function setCredentialsAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['credentials'] = null;
+        } else {
+            $this->attributes['credentials'] = encrypt(is_array($value) ? json_encode($value) : $value);
+        }
     }
 
     public function conversations(): HasMany

@@ -149,6 +149,13 @@ class InstagramDriver implements ChannelDriverInterface
         foreach ($entries as $entry) {
             $entryId = $entry['id'] ?? '';
             $events = $entry['messaging'] ?? [];
+            if (! empty($entry['changes'])) {
+                foreach ($entry['changes'] as $change) {
+                    if (($change['field'] ?? '') === 'messages' && isset($change['value'])) {
+                        $events[] = $change['value'];
+                    }
+                }
+            }
 
             Log::info('Instagram webhook: entry', [
                 'entry_id' => $entryId,
@@ -219,6 +226,10 @@ class InstagramDriver implements ChannelDriverInterface
                     ->orWhereJsonContains('meta_json->instagram_account_id', $pageId);
             })
             ->first();
+
+        if (! $channelAccount && ChannelAccount::where('channel', 'instagram')->count() === 1) {
+            $channelAccount = ChannelAccount::where('channel', 'instagram')->first();
+        }
 
         if (! $channelAccount) {
             Log::warning('Instagram webhook: no channel account matched — message dropped', [
