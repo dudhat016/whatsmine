@@ -23,6 +23,10 @@ class WooClient implements EcommerceClientInterface
         $key = $this->credentials->consumerKey();
         $secret = $this->credentials->consumerSecret();
 
+        if ($key === '' || $secret === '') {
+            throw new \RuntimeException('API credentials empty. Please delete this store and re-connect with your WooCommerce Consumer Key & Secret.');
+        }
+
         return Http::withBasicAuth($key, $secret)
             ->withQueryParameters([
                 'consumer_key' => $key,
