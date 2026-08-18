@@ -23,6 +23,12 @@ Schedule::call(function () {
     Cache::put(CronSetupController::HEARTBEAT_KEY, now()->toIso8601String(), now()->addDay());
 })->everyMinute()->name('scheduler-heartbeat');
 
+// Automatically process queued jobs every minute (webhooks, commerce sync, automation)
+Schedule::command('queue:work --stop-when-empty --tries=3')
+    ->everyMinute()
+    ->name('process-queue-jobs')
+    ->withoutOverlapping();
+
 // ─── Marketing Suite Scheduled Tasks ────────────────────────────────────────
 
 // Dispatch any campaigns scheduled for now

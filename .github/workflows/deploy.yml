@@ -70,4 +70,8 @@ jobs:
             php artisan view:cache || true
             php artisan storage:link --relative 2>/dev/null || true
 
+            echo "Restarting and processing pending queue jobs..."
+            php artisan queue:restart || true
+            php artisan queue:work --stop-when-empty --tries=3 || true
+
             echo "Deployment completed successfully at $(pwd)"
