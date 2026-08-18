@@ -230,7 +230,16 @@ JS;
   root.appendChild(badge);
   root.appendChild(tooltip);
   root.appendChild(btn);
-  document.body.appendChild(root);
+
+  if (document.body) {
+    document.body.appendChild(root);
+  } else {
+    document.addEventListener('DOMContentLoaded', function () {
+      if (document.body && !document.getElementById('_wacw_root')) {
+        document.body.appendChild(root);
+      }
+    });
+  }
 
   // ── State ───────────────────────────────────────────────────────────────
   var open = false;
