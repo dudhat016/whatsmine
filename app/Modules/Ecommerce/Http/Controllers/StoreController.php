@@ -119,10 +119,15 @@ class StoreController extends Controller
     public function sync(Request $request, EcommerceStore $store): RedirectResponse
     {
         $this->authorizeStore($request, $store);
-        SyncStoreCustomersJob::dispatch($store->id);
-        SyncStoreProductsJob::dispatch($store->id);
 
-        return back()->with('success', 'Customer & product sync started.');
+        try {
+            SyncStoreCustomersJob::dispatchSync($store->id);
+            SyncStoreProductsJob::dispatchSync($store->id);
+
+            return back()->with('success', 'Customer & product sync completed.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Sync failed: '.$e->getMessage());
+        }
     }
 
     public function destroy(Request $request, EcommerceStore $store): RedirectResponse

@@ -56,8 +56,14 @@ class StoreConnector
             if (! ($store->external_meta['webhooks_registered'] ?? false)) {
                 RegisterStoreWebhooksJob::dispatch($store->id);
             }
-            SyncStoreCustomersJob::dispatch($store->id);
-            SyncStoreProductsJob::dispatch($store->id);
+            try {
+                SyncStoreCustomersJob::dispatchSync($store->id);
+                SyncStoreProductsJob::dispatchSync($store->id);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('ecommerce.store_connect.initial_sync_failed', [
+                    'store' => $store->id, 'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return ['ok' => $result['ok'], 'message' => $result['message'], 'store' => $store];
