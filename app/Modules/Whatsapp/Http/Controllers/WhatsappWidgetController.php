@@ -142,6 +142,7 @@ JS;
         $color    = $widget->button_color ?? '#25D366';
         $posRight = $widget->position !== 'bottom_left';
         $posStyle = $posRight ? 'right:20px' : 'left:20px';
+        $origin   = $posRight ? 'right' : 'left';
         $greetingJson   = json_encode($widget->greeting_message ?? '');
         $agentNameJson  = json_encode($widget->agent_name ?? 'Support');
         $agentInitJson  = json_encode(strtoupper(substr(trim($widget->agent_name ?? 'Support'), 0, 1) ?: 'S'));
@@ -187,7 +188,7 @@ JS;
     '#_wacw_pulse{position:absolute;width:56px;height:56px;border-radius:50%;background:{$color};opacity:.5;animation:_wacw_pulse 2s ease-out infinite}',
     '@keyframes _wacw_pulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.7);opacity:0}}',
     '#_wacw_badge{position:absolute;top:-3px;right:-3px;width:16px;height:16px;border-radius:50%;background:#ef4444;border:2px solid #fff;display:none}',
-    '#_wacw_tooltip{position:absolute;bottom:66px;{$posStyle};background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);width:280px;overflow:hidden;transform-origin:bottom ' . ($posRight ? 'right' : 'left') . ';transform:scale(.85);opacity:0;pointer-events:none;transition:transform .25s cubic-bezier(.34,1.56,.64,1),opacity .2s}',
+    '#_wacw_tooltip{position:absolute;bottom:66px;{$posStyle};background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);width:280px;overflow:hidden;transform-origin:bottom {$origin};transform:scale(.85);opacity:0;pointer-events:none;transition:transform .25s cubic-bezier(.34,1.56,.64,1),opacity .2s}',
     '#_wacw_tooltip.open{transform:scale(1);opacity:1;pointer-events:auto}',
     '#_wacw_tip_head{background:{$color};padding:14px 16px;display:flex;align-items:center;gap:10px}',
     '#_wacw_tip_avatar{width:38px;height:38px;border-radius:50%;background:{$agentColor};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;text-transform:uppercase}',
@@ -301,7 +302,7 @@ JS;
   });
 
   // Auto-show greeting after 3 s if greeting message is set and not dismissed
-  if (hasGreeting && !sessionStorage.getItem('_wacw_seen_{$key}')) {
+  if (_hasGreeting && !sessionStorage.getItem('_wacw_seen_{$key}')) {
     setTimeout(function () {
       if (!open) {
         showTooltip();
