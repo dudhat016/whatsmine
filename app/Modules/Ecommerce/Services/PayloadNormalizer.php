@@ -315,16 +315,19 @@ class PayloadNormalizer
 
     private function woocommerce(string $topic, array $p, string $storeName): ?array
     {
+        $lowerTopic = strtolower($topic);
+
         // Woo sends order.created / order.updated & product.created / product.updated
-        if ($topic === 'product.updated' || $topic === 'product.created') {
+        // also action.woocommerce_update_product, action.woocommerce_new_product, etc.
+        if (str_contains($lowerTopic, 'product') || str_contains($lowerTopic, 'save_post')) {
             return $this->productEvent('woocommerce', $p);
         }
 
         $status = $p['status'] ?? '';
         $event = match (true) {
-            $topic === 'order.created' => 'order.placed',
-            $topic === 'order.updated' && in_array($status, ['completed'], true) => 'order.fulfilled',
-            $topic === 'order.updated' && in_array($status, ['cancelled', 'refunded'], true) => 'order.cancelled',
+            $topic === 'order.created' || str_contains($lowerTopic, 'order.created') || str_contains($lowerTopic, 'new_order') => 'order.placed',
+            ($topic === 'order.updated' || str_contains($lowerTopic, 'order.updated')) && in_array($status, ['completed'], true) => 'order.fulfilled',
+            ($topic === 'order.updated' || str_contains($lowerTopic, 'order.updated')) && in_array($status, ['cancelled', 'refunded'], true) => 'order.cancelled',
             default => null, // ignore other updates to avoid duplicate triggers
         };
 

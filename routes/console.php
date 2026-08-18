@@ -24,7 +24,7 @@ Schedule::call(function () {
 })->everyMinute()->name('scheduler-heartbeat');
 
 // Automatically process queued jobs every minute (webhooks, commerce sync, automation)
-Schedule::command('queue:work --stop-when-empty --tries=3')
+Schedule::command('queue:work --queue=automation,default,whatsapp,social,broadcast --stop-when-empty --tries=3')
     ->everyMinute()
     ->name('process-queue-jobs')
     ->withoutOverlapping();
