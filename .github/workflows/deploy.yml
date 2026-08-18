@@ -49,8 +49,11 @@ jobs:
             fi
 
             echo "Ensuring production .env file..."
-            cp -f .env.example .env
-            php artisan key:generate --force
+            if [ ! -f .env ]; then
+              echo "Creating .env from .env.example..."
+              cp .env.example .env
+              php artisan key:generate --force
+            fi
 
             echo "Setting folder permissions..."
             chmod -R 775 storage bootstrap/cache || true

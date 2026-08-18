@@ -41,13 +41,35 @@ class EcommerceStore extends Model
     protected function casts(): array
     {
         return [
-            'credentials' => 'encrypted:array',
             'external_meta' => 'array',
             'last_tested_at' => 'datetime',
             'customers_synced_at' => 'datetime',
             'orders_synced_at' => 'datetime',
             'products_synced_at' => 'datetime',
         ];
+    }
+
+    public function getCredentialsAttribute(): ?array
+    {
+        $raw = $this->attributes['credentials'] ?? null;
+        if (! $raw) {
+            return [];
+        }
+        try {
+            $decrypted = decrypt($raw);
+            return is_array($decrypted) ? $decrypted : (json_decode($decrypted, true) ?? []);
+        } catch (\Throwable) {
+            return is_string($raw) ? (json_decode($raw, true) ?? []) : [];
+        }
+    }
+
+    public function setCredentialsAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['credentials'] = null;
+        } else {
+            $this->attributes['credentials'] = encrypt(is_array($value) ? json_encode($value) : $value);
+        }
     }
 
     /**
