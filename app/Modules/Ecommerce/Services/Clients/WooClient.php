@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 class WooClient implements EcommerceClientInterface
 {
     /** WooCommerce REST API webhook topics. */
-    public const WEBHOOK_TOPICS = ['order.created', 'order.updated', 'product.updated'];
+    public const WEBHOOK_TOPICS = ['order.created', 'order.updated', 'product.created', 'product.updated'];
 
     public function __construct(
         private readonly string $baseUrl,

@@ -315,8 +315,8 @@ class PayloadNormalizer
 
     private function woocommerce(string $topic, array $p, string $storeName): ?array
     {
-        // Woo sends order.created / order.updated; map updates onto fulfilled/cancelled by status.
-        if ($topic === 'product.updated') {
+        // Woo sends order.created / order.updated & product.created / product.updated
+        if ($topic === 'product.updated' || $topic === 'product.created') {
             return $this->productEvent('woocommerce', $p);
         }
 
