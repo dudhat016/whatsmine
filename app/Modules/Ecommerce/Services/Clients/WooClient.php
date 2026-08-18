@@ -20,8 +20,14 @@ class WooClient implements EcommerceClientInterface
     private function http(): PendingRequest
     {
         $base = rtrim($this->baseUrl, '/').'/wp-json/wc/v3';
+        $key = $this->credentials->consumerKey();
+        $secret = $this->credentials->consumerSecret();
 
-        return Http::withBasicAuth($this->credentials->consumerKey(), $this->credentials->consumerSecret())
+        return Http::withBasicAuth($key, $secret)
+            ->withQueryParameters([
+                'consumer_key' => $key,
+                'consumer_secret' => $secret,
+            ])
             ->acceptJson()
             ->timeout(15)
             ->baseUrl($base);
