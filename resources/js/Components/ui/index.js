@@ -8,6 +8,7 @@ export { default as Dropdown } from './Dropdown';
 export { default as Drawer } from './Drawer';
 export { default as Input } from './Input';
 export { default as Modal } from './Modal';
+export { default as MultiSelect } from './MultiSelect';
 export { default as Select } from './Select';
 export { default as Skeleton } from './Skeleton';
 export { default as Tabs } from './Tabs';

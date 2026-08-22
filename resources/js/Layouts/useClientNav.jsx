@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Key, BookOpen, Image, Radio, Inbox, Bot, Database,
     Zap, Share2, MapPin, Tag, LifeBuoy, ExternalLink, Mail, MessageSquare,
-    ShoppingBag, Funnel, Users2,
+    ShoppingBag, Funnel, Users2, GitBranch, Calendar,
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -103,6 +103,8 @@ export default function useClientNav() {
     ];
 
     const leadsItems = [
+        { label: 'Opportunities', href: safeRoute('client.opportunities.index'), icon: <GitBranch className={iconClass} />, activePattern: 'client.opportunities.*' },
+        { label: 'Calendars', href: safeRoute('client.calendars.index'), icon: <Calendar className={iconClass} />, activePattern: 'client.calendars.*' },
         { label: t('nav.lead_scraper'), href: safeRoute('client.leads.index'), icon: <MapPin className={iconClass} />, activePattern: 'client.leads.*' },
     ];
 
@@ -118,8 +120,9 @@ export default function useClientNav() {
 
     // ─── Funnels & Page Builder ───────────────────────────────────────────────
     const funnelItems = [
-        { label: t('nav.funnels'),    href: safeRoute('client.funnels.index'),    icon: <Funnel className={iconClass} />,  activePattern: 'client.funnels.*' },
-        { label: t('nav.affiliates'), href: safeRoute('client.affiliates.index'), icon: <Users2 className={iconClass} />, activePattern: 'client.affiliates.*' },
+        { label: t('nav.funnels'),            href: safeRoute('client.funnels.index'),    icon: <Funnel className={iconClass} />,   activePattern: 'client.funnels.*' },
+        { label: 'Subscription Forms',        href: safeRoute('client.forms.index'),      icon: <FileText className={iconClass} />, activePattern: 'client.forms.*' },
+        { label: t('nav.affiliates'),         href: safeRoute('client.affiliates.index'), icon: <Users2 className={iconClass} />,  activePattern: 'client.affiliates.*' },
     ];
 
 

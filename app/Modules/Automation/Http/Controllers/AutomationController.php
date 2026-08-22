@@ -95,6 +95,20 @@ class AutomationController extends Controller
                 ->orderBy('name')->get(['id', 'name'])->values(),
             'stores' => EcommerceStore::where('workspace_id', $workspaceId)
                 ->get(['id', 'platform', 'name'])->values(),
+            'subscription_forms' => \App\Modules\Funnels\Models\SubscriptionForm::where('workspace_id', $workspaceId)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'slug', 'name', 'title'])
+                ->values(),
+            'tags' => \App\Modules\Shared\Models\ContactTag::where('workspace_id', $workspaceId)
+                ->orderBy('name')
+                ->get(['id', 'name', 'color'])
+                ->values(),
+            'pipelines' => \App\Modules\Pipelines\Models\LeadPipeline::where('workspace_id', $workspaceId)
+                ->with('stages:id,pipeline_id,name,color')
+                ->orderBy('name')
+                ->get(['id', 'name', 'is_default'])
+                ->values(),
             'integrations' => [
                 'google' => (bool) optional(IntegrationConfig::forProvider('google_workspace'))->enabled,
             ],

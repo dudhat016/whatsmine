@@ -84,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(MessageReceived::class, [AutomationTriggerListener::class, 'handleMessageReceived']);
         Event::listen(MessageReceived::class, [AutoReplyListener::class, 'handle']);
         Event::listen(ContactCreated::class, [AutomationTriggerListener::class, 'handleContactCreated']);
+        Event::listen(\App\Modules\Funnels\Events\SubscriptionFormSubmitted::class, [AutomationTriggerListener::class, 'handleSubscriptionFormSubmitted']);
         Event::listen(AutomationWebhookReceived::class, [AutomationTriggerListener::class, 'handleAutomationWebhookReceived']);
         Event::listen(CommerceEventReceived::class, [AutomationTriggerListener::class, 'handleCommerceEvent']);
 

@@ -32,6 +32,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// ─── Public Subscription Forms API (No Token Required / Headless Apps) ────────
+Route::prefix('v1/subscribe/{slug}')->group(function () {
+    Route::post('/', [\App\Modules\Funnels\Http\Controllers\PublicSubscriptionController::class, 'apiSubscribe']);
+    Route::post('/verify-otp', [\App\Modules\Funnels\Http\Controllers\PublicSubscriptionController::class, 'apiVerifyOtp']);
+});
+
 // ─── Mobile Auth (public — no token required for login) ───────────────────────
 Route::prefix('v1/auth')->middleware(['throttle:10,1'])->group(function () {
     Route::post('/login', [MobileAuthController::class, 'login']);

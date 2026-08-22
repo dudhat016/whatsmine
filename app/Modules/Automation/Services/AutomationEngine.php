@@ -115,13 +115,23 @@ class AutomationEngine
             $run->update(['resume_node_id' => null]);
         } else {
             // Find trigger node and start from the first node after it
-            $triggerNode = $nodes->first(fn ($n) => ($n['type'] ?? '') === 'trigger');
-            if (! $triggerNode) {
-                $run->update(['status' => 'failed', 'error' => 'No trigger node.', 'completed_at' => now()]);
+            $matchedTriggerId = $context['_matched_trigger_id'] ?? null;
+            $triggerNodes = $nodes->filter(fn ($n) => ($n['type'] ?? '') === 'trigger' || ($n['type'] ?? '') === 'triggerNode');
+
+            if ($triggerNodes->isEmpty()) {
+                $run->update(['status' => 'failed', 'error' => 'No trigger node found in automation.', 'completed_at' => now()]);
 
                 return;
             }
-            $firstEdge = $edges->first(fn ($e) => $e['source'] === ($triggerNode['id'] ?? null));
+
+            $triggerNodeIds = $triggerNodes->pluck('id')->all();
+            $firstEdge = $edges->first(function ($e) use ($matchedTriggerId, $triggerNodeIds) {
+                if ($matchedTriggerId && $e['source'] === $matchedTriggerId) {
+                    return true;
+                }
+                return in_array($e['source'], $triggerNodeIds);
+            });
+
             $currentId = $firstEdge['target'] ?? null;
         }
 
@@ -327,6 +337,7 @@ class AutomationEngine
         return match ($type) {
             'send_whatsapp' => $ok('Would send WhatsApp: "'.$this->snippet($render($data['body'] ?? '')).'"'),
             'send_sms' => $ok('Would send SMS: "'.$this->snippet($render($data['body'] ?? '')).'"'),
+            'internal_notification' => $ok('Would send internal '.($data['notification_type'] ?? 'email').' alert: "'.$this->snippet($render($data['subject'] ?? ($data['title'] ?? 'Alert'))).'"'),
             'send_email' => ($data['subject'] ?? '') === ''
                 ? $err('Email subject is required.')
                 : $ok('Would email "'.$this->snippet($render($data['subject'])).'" to '.$contact->email),
@@ -395,6 +406,7 @@ class AutomationEngine
                 'send_whatsapp' => $this->executeSendWhatsapp($data, $run, $context),
                 'send_sms' => $this->executeSendSms($data, $run, $context),
                 'send_email' => $this->executeSendEmail($data, $run, $context),
+                'internal_notification' => $this->executeInternalNotification($data, $run, $context),
                 'ai_reply' => $this->executeAiReply($data, $run, $context),
                 'add_to_campaign' => $this->executeAddToCampaign($data, $run),
                 // ── SEND ──────────────────────────────────────────────────────
@@ -425,6 +437,14 @@ class AutomationEngine
                 'google_sheets' => $this->executeGoogleSheets($data, $run, $context),
                 'google_docs' => $this->executeGoogleDocs($data, $run, $context),
                 'google_forms' => $this->executeGoogleForms($data, $run, $context),
+                // ── PIPELINES ─────────────────────────────────────────────────
+                'create_opportunity', 'create_update_opportunity' => $this->executeCreateOpportunity($data, $run, $context),
+                'change_opportunity_stage' => $this->executeChangeOpportunityStage($data, $run, $context),
+                'update_opportunity_status' => $this->executeUpdateOpportunityStatus($data, $run, $context),
+                'remove_opportunity' => $this->executeRemoveOpportunity($data, $run, $context),
+                // ── CALENDARS ─────────────────────────────────────────────────
+                'book_system_appointment' => $this->executeSystemBookAppointment($data, $run, $context),
+                'cancel_appointment' => $this->executeCancelAppointment($data, $run, $context),
                 default => ['status' => 'skipped', 'message' => "Unknown node type: {$type}"],
             };
         } catch (\Throwable $e) {
@@ -599,6 +619,60 @@ class AutomationEngine
         $template = preg_replace_callback('/\{\{context\.(\w+)\}\}/', function ($matches) use ($context) {
             return (string) ($context[$matches[1]] ?? '');
         }, $template);
+
+        // Opportunity tokens: {{opportunity.name}}, {{opportunity.monetary_value}}, {{opportunity.stage}}, etc.
+        if (str_contains($template, '{{opportunity.')) {
+            $deal = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $contact->workspace_id)
+                ->where('contact_id', $contact->id)
+                ->with(['pipeline', 'stage', 'assigned_user'])
+                ->latest()
+                ->first();
+
+            if ($deal) {
+                $template = str_replace([
+                    '{{opportunity.name}}',
+                    '{{opportunity.monetary_value}}',
+                    '{{opportunity.value}}',
+                    '{{opportunity.pipeline}}',
+                    '{{opportunity.stage}}',
+                    '{{opportunity.status}}',
+                    '{{opportunity.assigned_user}}',
+                ], [
+                    $deal->name,
+                    number_format((float) $deal->monetary_value, 2),
+                    number_format((float) $deal->monetary_value, 2),
+                    $deal->pipeline->name ?? 'Default Pipeline',
+                    $deal->stage->name ?? 'Default Stage',
+                    strtoupper($deal->status),
+                    $deal->assigned_user->name ?? 'Unassigned',
+                ], $template);
+            }
+        }
+
+        // Appointment tokens: {{appointment.title}}, {{appointment.start_time}}, {{appointment.location}}, etc.
+        if (str_contains($template, '{{appointment.')) {
+            $appointment = \App\Modules\Calendars\Models\Appointment::where('workspace_id', $contact->workspace_id)
+                ->where('contact_id', $contact->id)
+                ->with(['calendar', 'assignedUser'])
+                ->latest()
+                ->first();
+
+            if ($appointment) {
+                $template = str_replace([
+                    '{{appointment.title}}',
+                    '{{appointment.start_time}}',
+                    '{{appointment.location}}',
+                    '{{appointment.meeting_join_url}}',
+                    '{{appointment.staff_name}}',
+                ], [
+                    $appointment->title,
+                    $appointment->start_at->format('Y-m-d g:i A'),
+                    $appointment->location ?? 'Online',
+                    $appointment->meeting_join_url ?? '#',
+                    $appointment->assignedUser->name ?? 'Host Staff',
+                ], $template);
+            }
+        }
 
         return $template;
     }
@@ -1875,5 +1949,246 @@ class AutomationEngine
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function executeInternalNotification(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = $run->contact;
+        $type = $data['notification_type'] ?? 'email';
+        $sendTo = $data['send_to'] ?? 'user';
+        $subject = $this->renderTokens((string) ($data['subject'] ?? $data['title'] ?? 'Internal Automation Notification'), $contact, $context);
+        $body = $this->renderTokens((string) ($data['body'] ?? ''), $contact, $context);
+
+        $recipients = [];
+
+        if ($sendTo === 'user' && ! empty($data['user_id'])) {
+            $user = \App\Models\User::find($data['user_id']);
+            if ($user) {
+                $recipients[] = $user;
+            }
+        } elseif ($sendTo === 'assigned_user' && $contact && $contact->assigned_agent_id) {
+            $user = \App\Models\User::find($contact->assigned_agent_id);
+            if ($user) {
+                $recipients[] = $user;
+            }
+        } elseif ($sendTo === 'custom_email' && ! empty($data['to_address'])) {
+            $emails = array_map('trim', explode(',', $data['to_address']));
+            foreach ($emails as $em) {
+                if (filter_var($em, FILTER_VALIDATE_EMAIL)) {
+                    $recipients[] = (object) ['email' => $em, 'name' => 'Internal Recipient'];
+                }
+            }
+        } elseif ($sendTo === 'custom_phone' && ! empty($data['to_address'])) {
+            $phones = array_map('trim', explode(',', $data['to_address']));
+            foreach ($phones as $ph) {
+                $recipients[] = (object) ['phone' => $ph, 'name' => 'Internal Recipient'];
+            }
+        }
+
+        if (empty($recipients)) {
+            $recipients = \App\Models\User::where('workspace_id', $run->automation->workspace_id)->get()->all();
+        }
+
+        $sentCount = 0;
+        $notificationObj = new \App\Notifications\InternalAutomationNotification($subject, $body, [
+            'contact_id' => $contact?->id,
+            'contact_name' => $contact?->name,
+            'automation_id' => $run->automation_id,
+        ]);
+
+        foreach ($recipients as $recipient) {
+            try {
+                if ($recipient instanceof \App\Models\User) {
+                    if ($type === 'email') {
+                        $recipient->notify($notificationObj);
+                        $sentCount++;
+                    } else {
+                        $recipient->notifications()->create([
+                            'id' => (string) \Illuminate\Support\Str::uuid(),
+                            'type' => 'App\\Notifications\\InternalAutomationNotification',
+                            'data' => [
+                                'type' => 'internal_automation_alert',
+                                'title' => $subject,
+                                'body' => $body,
+                                'url' => $contact ? route('client.contacts.show', $contact->id) : null,
+                            ],
+                        ]);
+                        $sentCount++;
+                    }
+                } else {
+                    if ($type === 'email' && ! empty($recipient->email)) {
+                        \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($recipient, $subject) {
+                            $message->to($recipient->email)->subject($subject);
+                        });
+                        $sentCount++;
+                    } else {
+                        \Illuminate\Support\Facades\Log::info("[Internal Notification Alert] {$type} to recipient: {$subject} - {$body}");
+                        $sentCount++;
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send internal notification: " . $e->getMessage());
+            }
+        }
+
+        return ['status' => 'ok', 'message' => "Internal {$type} notification sent to {$sentCount} recipient(s)."];
+    }
+
+    private function executeCreateOpportunity(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact) {
+            return ['status' => 'skipped', 'message' => 'Contact not found.'];
+        }
+
+        $workspaceId = $run->automation->workspace_id;
+        $pipelineId = $data['pipeline_id'] ?? null;
+        $stageId = $data['stage_id'] ?? null;
+
+        if (! $pipelineId || ! $stageId) {
+            $pipelineService = app(\App\Modules\Pipelines\Services\PipelineService::class);
+            $defaultPipeline = $pipelineService->getOrCreateDefaultPipeline($workspaceId);
+            $pipelineId = $defaultPipeline->id;
+            $stageId = $defaultPipeline->stages->first()?->id;
+        }
+
+        if (! $stageId) {
+            return ['status' => 'error', 'message' => 'No pipeline stage available.'];
+        }
+
+        $dealName = ! empty($data['name'])
+            ? $this->renderTokens($data['name'], $contact, $context)
+            : "Opportunity - {$contact->full_name}";
+
+        $deal = \App\Modules\Pipelines\Models\Deal::updateOrCreate(
+            ['workspace_id' => $workspaceId, 'contact_id' => $contact->id, 'pipeline_id' => $pipelineId],
+            [
+                'stage_id' => $stageId,
+                'name' => $dealName,
+                'monetary_value' => (float) ($data['monetary_value'] ?? 0),
+                'assigned_user_id' => $data['assigned_user_id'] ?? null,
+                'deal_watcher_id' => $data['deal_watcher_id'] ?? null,
+                'status' => $data['status'] ?? 'open',
+            ]
+        );
+
+        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} created/updated."];
+    }
+
+    private function executeChangeOpportunityStage(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact) {
+            return ['status' => 'skipped', 'message' => 'Contact not found.'];
+        }
+
+        $workspaceId = $run->automation->workspace_id;
+        $stageId = $data['stage_id'] ?? null;
+        if (! $stageId) {
+            return ['status' => 'error', 'message' => 'No target stage selected.'];
+        }
+
+        $deal = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $workspaceId)
+            ->where('contact_id', $contact->id)
+            ->latest()
+            ->first();
+
+        if (! $deal) {
+            return $this->executeCreateOpportunity(array_merge($data, ['stage_id' => $stageId]), $run, $context);
+        }
+
+        $pipelineService = app(\App\Modules\Pipelines\Services\PipelineService::class);
+        $pipelineService->updateStageAndPriority($deal, (int) $stageId, [$deal->id]);
+
+        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} stage updated."];
+    }
+
+    private function executeUpdateOpportunityStatus(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact) {
+            return ['status' => 'skipped', 'message' => 'Contact not found.'];
+        }
+
+        $status = $data['status'] ?? 'won';
+        $workspaceId = $run->automation->workspace_id;
+
+        $deal = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $workspaceId)
+            ->where('contact_id', $contact->id)
+            ->latest()
+            ->first();
+
+        if (! $deal) {
+            return ['status' => 'skipped', 'message' => 'No active opportunity found for contact.'];
+        }
+
+        $deal->update(['status' => $status]);
+
+        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} status updated to '{$status}'."];
+    }
+
+    private function executeRemoveOpportunity(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact) {
+            return ['status' => 'skipped', 'message' => 'Contact not found.'];
+        }
+
+        $workspaceId = $run->automation->workspace_id;
+
+        $count = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $workspaceId)
+            ->where('contact_id', $contact->id)
+            ->delete();
+
+        return ['status' => 'ok', 'message' => "{$count} opportunity record(s) removed for contact."];
+    }
+
+    private function executeSystemBookAppointment(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact) {
+            return ['status' => 'skipped', 'message' => 'Contact not found.'];
+        }
+
+        $calendarId = $data['calendar_id'] ?? null;
+        $calendar = $calendarId ? \App\Modules\Calendars\Models\BookingCalendar::find($calendarId) : \App\Modules\Calendars\Models\BookingCalendar::where('workspace_id', $run->automation->workspace_id)->first();
+
+        if (! $calendar) {
+            return ['status' => 'skipped', 'message' => 'No active calendar found.'];
+        }
+
+        $appointmentService = app(\App\Modules\Calendars\Services\AppointmentService::class);
+        $appointment = $appointmentService->createAppointment($calendar, [
+            'first_name' => $contact->first_name,
+            'last_name' => $contact->last_name,
+            'email' => $contact->email,
+            'phone' => $contact->phone_e164,
+            'start_at' => now()->addDay()->format('Y-m-d 10:00:00'),
+        ]);
+
+        return ['status' => 'ok', 'message' => "Appointment #{$appointment->id} booked for contact."];
+    }
+
+    private function executeCancelAppointment(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact) {
+            return ['status' => 'skipped', 'message' => 'Contact not found.'];
+        }
+
+        $appointment = \App\Modules\Calendars\Models\Appointment::where('workspace_id', $run->automation->workspace_id)
+            ->where('contact_id', $contact->id)
+            ->where('status', 'confirmed')
+            ->latest()
+            ->first();
+
+        if (! $appointment) {
+            return ['status' => 'skipped', 'message' => 'No active confirmed appointment found for contact.'];
+        }
+
+        $appointmentService = app(\App\Modules\Calendars\Services\AppointmentService::class);
+        $appointmentService->cancel($appointment, $data['reason'] ?? 'Cancelled via automation workflow');
+
+        return ['status' => 'ok', 'message' => "Appointment #{$appointment->id} cancelled."];
     }
 }

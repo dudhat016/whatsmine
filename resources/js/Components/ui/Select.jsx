@@ -30,17 +30,21 @@ export default function Select({
                 ].filter(Boolean).join(' ')}
                 {...props}
             >
-                {placeholder && (
-                    <option value="">{placeholder}</option>
-                )}
-                {options.map((opt) =>
-                    typeof opt === 'object' ? (
-                        <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                        </option>
-                    ) : (
-                        <option key={opt} value={opt}>{opt}</option>
-                    )
+                {options && options.length > 0 ? (
+                    <>
+                        {placeholder && <option value="">{placeholder}</option>}
+                        {options.map((opt) =>
+                            typeof opt === 'object' ? (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ) : (
+                                <option key={opt} value={opt}>{opt}</option>
+                            )
+                        )}
+                    </>
+                ) : (
+                    props.children
                 )}
             </select>
             {error && (

@@ -32,6 +32,45 @@ Route::get('/funnels/share/{shareToken}', [FunnelRenderController::class, 'share
 // Home / Landing
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
+// ─── Public Subscription Forms (No Auth / iFrame / Standalone) ────────────────
+use App\Modules\Funnels\Http\Controllers\PublicSubscriptionController;
+use App\Modules\Funnels\Http\Controllers\SubscriptionFormController;
+
+Route::get('/subscribe/{slug}', [PublicSubscriptionController::class, 'show'])->name('public.subscribe.show');
+Route::post('/subscribe/{slug}', [PublicSubscriptionController::class, 'subscribe'])->name('public.subscribe.submit');
+Route::post('/subscribe/{slug}/verify-otp', [PublicSubscriptionController::class, 'verifyOtp'])->name('public.subscribe.verify_otp');
+
+// ─── Client App: Standalone Subscription Forms CRUD ────────────────────────────
+Route::middleware(['web', 'client-app'])->prefix('app/forms')->name('client.forms.')->group(function () {
+    Route::get('/', [SubscriptionFormController::class, 'index'])->name('index');
+    Route::get('/create', [SubscriptionFormController::class, 'create'])->name('create');
+    Route::post('/', [SubscriptionFormController::class, 'store'])->name('store');
+    Route::get('/{form}', [SubscriptionFormController::class, 'show'])->name('show');
+    Route::get('/{form}/edit', [SubscriptionFormController::class, 'edit'])->name('edit');
+    Route::put('/{form}', [SubscriptionFormController::class, 'update'])->name('update');
+    Route::delete('/{form}', [SubscriptionFormController::class, 'destroy'])->name('destroy');
+});
+
+// Calendars & Appointments Client Management Routes
+Route::middleware(['web', 'client-app'])->prefix('app/calendars')->name('client.calendars.')->group(function () {
+    Route::get('/', [\App\Modules\Calendars\Http\Controllers\CalendarController::class, 'index'])->name('index');
+    Route::post('/', [\App\Modules\Calendars\Http\Controllers\CalendarController::class, 'store'])->name('store');
+    Route::put('/{calendar}', [\App\Modules\Calendars\Http\Controllers\CalendarController::class, 'update'])->name('update');
+    Route::delete('/{calendar}', [\App\Modules\Calendars\Http\Controllers\CalendarController::class, 'destroy'])->name('destroy');
+    Route::put('/appointments/{appointment}/status', [\App\Modules\Calendars\Http\Controllers\CalendarController::class, 'updateAppointmentStatus'])->name('appointments.status');
+    Route::post('/manual-book', [\App\Modules\Calendars\Http\Controllers\CalendarController::class, 'bookManualAppointment'])->name('manual_book');
+});
+
+// Public Booking Widget Routes
+Route::prefix('b')->name('public.booking.')->group(function () {
+    Route::get('/reschedule/{token}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'showReschedule'])->name('reschedule.show');
+    Route::post('/reschedule/{token}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'processReschedule'])->name('reschedule.submit');
+    Route::get('/cancel/{token}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'processCancel'])->name('cancel');
+    Route::get('/{slug}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'showWidget'])->name('widget');
+    Route::get('/{slug}/slots', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'getSlots'])->name('slots');
+    Route::post('/{slug}/book', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'processBooking'])->name('book');
+});
+
 // Auth routes
 require __DIR__.'/auth.php';
 

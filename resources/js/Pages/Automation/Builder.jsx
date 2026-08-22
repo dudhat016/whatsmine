@@ -1,9 +1,9 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import { useCallback, useContext, useState, createContext } from 'react';
+import { useCallback, useContext, useState, createContext, useRef, useEffect } from 'react';
 import {
     ArrowLeft, Save, Play, Pause, Copy, Check, RefreshCw,
-    X, Zap, Mail, Phone, Clock, GitBranch,
+    X, Zap, Mail, Phone, Clock, GitBranch, Bell,
     Tag, Scissors, UserCog, Megaphone, Bot, Webhook,
     Plus, Trash2, Settings, UserRound, Link2, MessageCircle, FileText,
     ShoppingBag, PackageCheck, XCircle, ShoppingCart, UserPlus,
@@ -16,6 +16,8 @@ import { ChannelBrandIcon } from '@/Components/BrandIcons';
 import MediaUpload from '@/Components/MediaUpload';
 import { Link } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
+import EmailEditor from '@/Components/EmailEditor';
+import { EMAIL_TEMPLATES } from '@/Components/EmailEditor/templates';
 import axios from 'axios';
 import {
     ReactFlow,
@@ -37,21 +39,26 @@ import '@xyflow/react/dist/style.css';
 /* ─── Constants ─────────────────────────────────────────────── */
 
 const TRIGGER_TYPES = [
-    { value: 'contact.created',   labelKey: 'automation.trigger_contact_created',   Icon: UserRound      },
-    { value: 'contact.tag_added', labelKey: 'automation.trigger_tag_added',         Icon: Tag            },
-    { value: 'message.received',  labelKey: 'automation.trigger_message_received',  Icon: MessageCircle  },
-    { value: 'campaign.sent',     labelKey: 'automation.trigger_campaign_sent',     Icon: Megaphone      },
-    { value: 'form.submitted',    labelKey: 'automation.trigger_form_submitted',    Icon: FileText       },
-    { value: 'webhook.received',  labelKey: 'automation.trigger_webhook_received',  Icon: Link2          },
-    { value: 'order.placed',      labelKey: 'automation.trigger_order_placed',      Icon: ShoppingBag    },
-    { value: 'order.fulfilled',   labelKey: 'automation.trigger_order_fulfilled',   Icon: PackageCheck   },
-    { value: 'order.cancelled',   labelKey: 'automation.trigger_order_cancelled',   Icon: XCircle        },
-    { value: 'cart.abandoned',    labelKey: 'automation.trigger_cart_abandoned',    Icon: ShoppingCart   },
-    { value: 'customer.created',  labelKey: 'automation.trigger_customer_created',  Icon: UserPlus       },
+    { value: 'contact.created',           labelKey: 'automation.trigger_contact_created',           Icon: UserRound      },
+    { value: 'contact.tag_added',         labelKey: 'automation.trigger_tag_added',                 Icon: Tag            },
+    { value: 'message.received',          labelKey: 'automation.trigger_message_received',          Icon: MessageCircle  },
+    { value: 'opportunity.created',       labelKey: 'Opportunity Created',                         Icon: GitBranch      },
+    { value: 'opportunity.stage_changed', labelKey: 'Opportunity Stage Changed',                   Icon: GitBranch      },
+    { value: 'appointment.created',       labelKey: 'Appointment Booked',                          Icon: CalendarClock  },
+    { value: 'appointment.rescheduled',   labelKey: 'Appointment Rescheduled',                     Icon: CalendarClock  },
+    { value: 'appointment.cancelled',     labelKey: 'Appointment Cancelled',                       Icon: XCircle        },
+    { value: 'campaign.sent',             labelKey: 'automation.trigger_campaign_sent',             Icon: Megaphone      },
+    { value: 'form.submitted',            labelKey: 'automation.trigger_form_submitted',            Icon: FileText       },
+    { value: 'webhook.received',          labelKey: 'automation.trigger_webhook_received',          Icon: Link2          },
+    { value: 'order.placed',              labelKey: 'automation.trigger_order_placed',              Icon: ShoppingBag    },
+    { value: 'order.fulfilled',           labelKey: 'automation.trigger_order_fulfilled',           Icon: PackageCheck   },
+    { value: 'order.cancelled',           labelKey: 'automation.trigger_order_cancelled',           Icon: XCircle        },
+    { value: 'cart.abandoned',            labelKey: 'automation.trigger_cart_abandoned',            Icon: ShoppingCart   },
+    { value: 'customer.created',          labelKey: 'automation.trigger_customer_created',          Icon: UserPlus       },
 ];
 
 // Categories rendered (in order) in the node palette — mirrors the product node list.
-const CATEGORY_ORDER = ['send', 'listen', 'logic', 'ai', 'contact', 'engage', 'commerce', 'integrations'];
+const CATEGORY_ORDER = ['send', 'listen', 'logic', 'ai', 'contact', 'pipeline', 'engage', 'commerce', 'integrations'];
 
 const NODE_DEFS = {
     // ── SEND ──────────────────────────────────────────────────────────────
@@ -63,6 +70,7 @@ const NODE_DEFS = {
     list_message:        { labelKey: 'automation.node_list_message',        color: '#6d28d9', bg: '#f5f3ff', icon: List,              category: 'send' },
     send_sms:            { labelKey: 'automation.node_send_sms',            color: '#6366f1', bg: '#eef2ff', icon: Phone,             category: 'send' },
     send_email:          { labelKey: 'automation.node_send_email',          color: '#0ea5e9', bg: '#f0f9ff', icon: Mail,              category: 'send' },
+    internal_notification: { labelKey: 'Internal Notification',         color: '#f59e0b', bg: '#fffbeb', icon: Bell,              category: 'send' },
     // ── LISTEN ────────────────────────────────────────────────────────────
     ask_question:        { labelKey: 'automation.node_ask_question',        color: '#ea580c', bg: '#fff7ed', icon: HelpCircle,        category: 'listen' },
     // ── LOGIC ─────────────────────────────────────────────────────────────
@@ -78,6 +86,11 @@ const NODE_DEFS = {
     update_contact:      { labelKey: 'automation.node_update_contact',      color: '#0ea5e9', bg: '#f0f9ff', icon: UserCog,           category: 'contact' },
     assign_agent:        { labelKey: 'automation.node_assign_agent',        color: '#0284c7', bg: '#f0f9ff', icon: UserCheck,         category: 'contact' },
     add_to_campaign:     { labelKey: 'automation.node_add_to_campaign',     color: '#f97316', bg: '#fff7ed', icon: Megaphone,         category: 'contact' },
+    // ── PIPELINE ──────────────────────────────────────────────────────────
+    create_opportunity:       { labelKey: 'Create / Update Opportunity',    color: '#6366f1', bg: '#eef2ff', icon: GitBranch,         category: 'pipeline' },
+    change_opportunity_stage: { labelKey: 'Change Opportunity Stage',       color: '#8b5cf6', bg: '#f5f3ff', icon: GitBranch,         category: 'pipeline' },
+    update_opportunity_status:{ labelKey: 'Update Opportunity Status',      color: '#10b981', bg: '#ecfdf5', icon: CheckCircle2,      category: 'pipeline' },
+    remove_opportunity:       { labelKey: 'Remove Opportunity',             color: '#f43f5e', bg: '#fff1f2', icon: Trash2,            category: 'pipeline' },
     // ── ENGAGE ────────────────────────────────────────────────────────────
     cta_button:          { labelKey: 'automation.node_cta_button',          color: '#e11d48', bg: '#fff1f2', icon: ExternalLink,      category: 'engage' },
     send_location:       { labelKey: 'automation.node_send_location',       color: '#dc2626', bg: '#fef2f2', icon: MapPin,            category: 'engage' },
@@ -141,6 +154,13 @@ function NodeIcon({ nodeType, size = 14 }) {
 /* Lets custom nodes reach the builder's configure/delete handlers (context crosses the ReactFlow boundary). */
 const NodeActionsContext = createContext({ onConfigure: () => {}, onDelete: () => {} });
 
+const actionBtnStyle = {
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: 22, height: 22, padding: 0, borderRadius: 6, border: 'none',
+    background: 'transparent', color: '#9ca3af', cursor: 'pointer',
+    transition: 'background 0.12s, color 0.12s',
+};
+
 /* ─── Custom Nodes ───────────────────────────────────────────── */
 function BaseNode({ id, data, selected }) {
     const { t } = useTranslation();
@@ -153,13 +173,6 @@ function BaseNode({ id, data, selected }) {
 
     const hasLabel = label && label !== defLabel;
     const summary = hasLabel ? label : (configured ? summarizeConfig(data, t) : '');
-
-    const actionBtnStyle = {
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        width: 22, height: 22, padding: 0, borderRadius: 6, border: 'none',
-        background: 'transparent', color: '#9ca3af', cursor: 'pointer',
-        transition: 'background 0.12s, color 0.12s',
-    };
 
     return (
         <div
@@ -242,16 +255,42 @@ function BaseNode({ id, data, selected }) {
     );
 }
 
-function TriggerNode({ data, selected }) {
+function getTriggerSummary(data) {
+    const config = data.triggerConfig || {};
+    if (data.triggerType === 'form.submitted') {
+        return config.form_slug ? `Form: ${config.form_slug}` : 'All Forms';
+    }
+    if (data.triggerType === 'contact.tag_added') {
+        return config.tag_name ? `Tag: ${config.tag_name}` : 'All Tags';
+    }
+    if (data.triggerType === 'contact.created') {
+        return config.source ? `Source: ${config.source}` : 'All Sources';
+    }
+    if (data.triggerType === 'message.received') {
+        return config.channel ? `Channel: ${config.channel}` : 'All Channels';
+    }
+    if (data.triggerType === 'campaign.sent') {
+        return config.campaign_id ? `Campaign #${config.campaign_id}` : 'All Campaigns';
+    }
+    if (['order.placed', 'cart.abandoned', 'order.fulfilled', 'order.cancelled', 'customer.created'].includes(data.triggerType)) {
+        return config.store_id ? `Store #${config.store_id}` : 'All Stores';
+    }
+    return '';
+}
+
+function TriggerNode({ id, data, selected }) {
     const { t } = useTranslation();
+    const { onConfigure, onDelete } = useContext(NodeActionsContext);
     const trigger = TRIGGER_TYPES.find(tr => tr.value === data.triggerType);
     const accent = '#6366f1';
+    const summary = getTriggerSummary(data);
+
     return (
         <div style={{
             background: '#fff',
             border: `1px solid ${selected ? accent : '#e5e7eb'}`,
             borderRadius: 12,
-            minWidth: 210,
+            minWidth: 220,
             boxShadow: selected ? `0 0 0 3px ${accent}1f, 0 8px 20px rgba(0,0,0,0.08)` : '0 1px 3px rgba(0,0,0,0.06)',
             transition: 'box-shadow 0.15s, border-color 0.15s',
             overflow: 'hidden',
@@ -270,6 +309,34 @@ function TriggerNode({ data, selected }) {
                         {trigger?.Icon && <trigger.Icon size={12} style={{ color: accent, flexShrink: 0 }} />}
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trigger ? t(trigger.labelKey) : t('automation.select_trigger')}</span>
                     </div>
+                    {summary && (
+                        <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {summary}
+                        </div>
+                    )}
+                </div>
+
+                <div className="nodrag" style={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                    <button
+                        className="nodrag"
+                        title={t('common.settings')}
+                        onClick={(e) => { e.stopPropagation(); onConfigure(id); }}
+                        style={actionBtnStyle}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#f3f4f6'; e.currentTarget.style.color = '#4b5563'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9ca3af'; }}
+                    >
+                        <Settings size={13} />
+                    </button>
+                    <button
+                        className="nodrag"
+                        title={t('common.delete')}
+                        onClick={(e) => { e.stopPropagation(); onDelete(id); }}
+                        style={actionBtnStyle}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#ef4444'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9ca3af'; }}
+                    >
+                        <Trash2 size={13} />
+                    </button>
                 </div>
             </div>
             <Handle type="source" position={Position.Bottom} style={{ background: '#fff', width: 9, height: 9, border: `2px solid ${accent}` }} />
@@ -289,10 +356,14 @@ function summarizeConfig(data, t) {
         case 'condition': return data.field ? `${data.field} ${data.operator ?? '='} ${data.value ?? ''}` : '';
         case 'add_tag':
         case 'remove_tag': return data.tag ?? '';
+        case 'create_opportunity': return data.name ? clip(data.name, 28) : 'Create Opportunity';
+        case 'change_opportunity_stage': return data.stage_id ? `Stage #${data.stage_id}` : 'Change Stage';
         case 'send_whatsapp':
         case 'send_sms': return clip(data.body);
         case 'send_email': return data.subject ?? '';
+        case 'internal_notification': return `${data.notification_type ?? 'email'} → ${data.send_to ?? 'user'}`;
         case 'update_contact': return data.field ? `${data.field} = ${data.value ?? ''}` : '';
+        case 'assign_agent': return data.agent_name ?? (data.user_id ? `#${data.user_id}` : t('automation.assign_unassigned'));
         case 'add_to_campaign': return data.campaign_id ? t('automation.campaign_ref', { id: data.campaign_id }) : '';
         case 'ai_reply':
         case 'run_chatbot': return clip(data.prompt || data.chatbot_id || '');
@@ -304,7 +375,6 @@ function summarizeConfig(data, t) {
         case 'list_message': return clip(data.body, 30);
         case 'ask_question': return data.question ? `${clip(data.question, 28)} → {{${data.variable || 'answer'}}}` : '';
         case 'run_subflow': return data.subflow_name ?? data.automation_uuid ?? '';
-        case 'assign_agent': return data.agent_name ?? (data.user_id ? `#${data.user_id}` : t('automation.assign_unassigned'));
         case 'cta_button': return data.display_text ? `${data.display_text} · ${clip(data.url, 22)}` : clip(data.url, 28);
         case 'send_location': return data.name || (data.latitude ? `${data.latitude}, ${data.longitude}` : '');
         case 'send_poll': return clip(data.question, 30);
@@ -331,6 +401,7 @@ const FIELD_COMPONENTS = {
     send_whatsapp: WhatsAppFields,
     send_sms: SmsFields,
     send_email: EmailFields,
+    internal_notification: InternalNotificationFields,
     send_template: TemplateFields,
     send_media: MediaFields,
     send_sequence: SequenceFields,
@@ -347,6 +418,10 @@ const FIELD_COMPONENTS = {
     update_contact: UpdateContactFields,
     assign_agent: AssignAgentFields,
     add_to_campaign: CampaignFields,
+    create_opportunity: CreateOpportunityFields,
+    change_opportunity_stage: ChangeStageFields,
+    update_opportunity_status: UpdateOpportunityStatusFields,
+    remove_opportunity: () => <p style={{ fontSize: 11, color: '#64748b', padding: 8 }}>Removes active opportunity record(s) linked to this contact.</p>,
     cta_button: CtaButtonFields,
     send_location: LocationFields,
     send_poll: PollFields,
@@ -369,16 +444,25 @@ function ConfigPanel({ node, onClose, onChange }) {
     const def = NODE_DEFS[nodeType];
     const defLabel = def ? t(def.labelKey) : nodeType;
     const d = node.data;
-    const set = (key, val) => onChange(node.id, { ...d, [key]: val, configured: true });
+    const set = (key, val) => {
+        if (typeof key === 'object' && key !== null) {
+            onChange(node.id, { ...d, ...key, configured: true });
+        } else {
+            onChange(node.id, { ...d, [key]: val, configured: true });
+        }
+    };
+    const isEmailEditorNode = nodeType === 'send_email' || (nodeType === 'internal_notification' && d.notification_type === 'email');
+    const panelWidth = isEmailEditorNode ? 680 : 340;
     const Fields = FIELD_COMPONENTS[nodeType];
 
     return (
         <div style={{
-            position: 'absolute', top: 0, right: 0, bottom: 0, width: 320,
+            position: 'absolute', top: 0, right: 0, bottom: 0, width: panelWidth,
             background: '#fff', borderLeft: '1px solid #e5e7eb',
             boxShadow: '-4px 0 24px rgba(0,0,0,0.08)',
             zIndex: 10, display: 'flex', flexDirection: 'column',
             borderRadius: '0 0 12px 0',
+            transition: 'width 0.2s ease-in-out',
         }}>
             {/* Header */}
             <div style={{
@@ -462,15 +546,206 @@ function TriggerConfigPanel({ automation, onTypeChange, onConfigChange, webhookU
                     </select>
                 </Field>
 
-                {triggerType === 'message.received' && (
-                    <Field label={t('automation.keyword_filter_optional')}>
-                        <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>{t('automation.keyword_filter_hint')}</p>
+                {/* 1. Tag Added Filter */}
+                {triggerType === 'contact.tag_added' && (
+                    <Field label="Tag Filter (Optional)">
+                        <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>
+                            Choose a specific tag to trigger this automation, or enter a custom tag name.
+                        </p>
+                        <select
+                            className={`${selectCls} mb-2`}
+                            value={automation.trigger_config?.tag_name ?? ''}
+                            onChange={e => onConfigChange({
+                                ...automation.trigger_config,
+                                tag_name: e.target.value || null,
+                            })}
+                        >
+                            <option value="">All Tags (Any tag added)</option>
+                            {(useResources().tags ?? []).map(t => (
+                                <option key={t.id} value={t.name}>
+                                    {t.name}
+                                </option>
+                            ))}
+                        </select>
                         <input
                             className={inputCls}
-                            value={(automation.trigger_config?.keywords ?? []).join(', ')}
-                            onChange={e => onConfigChange({ keywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean) })}
-                            placeholder={t('automation.placeholder_keywords')}
+                            placeholder="Or type custom tag name (e.g. VIP Lead)"
+                            value={automation.trigger_config?.tag_name ?? ''}
+                            onChange={e => onConfigChange({
+                                ...automation.trigger_config,
+                                tag_name: e.target.value.trim() || null,
+                            })}
                         />
+                    </Field>
+                )}
+
+                {/* 2. Contact Created Lead Source Filter */}
+                {triggerType === 'contact.created' && (
+                    <Field label="Lead Source Filter (Optional)">
+                        <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>
+                            Trigger automation only when contact is created from a specific source.
+                        </p>
+                        <select
+                            className={selectCls}
+                            value={automation.trigger_config?.source ?? ''}
+                            onChange={e => onConfigChange({
+                                ...automation.trigger_config,
+                                source: e.target.value || null,
+                            })}
+                        >
+                            <option value="">All Lead Sources (Any)</option>
+                            <option value="form">Subscription / Lead Form</option>
+                            <option value="widget">WhatsApp Chat Widget</option>
+                            <option value="api">API / REST Endpoint</option>
+                            <option value="import">CSV / Excel Import</option>
+                            <option value="manual">Manual Addition</option>
+                            <option value="social">Social Media</option>
+                        </select>
+                    </Field>
+                )}
+
+                {/* 3. Inbound Message Received Filters */}
+                {triggerType === 'message.received' && (
+                    <>
+                        <Field label="Channel Filter (Optional)">
+                            <select
+                                className={selectCls}
+                                value={automation.trigger_config?.channel ?? ''}
+                                onChange={e => onConfigChange({
+                                    ...automation.trigger_config,
+                                    channel: e.target.value || null,
+                                })}
+                            >
+                                <option value="">All Channels (WhatsApp, SMS, Email, Social)</option>
+                                <option value="whatsapp">WhatsApp</option>
+                                <option value="sms">SMS</option>
+                                <option value="email">Email</option>
+                                <option value="messenger">Messenger</option>
+                                <option value="instagram">Instagram</option>
+                            </select>
+                        </Field>
+                        <Field label={t('automation.keyword_filter_optional')}>
+                            <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>{t('automation.keyword_filter_hint')}</p>
+                            <input
+                                className={inputCls}
+                                value={(automation.trigger_config?.keywords ?? []).join(', ')}
+                                onChange={e => onConfigChange({
+                                    ...automation.trigger_config,
+                                    keywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean)
+                                })}
+                                placeholder={t('automation.placeholder_keywords')}
+                            />
+                        </Field>
+                    </>
+                )}
+
+                {/* Opportunity Triggers Filters */}
+                {['opportunity.created', 'opportunity.stage_changed'].includes(triggerType) && (
+                    <>
+                        <Field label="Pipeline Filter">
+                            <select
+                                className={selectCls}
+                                value={automation.trigger_config?.pipeline_id ?? ''}
+                                onChange={e => onConfigChange({
+                                    ...automation.trigger_config,
+                                    pipeline_id: e.target.value ? parseInt(e.target.value, 10) : null,
+                                })}
+                            >
+                                <option value="">All Lead Pipelines</option>
+                                {(useResources().pipelines ?? []).map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                        </Field>
+
+                        <Field label="Target Stage Filter">
+                            <select
+                                className={selectCls}
+                                value={automation.trigger_config?.stage_id ?? ''}
+                                onChange={e => onConfigChange({
+                                    ...automation.trigger_config,
+                                    stage_id: e.target.value ? parseInt(e.target.value, 10) : null,
+                                })}
+                            >
+                                <option value="">All Pipeline Stages</option>
+                                {((useResources().pipelines ?? []).find(p => p.id === parseInt(automation.trigger_config?.pipeline_id, 10))?.stages ?? []).map(s => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                            </select>
+                        </Field>
+                    </>
+                )}
+
+                {/* 4. Form Submitted Filter */}
+                {triggerType === 'form.submitted' && (
+                    <Field label="Form Selection Filter">
+                        <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>
+                            Choose a specific form to trigger this automation, or select 'All Subscription Forms'.
+                        </p>
+                        <select
+                            className={selectCls}
+                            value={automation.trigger_config?.form_slug ?? ''}
+                            onChange={e => onConfigChange({
+                                ...automation.trigger_config,
+                                form_slug: e.target.value || null,
+                                match_mode: e.target.value ? 'specific' : 'any',
+                            })}
+                        >
+                            <option value="">All Subscription Forms (Any form submission)</option>
+                            {(useResources().subscription_forms ?? []).map(f => (
+                                <option key={f.id} value={f.slug}>
+                                    {f.name} ({f.slug})
+                                </option>
+                            ))}
+                        </select>
+                    </Field>
+                )}
+
+                {/* 5. Campaign Broadcast Sent Filter */}
+                {triggerType === 'campaign.sent' && (
+                    <Field label="Campaign Filter (Optional)">
+                        <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>
+                            Trigger automation when a specific broadcast campaign is sent.
+                        </p>
+                        <select
+                            className={selectCls}
+                            value={automation.trigger_config?.campaign_id ?? ''}
+                            onChange={e => onConfigChange({
+                                ...automation.trigger_config,
+                                campaign_id: e.target.value ? parseInt(e.target.value, 10) : null,
+                            })}
+                        >
+                            <option value="">All Broadcast Campaigns</option>
+                            {(useResources().campaigns ?? []).map(c => (
+                                <option key={c.id} value={c.id}>
+                                    {c.name}
+                                </option>
+                            ))}
+                        </select>
+                    </Field>
+                )}
+
+                {/* 6. Ecommerce Events Store Filter */}
+                {['order.placed', 'order.fulfilled', 'order.cancelled', 'cart.abandoned', 'customer.created'].includes(triggerType) && (
+                    <Field label="Ecommerce Store Filter (Optional)">
+                        <p style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6 }}>
+                            Trigger automation for a specific store platform.
+                        </p>
+                        <select
+                            className={selectCls}
+                            value={automation.trigger_config?.store_id ?? ''}
+                            onChange={e => onConfigChange({
+                                ...automation.trigger_config,
+                                store_id: e.target.value ? parseInt(e.target.value, 10) : null,
+                            })}
+                        >
+                            <option value="">All Connected Stores</option>
+                            {(useResources().stores ?? []).map(s => (
+                                <option key={s.id} value={s.id}>
+                                    {s.name} ({s.platform})
+                                </option>
+                            ))}
+                        </select>
                     </Field>
                 )}
 
@@ -576,19 +851,34 @@ function SmsFields({ d, set }) {
     );
 }
 
+function RichMessageEditor({ value, onChange, subject, onSubjectChange }) {
+    return (
+        <div style={{ background: '#fff', borderRadius: 10, border: '1px solid #cbd5e1', overflow: 'hidden', padding: 8 }}>
+            <EmailEditor
+                subject={subject ?? ''}
+                body={value ?? ''}
+                onSubjectChange={onSubjectChange || (() => {})}
+                onBodyChange={onChange}
+            />
+        </div>
+    );
+}
+
 function EmailFields({ d, set }) {
     const { t } = useTranslation();
     return (
         <>
-            <Field label={t('automation.field_subject_required')}>
-                <input className={inputCls} value={d.subject ?? ''} onChange={e => set('subject', e.target.value)} placeholder={t('automation.placeholder_email_subject')} />
-            </Field>
             <Field label={t('automation.field_from_name_optional')}>
                 <input className={inputCls} value={d.from_name ?? ''} onChange={e => set('from_name', e.target.value)} placeholder={t('automation.placeholder_from_name')} />
             </Field>
-            <Field label={t('automation.field_body_required')}>
-                <textarea className={textareaCls} rows={6} value={d.body ?? ''} onChange={e => set('body', e.target.value)} placeholder={t('automation.placeholder_email_body', { token: '{{contact.name}}' })} />
-            </Field>
+            <div style={{ marginTop: 8 }}>
+                <RichMessageEditor
+                    value={d.body ?? ''}
+                    onChange={val => set('body', val)}
+                    subject={d.subject ?? ''}
+                    onSubjectChange={val => set('subject', val)}
+                />
+            </div>
         </>
     );
 }
@@ -1264,6 +1554,104 @@ function GoogleFormsFields({ d, set }) {
     );
 }
 
+function InternalNotificationFields({ d, set }) {
+    const { t } = useTranslation();
+    const resources = useResources();
+    const notificationType = d.notification_type ?? 'email';
+    const sendTo = d.send_to ?? 'user';
+
+    return (
+        <>
+            <Field label="Action Name">
+                <input
+                    className={inputCls}
+                    value={d.label ?? 'Internal Notification'}
+                    onChange={e => set('label', e.target.value)}
+                    placeholder="Internal Notification"
+                />
+            </Field>
+
+            <Field label="Type of Notification">
+                <select
+                    className={selectCls}
+                    value={notificationType}
+                    onChange={e => set('notification_type', e.target.value)}
+                >
+                    <option value="email">Email Notification</option>
+                    <option value="notification">In-App System Notification</option>
+                    <option value="sms">SMS Alert</option>
+                    <option value="whatsapp">WhatsApp Alert</option>
+                </select>
+            </Field>
+
+            <Field label="Send To">
+                <select
+                    className={selectCls}
+                    value={sendTo}
+                    onChange={e => set('send_to', e.target.value)}
+                >
+                    <option value="user">Specific Team Member / User</option>
+                    <option value="assigned_user">Assigned Contact Owner / Agent</option>
+                    <option value="custom_email">Custom Email Address(es)</option>
+                    <option value="custom_phone">Custom Mobile Number(s)</option>
+                </select>
+            </Field>
+
+            {sendTo === 'user' && (
+                <Field label="Select User / Agent">
+                    <select
+                        className={selectCls}
+                        value={d.user_id ?? ''}
+                        onChange={e => set('user_id', e.target.value ? parseInt(e.target.value, 10) : null)}
+                    >
+                        <option value="">Select a Workspace User</option>
+                        {(resources.agents ?? []).map(u => (
+                            <option key={u.id} value={u.id}>
+                                {u.name} ({u.email})
+                            </option>
+                        ))}
+                    </select>
+                </Field>
+            )}
+
+            {(sendTo === 'custom_email' || sendTo === 'custom_phone') && (
+                <Field label={sendTo === 'custom_email' ? "Recipient Email Address(es)" : "Recipient Mobile Number(s)"}>
+                    <input
+                        className={inputCls}
+                        value={d.to_address ?? ''}
+                        onChange={e => set('to_address', e.target.value)}
+                        placeholder={sendTo === 'custom_email' ? "e.g. sales@company.com, admin@company.com" : "e.g. +1234567890"}
+                    />
+                </Field>
+            )}
+
+            {(notificationType === 'email' || notificationType === 'notification') && (
+                <Field label="Notification Title / Subject">
+                    <input
+                        className={inputCls}
+                        value={d.subject ?? d.title ?? ''}
+                        onChange={e => set('subject', e.target.value)}
+                        placeholder="e.g. New Lead Form Submission: {{contact.name}}"
+                    />
+                </Field>
+            )}
+
+            <Field label="Message / Notification Body">
+                <RichMessageEditor
+                    value={d.body ?? ''}
+                    onChange={val => set('body', val)}
+                    onSelectTemplate={tpl => {
+                        if (tpl.subject && !(d.subject || d.title)) {
+                            set('subject', tpl.subject);
+                        }
+                    }}
+                    placeholder="e.g. New lead {{contact.name}} ({{contact.email}}) submitted form {{context.form_name}}!"
+                />
+            </Field>
+        </>
+    );
+}
+
 function WebhookFields({ d, set }) {
     const { t } = useTranslation();
     return (
@@ -1284,6 +1672,136 @@ function WebhookFields({ d, set }) {
             </Field>
             <Field label={t('automation.field_payload_json_optional')}>
                 <textarea className={textareaCls} rows={4} value={d.payload ?? ''} onChange={e => set('payload', e.target.value)} placeholder={'{"contact_id": "{{contact.id}}"}'} />
+            </Field>
+        </>
+    );
+}
+
+function CreateOpportunityFields({ d, set }) {
+    const { pipelines = [], agents = [] } = useResources();
+    const selectedPipeline = pipelines.find(p => p.id === parseInt(d.pipeline_id, 10)) || pipelines[0];
+    const stages = selectedPipeline?.stages || [];
+
+    return (
+        <>
+            <Field label="Select Target Pipeline">
+                <select
+                    className={selectCls}
+                    value={d.pipeline_id ?? (selectedPipeline?.id || '')}
+                    onChange={e => {
+                        const pid = parseInt(e.target.value, 10);
+                        const p = pipelines.find(x => x.id === pid);
+                        const firstStageId = p?.stages?.[0]?.id || null;
+                        set({ pipeline_id: pid, stage_id: firstStageId });
+                    }}
+                >
+                    {pipelines.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} {p.is_default ? '(Default)' : ''}</option>
+                    ))}
+                </select>
+            </Field>
+
+            <Field label="Target Pipeline Stage">
+                <select
+                    className={selectCls}
+                    value={d.stage_id ?? (stages[0]?.id || '')}
+                    onChange={e => set('stage_id', parseInt(e.target.value, 10))}
+                >
+                    {stages.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                </select>
+            </Field>
+
+            <Field label="Opportunity Title">
+                <input
+                    className={inputCls}
+                    value={d.name ?? ''}
+                    onChange={e => set('name', e.target.value)}
+                    placeholder="e.g. Lead - {{contact.name}}"
+                />
+            </Field>
+
+            <Field label="Monetary Value ($)">
+                <input
+                    type="number"
+                    step="0.01"
+                    className={inputCls}
+                    value={d.monetary_value ?? ''}
+                    onChange={e => set('monetary_value', e.target.value)}
+                    placeholder="0.00"
+                />
+            </Field>
+
+            <Field label="Assigned Sales Agent">
+                <select
+                    className={selectCls}
+                    value={d.assigned_user_id ?? ''}
+                    onChange={e => set('assigned_user_id', e.target.value ? parseInt(e.target.value, 10) : null)}
+                >
+                    <option value="">Unassigned</option>
+                    {agents.map(u => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
+                    ))}
+                </select>
+            </Field>
+        </>
+    );
+}
+
+function ChangeStageFields({ d, set }) {
+    const { pipelines = [] } = useResources();
+    const selectedPipeline = pipelines.find(p => p.id === parseInt(d.pipeline_id, 10)) || pipelines[0];
+    const stages = selectedPipeline?.stages || [];
+
+    return (
+        <>
+            <Field label="Select Pipeline">
+                <select
+                    className={selectCls}
+                    value={d.pipeline_id ?? (selectedPipeline?.id || '')}
+                    onChange={e => {
+                        const pid = parseInt(e.target.value, 10);
+                        const p = pipelines.find(x => x.id === pid);
+                        const firstStageId = p?.stages?.[0]?.id || null;
+                        set({ pipeline_id: pid, stage_id: firstStageId });
+                    }}
+                >
+                    {pipelines.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                </select>
+            </Field>
+
+            <Field label="New Target Stage">
+                <select
+                    className={selectCls}
+                    value={d.stage_id ?? (stages[0]?.id || '')}
+                    onChange={e => set('stage_id', parseInt(e.target.value, 10))}
+                >
+                    {stages.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                </select>
+            </Field>
+        </>
+    );
+}
+
+function UpdateOpportunityStatusFields({ d, set }) {
+    return (
+        <>
+            <Field label="Target Opportunity Outcome Status">
+                <select
+                    className={selectCls}
+                    value={d.status ?? 'won'}
+                    onChange={e => set('status', e.target.value)}
+                >
+                    <option value="won">🏆 Closed Won</option>
+                    <option value="lost">🔴 Closed Lost</option>
+                    <option value="abandoned">⚪ Abandoned</option>
+                    <option value="open">🟢 Open</option>
+                </select>
             </Field>
         </>
     );
@@ -1334,16 +1852,39 @@ function deserializeNodes(raw) {
 
 // Guarantee a single, non-deletable trigger node anchored at the top of the canvas, with its
 // display synced to the automation's trigger_type (the backend source of truth).
-function withTriggerNode(nodes, triggerType) {
-    if (!nodes.some(n => n.type === 'triggerNode')) {
+function withTriggerNodes(nodes, defaultTriggerType, defaultTriggerConfig = {}) {
+    const hasTriggers = nodes.some(n => n.type === 'triggerNode' || n.type === 'trigger');
+    if (!hasTriggers) {
         return [
-            { id: TRIGGER_NODE_ID, type: 'triggerNode', position: { x: 250, y: 50 }, deletable: false, data: { triggerType, label: 'Trigger' } },
+            {
+                id: TRIGGER_NODE_ID,
+                type: 'triggerNode',
+                position: { x: 250, y: 50 },
+                deletable: true,
+                data: {
+                    triggerType: defaultTriggerType || 'form.submitted',
+                    triggerConfig: defaultTriggerConfig || {},
+                    label: 'Trigger',
+                },
+            },
             ...nodes,
         ];
     }
-    return nodes.map(n => n.type === 'triggerNode'
-        ? { ...n, deletable: false, data: { ...n.data, triggerType } }
-        : n);
+    return nodes.map(n => {
+        if (n.type === 'triggerNode' || n.type === 'trigger') {
+            return {
+                ...n,
+                type: 'triggerNode',
+                deletable: true,
+                data: {
+                    ...n.data,
+                    triggerType: n.data?.triggerType ?? n.data?.trigger_type ?? defaultTriggerType,
+                    triggerConfig: n.data?.triggerConfig ?? n.data?.trigger_config ?? defaultTriggerConfig,
+                },
+            };
+        }
+        return n;
+    });
 }
 
 /* ─── Test & AI Generate modals ──────────────────────────────── */
@@ -1507,7 +2048,7 @@ function AutomationBuilderInner({ automation: initial }) {
     const { t } = useTranslation();
     const [automation, setAutomation] = useState(initial);
     const [nodes, setNodes, onNodesChange] = useNodesState(
-        withTriggerNode(deserializeNodes(initial.nodes ?? []), initial.trigger_type ?? '')
+        withTriggerNodes(deserializeNodes(initial.nodes ?? []), initial.trigger_type ?? '', initial.trigger_config ?? {})
     );
     const [edges, setEdges, onEdgesChange] = useEdgesState(
         (initial.edges ?? []).map(e => ({
@@ -1616,14 +2157,58 @@ function AutomationBuilderInner({ automation: initial }) {
         if (node) setSelectedNode(node);
     };
 
-    // Trigger lives on the canvas as a node; trigger_type/trigger_config stay the saved source of truth.
-    const setTriggerType = (value) => {
-        setAutomation(a => ({ ...a, trigger_type: value }));
-        setNodes(nds => nds.map(n => n.type === 'triggerNode' ? { ...n, data: { ...n.data, triggerType: value } } : n));
+    const addTriggerNode = () => {
+        const triggerNodes = nodes.filter(n => n.type === 'triggerNode');
+        const maxX = triggerNodes.reduce((max, n) => Math.max(max, n.position?.x ?? 250), 100);
+        const newId = `trigger-${Date.now()}`;
+        const newTriggerNode = {
+            id: newId,
+            type: 'triggerNode',
+            position: { x: maxX + 240, y: 50 },
+            deletable: true,
+            data: {
+                triggerType: 'form.submitted',
+                triggerConfig: {},
+                label: 'Trigger',
+            },
+        };
+
+        const firstActionNode = nodes.find(n => n.type === 'automationNode');
+        let nextEdges = [...edges];
+        if (firstActionNode) {
+            nextEdges.push({
+                id: `edge-${newId}-${firstActionNode.id}`,
+                source: newId,
+                target: firstActionNode.id,
+                animated: true,
+                style: { stroke: '#6366f1', strokeWidth: 2 },
+                markerEnd: { type: MarkerType.ArrowClosed, color: '#6366f1' },
+            });
+        }
+
+        setNodes(nds => [...nds, newTriggerNode]);
+        setEdges(nextEdges);
+        setSelectedNode(newTriggerNode);
     };
 
-    const setTriggerConfig = (patch) =>
+    // Trigger lives on the canvas as nodes; update active selected trigger node directly.
+    const setTriggerType = (value) => {
+        setAutomation(a => ({ ...a, trigger_type: value }));
+        if (selectedNode && selectedNode.type === 'triggerNode') {
+            setNodes(nds => nds.map(n => n.id === selectedNode.id ? { ...n, data: { ...n.data, triggerType: value, triggerConfig: {} } } : n));
+            setSelectedNode(prev => prev ? { ...prev, data: { ...prev.data, triggerType: value, triggerConfig: {} } } : null);
+        } else {
+            setNodes(nds => nds.map(n => n.type === 'triggerNode' ? { ...n, data: { ...n.data, triggerType: value } } : n));
+        }
+    };
+
+    const setTriggerConfig = (patch) => {
         setAutomation(a => ({ ...a, trigger_config: { ...(a.trigger_config ?? {}), ...patch } }));
+        if (selectedNode && selectedNode.type === 'triggerNode') {
+            setNodes(nds => nds.map(n => n.id === selectedNode.id ? { ...n, data: { ...n.data, triggerConfig: { ...(n.data?.triggerConfig ?? {}), ...patch } } } : n));
+            setSelectedNode(prev => prev ? { ...prev, data: { ...prev.data, triggerConfig: { ...(prev.data?.triggerConfig ?? {}), ...patch } } } : null);
+        }
+    };
 
     const save = () => {
         setSaving(true);
@@ -1665,7 +2250,7 @@ function AutomationBuilderInner({ automation: initial }) {
 
     // Replace the canvas with an AI-generated (or otherwise supplied) graph for review before saving.
     const applyGraph = (graph) => {
-        setNodes(withTriggerNode(deserializeNodes(graph.nodes ?? []), graph.trigger_type ?? ''));
+        setNodes(withTriggerNodes(deserializeNodes(graph.nodes ?? []), graph.trigger_type ?? '', graph.trigger_config ?? {}));
         setEdges((graph.edges ?? []).map(e => ({
             ...e,
             animated: true,
@@ -1785,6 +2370,13 @@ function AutomationBuilderInner({ automation: initial }) {
                                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: automation.status === 'active' ? '#10b981' : '#f59e0b' }} />
                                 <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 500 }}>{t(`automation.status_${automation.status}`)}</span>
                             </div>
+                            <button onClick={addTriggerNode} title="Add an additional trigger to start this workflow" style={{
+                                display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8,
+                                background: '#eff6ff', padding: '6px 12px', fontSize: 12, fontWeight: 600,
+                                color: '#2563eb', border: '1px border-dashed #bfdbfe', cursor: 'pointer', transition: 'all 0.15s',
+                            }}>
+                                <Plus size={13} /> + Add New Trigger
+                            </button>
                             <button onClick={() => { setAiError(null); setAiOpen(true); }} title={t('automation.ai_title')} style={{
                                 display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8,
                                 background: '#faf5ff', padding: '6px 12px', fontSize: 12, fontWeight: 600,

@@ -29,3 +29,5 @@ database/.DS_Store
 /WhatsMe
 /release
 /Chat-Agent-App
+
+public/build
