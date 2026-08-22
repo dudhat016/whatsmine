@@ -21,10 +21,8 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 65002 }}
-          timeout: 60s
-          command_timeout: 20m
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 65002
           script: |
             TARGET_DIR="${{ secrets.HOSTINGER_TARGET_DIR }}"
             if [ -z "$TARGET_DIR" ]; then
