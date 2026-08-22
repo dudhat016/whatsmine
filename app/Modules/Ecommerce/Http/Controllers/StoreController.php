@@ -3,6 +3,7 @@
 namespace App\Modules\Ecommerce\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Ecommerce\Jobs\BackfillStoreOrdersJob;
 use App\Modules\Ecommerce\Jobs\SyncStoreCustomersJob;
 use App\Modules\Ecommerce\Jobs\SyncStoreProductsJob;
 use App\Modules\Ecommerce\Models\EcommerceStore;
@@ -123,8 +124,9 @@ class StoreController extends Controller
         try {
             SyncStoreCustomersJob::dispatchSync($store->id);
             SyncStoreProductsJob::dispatchSync($store->id);
+            BackfillStoreOrdersJob::dispatchSync($store->id);
 
-            return back()->with('success', 'Customer & product sync completed.');
+            return back()->with('success', 'Customer, product & order sync completed.');
         } catch (\Throwable $e) {
             return back()->with('error', 'Sync failed: '.$e->getMessage());
         }
