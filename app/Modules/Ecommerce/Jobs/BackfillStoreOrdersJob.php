@@ -30,6 +30,7 @@ class BackfillStoreOrdersJob implements ShouldQueue
     public function __construct(
         public readonly int $storeId,
         public readonly ?string $cursor = null,
+        public array $seenIds = [],
     ) {}
 
     public function handle(PayloadNormalizer $normalizer, ContactService $contacts, ContactEnricher $enricher, ContactCapacity $capacity): void
@@ -63,6 +64,8 @@ class BackfillStoreOrdersJob implements ShouldQueue
                 ]),
             );
 
+            $this->seenIds[] = (string) $event['order']['external_order_id'];
+
             if ($contact) {
                 $touchedContacts[$contact->id] = $contact;
             }
@@ -73,9 +76,16 @@ class BackfillStoreOrdersJob implements ShouldQueue
         }
 
         if ($page['next'] !== null && $page['next'] !== $this->cursor) {
-            self::dispatch($store->id, $page['next']);
+            self::dispatch($store->id, $page['next'], $this->seenIds);
 
             return;
+        }
+
+        // Reconciliation: prune orders for this store that were deleted from the source store
+        if (! empty($this->seenIds)) {
+            EcommerceOrder::where('store_id', $store->id)
+                ->whereNotIn('external_order_id', $this->seenIds)
+                ->delete();
         }
 
         $store->update(['orders_synced_at' => now()]);

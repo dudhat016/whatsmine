@@ -26,6 +26,7 @@ class SyncStoreProductsJob implements ShouldQueue
     public function __construct(
         public readonly int $storeId,
         public readonly ?string $cursor = null,
+        public array $seenIds = [],
     ) {}
 
     public function handle(PayloadNormalizer $normalizer): void
@@ -47,12 +48,21 @@ class SyncStoreProductsJob implements ShouldQueue
                 ['store_id' => $store->id, 'external_id' => $product['external_id']],
                 array_merge($product, ['workspace_id' => $store->workspace_id]),
             );
+
+            $this->seenIds[] = (string) $product['external_id'];
         }
 
         if ($page['next'] !== null && $page['next'] !== $this->cursor) {
-            self::dispatch($store->id, $page['next']);
+            self::dispatch($store->id, $page['next'], $this->seenIds);
 
             return;
+        }
+
+        // Reconciliation: prune products for this store that were deleted from the source store
+        if (! empty($this->seenIds)) {
+            EcommerceProduct::where('store_id', $store->id)
+                ->whereNotIn('external_id', $this->seenIds)
+                ->delete();
         }
 
         $store->update(['products_synced_at' => now()]);

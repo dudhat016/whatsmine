@@ -75,6 +75,22 @@ class ProcessEcommerceWebhookJob implements ShouldQueue
             return;
         }
 
+        if ($event['event_type'] === 'product.deleted' && ! empty($event['product_deleted_id'])) {
+            EcommerceProduct::where('store_id', $store->id)
+                ->where('external_id', (string) $event['product_deleted_id'])
+                ->delete();
+
+            return;
+        }
+
+        if ($event['event_type'] === 'order.deleted' && ! empty($event['order_deleted_id'])) {
+            EcommerceOrder::where('store_id', $store->id)
+                ->where('external_order_id', (string) $event['order_deleted_id'])
+                ->delete();
+
+            return;
+        }
+
         // Product/inventory updates have no contact and drive no automations.
         if (($event['product'] ?? null) !== null) {
             $this->upsertProduct($store, $event['product']);

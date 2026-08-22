@@ -149,10 +149,38 @@ class PayloadNormalizer
             'orders/create' => $this->shopifyOrder('order.placed', $p, $storeName),
             'orders/fulfilled' => $this->shopifyOrder('order.fulfilled', $p, $storeName),
             'orders/cancelled' => $this->shopifyOrder('order.cancelled', $p, $storeName),
+            'orders/delete' => $this->orderDeletedEvent('shopify', $p),
             'checkouts/create' => $this->shopifyCheckout($p, $storeName),
-            'products/update' => $this->productEvent('shopify', $p),
+            'products/update', 'products/create' => $this->productEvent('shopify', $p),
+            'products/delete' => $this->productDeletedEvent('shopify', $p),
             default => null,
         };
+    }
+
+    private function productDeletedEvent(string $platform, array $p): array
+    {
+        return [
+            'event_type' => 'product.deleted',
+            'contact' => ['phone_e164' => null, 'email' => null, 'first_name' => null, 'last_name' => null],
+            'order' => null,
+            'cart' => null,
+            'product' => null,
+            'product_deleted_id' => (string) ($p['id'] ?? ''),
+            'context' => [],
+        ];
+    }
+
+    private function orderDeletedEvent(string $platform, array $p): array
+    {
+        return [
+            'event_type' => 'order.deleted',
+            'contact' => ['phone_e164' => null, 'email' => null, 'first_name' => null, 'last_name' => null],
+            'order' => null,
+            'cart' => null,
+            'product' => null,
+            'order_deleted_id' => (string) ($p['id'] ?? ''),
+            'context' => [],
+        ];
     }
 
     /**
@@ -316,6 +344,14 @@ class PayloadNormalizer
     private function woocommerce(string $topic, array $p, string $storeName): ?array
     {
         $lowerTopic = strtolower($topic);
+
+        if (str_contains($lowerTopic, 'product.deleted') || str_contains($lowerTopic, 'delete_product') || str_contains($lowerTopic, 'trash_product')) {
+            return $this->productDeletedEvent('woocommerce', $p);
+        }
+
+        if (str_contains($lowerTopic, 'order.deleted') || str_contains($lowerTopic, 'delete_order') || str_contains($lowerTopic, 'trash_order')) {
+            return $this->orderDeletedEvent('woocommerce', $p);
+        }
 
         // Woo sends order.created / order.updated & product.created / product.updated
         // also action.woocommerce_update_product, action.woocommerce_new_product, etc.
