@@ -23,6 +23,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: 65002
+          timeout: 60s
+          command_timeout: 15m
           script: |
             TARGET_DIR="${{ secrets.HOSTINGER_TARGET_DIR }}"
             if [ -z "$TARGET_DIR" ]; then
@@ -61,9 +63,12 @@ jobs:
             echo "Installing composer dependencies..."
             composer install --no-dev --optimize-autoloader --no-interaction
 
-            echo "Installing npm dependencies & building production assets..."
-            npm install || true
-            npm run build || true
+            if command -v npm >/dev/null 2>&1; then
+              echo "Building frontend production assets..."
+              npm run build || true
+            else
+              echo "npm not available on host; using pre-built assets from repository."
+            fi
 
             echo "Clearing stale config caches..."
             php artisan config:clear || true
