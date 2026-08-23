@@ -695,25 +695,35 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                             <div>
                                 <label className="mb-2 block text-sm font-medium">{t('admin.select_plan')} <span className="text-red-500">*</span></label>
                                 <div className="max-h-64 space-y-2 overflow-y-auto rounded-soft border border-neutral-200 dark:border-neutral-700 p-2">
-                                    {plans.map((p) => (
-                                        <label
-                                            key={p.id}
-                                            className={`flex cursor-pointer items-center justify-between rounded-soft border p-3 transition ${assignPlanId === p.id ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20' : 'border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="plan_id"
-                                                value={p.id}
-                                                checked={assignPlanId === p.id}
-                                                onChange={() => setAssignPlanId(p.id)}
-                                                className="sr-only"
-                                            />
-                                            <span className="font-medium">{p.name}</span>
-                                            <span className="text-sm text-neutral-500">
-                                                Monthly: {p.currency_code ?? 'USD'} {((p.monthly_price_cents ?? 0) / 100).toFixed(2)} · Yearly: {p.currency_code ?? 'USD'} {((p.yearly_price_cents ?? 0) / 100).toFixed(2)}
-                                            </span>
-                                        </label>
-                                    ))}
+                                    {plans.length === 0 ? (
+                                        <p className="py-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                                            No active plans available. Please create or enable plans in{' '}
+                                            <a href={route('admin.plans.index')} className="text-brand-600 underline font-medium hover:text-brand-700">
+                                                Admin Plans
+                                            </a>
+                                            .
+                                        </p>
+                                    ) : (
+                                        plans.map((p) => (
+                                            <label
+                                                key={p.id}
+                                                className={`flex cursor-pointer items-center justify-between rounded-soft border p-3 transition ${assignPlanId === p.id ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20' : 'border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="plan_id"
+                                                    value={p.id}
+                                                    checked={assignPlanId === p.id}
+                                                    onChange={() => setAssignPlanId(p.id)}
+                                                    className="sr-only"
+                                                />
+                                                <span className="font-medium">{p.name}</span>
+                                                <span className="text-sm text-neutral-500">
+                                                    Monthly: {p.currency_code ?? 'USD'} {((p.monthly_price_cents ?? 0) / 100).toFixed(2)} · Yearly: {p.currency_code ?? 'USD'} {((p.yearly_price_cents ?? 0) / 100).toFixed(2)}
+                                                </span>
+                                            </label>
+                                        ))
+                                    )}
                                 </div>
                                 {(pageErrors.plan_id || pageErrors.billing_cycle) && (
                                     <p className="mt-0.5 text-xs text-red-500">{pageErrors.plan_id || pageErrors.billing_cycle}</p>

@@ -61,6 +61,10 @@ jobs:
             echo "Installing composer dependencies..."
             composer install --no-dev --optimize-autoloader --no-interaction
 
+            echo "Installing npm dependencies & building production assets..."
+            npm install || true
+            npm run build || true
+
             echo "Clearing stale config caches..."
             php artisan config:clear || true
             php artisan route:clear || true
