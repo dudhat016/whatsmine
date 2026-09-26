@@ -6,7 +6,9 @@ export default function PipelineColumn({
     column,
     onEditDeal,
     onAddDeal,
+    onTransferDeal,
     onDragStart,
+    onDragEnd,
     onDragOver,
     onDropColumn,
     onDropCard,
@@ -56,7 +58,9 @@ export default function PipelineColumn({
                         key={deal.id}
                         deal={deal}
                         onEdit={onEditDeal}
+                        onTransfer={onTransferDeal}
                         onDragStart={onDragStart}
+                        onDragEnd={onDragEnd}
                         onDragOver={onDragOver}
                         onDrop={onDropCard}
                     />

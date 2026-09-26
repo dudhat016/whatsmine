@@ -53,16 +53,69 @@ class FunnelShareController extends Controller
      * into the authenticated user's workspace.
      * Asset deep-cloning (images) is dispatched as a background job.
      */
-    public function import(Request $request, string $shareToken): JsonResponse
-    {
-        $wid = $this->workspaceId($request);
+    // ─── Share Preview (Public / Inertia) ───────────────────────────────────
 
-        $source = Funnel::where('share_token', $shareToken)
-            ->where('is_shareable', true)
-            ->firstOrFail();
+    public function sharePreview(Request $request, string $shareToken)
+    {
+        $funnel = $this->resolveShareableFunnel($shareToken);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'name'        => $funnel->name,
+                'uuid'        => $funnel->uuid,
+                'slug'        => $funnel->slug,
+                'steps_count' => $funnel->steps->count(),
+                'steps'       => $funnel->steps->map(fn ($s) => [
+                    'id'   => $s->id,
+                    'name' => $s->name,
+                    'type' => $s->type,
+                ]),
+            ]);
+        }
+
+        $user = $request->user();
+        $previewUrl = url("/f/{$funnel->workspace_id}/{$funnel->slug}");
+
+        return \Inertia\Inertia::render('Funnels/Share', [
+            'funnel' => [
+                'id'               => $funnel->id,
+                'uuid'             => $funnel->uuid,
+                'name'             => $funnel->name,
+                'slug'             => $funnel->slug,
+                'theme_color'      => $funnel->theme_color,
+                'meta_title'       => $funnel->meta_title,
+                'meta_description' => $funnel->meta_description,
+                'steps_count'      => $funnel->steps->count(),
+            ],
+            'steps' => $funnel->steps->map(fn ($s) => [
+                'id'         => $s->id,
+                'name'       => $s->name,
+                'type'       => $s->type,
+                'sort_order' => $s->sort_order,
+            ]),
+            'previewUrl'  => $previewUrl,
+            'shareToken'  => $shareToken,
+            'isAuthenticated' => (bool) $user,
+        ]);
+    }
+
+    // ─── Import (Clone into workspace) ───────────────────────────────────────
+
+    /**
+     * 1-Click funnel import: clones the entire funnel structure (steps + pages)
+     * into the authenticated user's workspace.
+     */
+    public function import(Request $request, string $shareToken)
+    {
+        $user = $request->user();
+        if (! $user) {
+            return redirect()->guest(route('login', ['redirect' => url()->current()]));
+        }
+
+        $wid = $this->workspaceId($request);
+        $source = $this->resolveShareableFunnel($shareToken);
 
         $newFunnel = \DB::transaction(function () use ($source, $wid) {
-            // Clone funnel record
             $newFunnel = Funnel::create([
                 'workspace_id'       => $wid,
                 'name'               => $source->name.' (Imported)',
@@ -70,10 +123,9 @@ class FunnelShareController extends Controller
                 'theme_color'        => $source->theme_color,
                 'meta_title'         => $source->meta_title,
                 'meta_description'   => $source->meta_description,
-                'status'             => 'draft', // Always start as draft
+                'status'             => 'draft',
             ]);
 
-            // Clone steps and pages
             foreach ($source->steps()->with('pages')->get() as $step) {
                 $newStep = FunnelStep::create([
                     'funnel_id'  => $newFunnel->id,
@@ -84,14 +136,14 @@ class FunnelShareController extends Controller
 
                 foreach ($step->pages as $page) {
                     FunnelPage::create([
-                        'funnel_step_id' => $newStep->id,
-                        'variant'        => $page->variant,
-                        'is_control'     => $page->is_control,
-                        'traffic_split'  => $page->traffic_split,
-                        'canvas_json'    => $page->canvas_json,  // Deep-clone of JSON
-                        'meta_title'     => $page->meta_title,
+                        'funnel_step_id'   => $newStep->id,
+                        'variant'          => $page->variant,
+                        'is_control'       => $page->is_control,
+                        'traffic_split'    => $page->traffic_split,
+                        'canvas_json'      => $page->canvas_json,
+                        'meta_title'       => $page->meta_title,
                         'meta_description' => $page->meta_description,
-                        'schema_json'    => $page->schema_json,
+                        'schema_json'      => $page->schema_json,
                     ]);
                 }
             }
@@ -99,36 +151,42 @@ class FunnelShareController extends Controller
             return $newFunnel;
         });
 
-        // Dispatch background job to deep-clone image assets into recipient's cloud bucket
-        // \App\Modules\Funnels\Jobs\CloneFunnelAssetsJob::dispatch($source->id, $newFunnel->id);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'ok'          => true,
+                'redirect'    => route('client.funnels.edit', $newFunnel->uuid),
+                'funnel_uuid' => $newFunnel->uuid,
+            ]);
+        }
 
-        return response()->json([
-            'ok'          => true,
-            'redirect'    => route('client.funnels.edit', $newFunnel->uuid),
-            'funnel_uuid' => $newFunnel->uuid,
-        ]);
-    }
-
-    // ─── Export (Preview before import) ──────────────────────────────────────
-
-    public function preview(string $shareToken): JsonResponse
-    {
-        $funnel = Funnel::where('share_token', $shareToken)
-            ->where('is_shareable', true)
-            ->with('steps')
-            ->firstOrFail();
-
-        return response()->json([
-            'name'        => $funnel->name,
-            'steps_count' => $funnel->steps->count(),
-            'steps'       => $funnel->steps->map(fn ($s) => [
-                'name' => $s->name,
-                'type' => $s->type,
-            ]),
-        ]);
+        return redirect()->route('client.funnels.edit', $newFunnel->uuid)
+            ->with('success', "Funnel \"{$source->name}\" was successfully imported into your workspace!");
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function resolveShareableFunnel(string $token): Funnel
+    {
+        $cleanToken = str_starts_with($token, 'fnl_share_') ? substr($token, 10) : $token;
+
+        return Funnel::where(function ($q) use ($token, $cleanToken) {
+            $q->where('share_token', $token)
+              ->orWhere('share_token', $cleanToken)
+              ->orWhere('uuid', $token)
+              ->orWhere('uuid', $cleanToken)
+              ->orWhere('slug', $token)
+              ->orWhere('slug', $cleanToken);
+
+            if (is_numeric($token)) {
+                $q->orWhere('id', (int) $token);
+            }
+            if (is_numeric($cleanToken)) {
+                $q->orWhere('id', (int) $cleanToken);
+            }
+        })
+        ->with(['steps' => fn ($q) => $q->orderBy('sort_order'), 'steps.pages'])
+        ->firstOrFail();
+    }
 
     private function uniqueSlug(int $workspaceId, string $base): string
     {

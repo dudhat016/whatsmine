@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { browserTz, formatInTz } from '@/Utils/datetime';
 import { ChannelBrandIcon, CHANNEL_LABELS } from '@/Components/BrandIcons';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const STATUS_COLORS = {
     draft:     'bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300',
@@ -35,6 +36,7 @@ const STATUS_LABEL_KEYS = {
 
 export default function CampaignsIndex({ campaigns, filters }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
     const userTz = props.timezone || browserTz() || 'Asia/Dhaka';
@@ -49,8 +51,14 @@ export default function CampaignsIndex({ campaigns, filters }) {
         router.post(route('client.campaigns.launch', id), {}, { preserveScroll: true });
     const handlePause = (id) =>
         router.post(route('client.campaigns.pause', id), {}, { preserveScroll: true });
-    const handleDelete = (id) => {
-        if (confirm(t('campaign.delete_confirm'))) {
+    const handleDelete = async (id) => {
+        const ok = await confirm({
+            title: 'Delete Campaign',
+            message: t('campaign.delete_confirm') || 'Are you sure you want to delete this campaign?',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.campaigns.destroy', id), { preserveScroll: true });
         }
     };

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { browserTz, formatInTz } from '@/Utils/datetime';
 import AiPlannerModal from './AiPlannerModal';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const STATUS_META = {
     draft:      { labelKey: 'social.status_draft',      cls: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300', icon: <Pencil className="h-3 w-3" /> },
@@ -158,6 +159,7 @@ function PostDetailModal({ post, accountMap, userTz, onClose }) {
 /* ── Post Card ────────────────────────────────────────────────── */
 function PostCard({ post, accountMap, userTz, onView, onDelete }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const [actioning, setActioning] = useState(null);
     const targets = post.target_accounts ?? [];
     const dateField = post.published_at ?? post.scheduled_at;
@@ -168,8 +170,14 @@ function PostCard({ post, accountMap, userTz, onView, onDelete }) {
     const canCancel = post.status === 'scheduled';
     const mediaUrls = (post.media_urls ?? []).filter(Boolean);
 
-    const action = (type, confirmMsg, fn) => {
-        if (!confirm(confirmMsg)) return;
+    const action = async (type, confirmMsg, fn) => {
+        const ok = await confirm({
+            title: 'Confirm Action',
+            message: confirmMsg,
+            confirmText: 'Confirm',
+            variant: type === 'delete' || type === 'cancel' ? 'danger' : 'primary',
+        });
+        if (!ok) return;
         setActioning(type);
         router.post(fn(), {}, {
             preserveScroll: true,
@@ -184,98 +192,121 @@ function PostCard({ post, accountMap, userTz, onView, onDelete }) {
                 <div className="relative h-40 bg-neutral-100 dark:bg-neutral-800 shrink-0">
                     <img src={mediaUrls[0]} alt="" className="w-full h-full object-cover" />
                     {mediaUrls.length > 1 && (
-                        <span className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
-                            <Image className="h-3 w-3" /> {mediaUrls.length}
+                        <span className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                            +{mediaUrls.length - 1}
                         </span>
                     )}
                 </div>
             ) : (
-                <div className="h-1.5 bg-gradient-to-r from-brand-500 to-brand-400 shrink-0" />
+                <div className="h-2 bg-gradient-to-r from-brand-400 to-indigo-500 shrink-0" />
             )}
 
-            <div className="flex flex-col flex-1 p-4 gap-3">
-                {/* Status + date */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="p-4 flex flex-col flex-1 gap-3">
+                {/* Status + Target accounts */}
+                <div className="flex items-center justify-between gap-2">
                     <StatusBadge status={post.status} />
-                    {dateField && (
-                        <span className="flex items-center gap-1 text-[11px] text-neutral-400">
-                            <Clock className="h-3 w-3 shrink-0" /> {formatInTz(dateField, tz)}
-                        </span>
-                    )}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-h-0">
-                    {post.title && <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-1 truncate">{post.title}</p>}
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-3 leading-relaxed">{post.body}</p>
-                </div>
-
-                {/* Accounts */}
-                {targets.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                        {targets.slice(0, 3).map((id) => {
-                            const acct = accountMap[id];
-                            return acct ? <AccountPill key={id} acct={acct} /> : null;
+                    <div className="flex items-center -space-x-1.5 overflow-hidden">
+                        {targets.map(target => {
+                            const acc = accountMap[target.account_id];
+                            return (
+                                <span
+                                    key={target.account_id}
+                                    title={acc?.name || target.platform}
+                                    className="inline-flex items-center justify-center h-6 w-6 rounded-full ring-2 ring-white dark:ring-neutral-900 bg-neutral-100 dark:bg-neutral-800 text-xs"
+                                >
+                                    <SocialBrandIcon platform={target.platform} className="h-3.5 w-3.5" />
+                                </span>
+                            );
                         })}
-                        {targets.length > 3 && <span className="text-[11px] text-neutral-400 self-center">{t('social.more_count', { count: targets.length - 3 })}</span>}
+                    </div>
+                </div>
+
+                {/* Content preview */}
+                <p className="text-sm text-neutral-800 dark:text-neutral-200 line-clamp-3 flex-1">
+                    {post.content || <span className="italic text-neutral-400">{t('social.no_content')}</span>}
+                </p>
+
+                {/* Date / meta */}
+                {dateField && (
+                    <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                        <span>{formatInTz(dateField, tz, 'MMM d, yyyy h:mm a')}</span>
                     </div>
                 )}
 
-                {/* Primary actions */}
-                <div className="flex items-center gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-                    <button onClick={() => onView(post)}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:border-brand-400 hover:text-brand-600 transition">
-                        <Eye className="h-3.5 w-3.5" /> {t('social.details')}
-                    </button>
-                    {canEdit && (
-                        <Link href={route('client.social.posts.edit', post.id)}
-                            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:border-brand-400 hover:text-brand-600 transition">
-                            <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
-                        </Link>
-                    )}
-                </div>
+                {/* Failure reason */}
+                {post.status === 'failed' && post.error_message && (
+                    <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg p-2 line-clamp-2">
+                        {post.error_message}
+                    </p>
+                )}
 
-                {/* Secondary actions */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                    {canPublishNow && (
-                        <button
-                            onClick={() => action('publish', t('social.confirm_publish_now'), () => route('client.social.posts.publish-now', post.id))}
-                            disabled={actioning === 'publish'}
-                            className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition"
-                        >
-                            <Zap className="h-3 w-3" /> {actioning === 'publish' ? t('social.publishing') : t('social.publish_now')}
-                        </button>
-                    )}
-                    {canCancel && (
-                        <button
-                            onClick={() => action('cancel', t('social.confirm_cancel_schedule'), () => route('client.social.posts.cancel', post.id))}
-                            disabled={actioning === 'cancel'}
-                            className="inline-flex items-center gap-1 rounded-lg border border-amber-300 px-2.5 py-1 text-[11px] font-medium text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 disabled:opacity-60 transition"
-                        >
-                            <Ban className="h-3 w-3" /> {actioning === 'cancel' ? t('social.cancelling') : t('social.cancel_schedule')}
-                        </button>
-                    )}
-                    {post.post_url && (
-                        <a href={post.post_url} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 dark:border-neutral-700 px-2.5 py-1 text-[11px] font-medium text-neutral-500 hover:text-brand-600 transition">
-                            <ExternalLink className="h-3 w-3" /> {t('social.view')}
-                        </a>
-                    )}
-                    {canDelete && (
-                        <button onClick={() => onDelete(post.id)}
-                            className="ml-auto inline-flex items-center gap-1 rounded-lg border border-neutral-200 dark:border-neutral-700 px-2 py-1 text-[11px] text-neutral-400 hover:text-red-500 hover:border-red-300 transition">
-                            <Trash2 className="h-3 w-3" />
-                        </button>
-                    )}
+                {/* Actions */}
+                <div className="flex items-center justify-between gap-1 pt-2 border-t border-neutral-100 dark:border-neutral-800 text-xs">
+                    <button
+                        type="button"
+                        onClick={() => onView(post)}
+                        className="flex items-center gap-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                    >
+                        <Eye className="h-3.5 w-3.5" />
+                        {t('common.view')}
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                        {canPublishNow && (
+                            <button
+                                type="button"
+                                disabled={actioning !== null}
+                                onClick={() => action('publish', t('social.confirm_publish_now'), () => route('client.social.posts.publish-now', post.id))}
+                                title={t('social.publish_now')}
+                                className="flex items-center gap-1 px-2 py-1 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:hover:bg-brand-900/50 dark:text-brand-300 font-medium transition-colors"
+                            >
+                                <Zap className="h-3 w-3" />
+                                {t('social.publish_now')}
+                            </button>
+                        )}
+                        {canCancel && (
+                            <button
+                                type="button"
+                                disabled={actioning !== null}
+                                onClick={() => action('cancel', t('social.confirm_cancel_post'), () => route('client.social.posts.cancel', post.id))}
+                                title={t('social.cancel_scheduled')}
+                                className="flex items-center gap-1 px-2 py-1 rounded bg-neutral-100 hover:bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 transition-colors"
+                            >
+                                <Ban className="h-3 w-3" />
+                                {t('common.cancel')}
+                            </button>
+                        )}
+                        {canEdit && (
+                            <Link
+                                href={route('client.social.posts.edit', post.id)}
+                                className="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                                title={t('common.edit')}
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                            </Link>
+                        )}
+                        {canDelete && (
+                            <button
+                                type="button"
+                                onClick={() => onDelete(post.id)}
+                                className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-600 transition-colors"
+                                title={t('common.delete')}
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
 
-/* ── Main Page ────────────────────────────────────────────────── */
-export default function PostsIndex({ posts, accounts, filters }) {
+/* ── Main Page Component ───────────────────────────────────────── */
+export default function SocialPostsIndex({ posts, accounts, filters }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
     const userTz = props.timezone || browserTz() || 'Asia/Dhaka';
@@ -287,8 +318,14 @@ export default function PostsIndex({ posts, accounts, filters }) {
     const handleFilter = (key, val) =>
         router.get(route('client.social.posts.index'), { ...filters, [key]: val || undefined }, { preserveState: true, replace: true });
 
-    const handleDelete = (id) => {
-        if (confirm(t('social.confirm_delete_post'))) {
+    const handleDelete = async (id) => {
+        const ok = await confirm({
+            title: 'Delete Post',
+            message: t('social.confirm_delete_post') || 'Are you sure you want to delete this post?',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.social.posts.destroy', id), { preserveScroll: true });
         }
     };

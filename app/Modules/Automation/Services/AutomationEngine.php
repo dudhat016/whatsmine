@@ -62,6 +62,58 @@ class AutomationEngine
             return;
         }
 
+        $cfg = $automation->trigger_config ?? [];
+        if (empty($cfg) && is_array($automation->nodes)) {
+            foreach ($automation->nodes as $n) {
+                if ((($n['type'] ?? '') === 'trigger' || ($n['type'] ?? '') === 'triggerNode') && ! empty($n['data']['triggerConfig'])) {
+                    $cfg = array_merge($cfg, $n['data']['triggerConfig']);
+                    break;
+                }
+            }
+        }
+
+        // 1. Prevent duplicate parallel runs (Active Run Debounce / Mutex)
+        $preventParallel = $cfg['prevent_parallel_runs'] ?? true;
+        if ($preventParallel) {
+            $hasActiveRun = AutomationRun::where('automation_id', $automation->id)
+                ->where('contact_id', $contactId)
+                ->whereIn('status', ['pending', 'running', 'waiting'])
+                ->exists();
+
+            if ($hasActiveRun) {
+                return;
+            }
+        }
+
+        // 2. Re-entry policy (Once, Cooldown, Always)
+        $policy = $cfg['re_entry_policy'] ?? 'always';
+        if ($policy === 'once') {
+            $hasPastRun = AutomationRun::where('automation_id', $automation->id)
+                ->where('contact_id', $contactId)
+                ->exists();
+
+            if ($hasPastRun) {
+                return;
+            }
+        } elseif ($policy === 'cooldown') {
+            $amount = (int) ($cfg['cooldown_amount'] ?? 24);
+            $unit = $cfg['cooldown_unit'] ?? 'hours';
+            $cutoff = match ($unit) {
+                'minutes' => now()->subMinutes($amount),
+                'days' => now()->subDays($amount),
+                default => now()->subHours($amount),
+            };
+
+            $hasRecentRun = AutomationRun::where('automation_id', $automation->id)
+                ->where('contact_id', $contactId)
+                ->where('created_at', '>=', $cutoff)
+                ->exists();
+
+            if ($hasRecentRun) {
+                return;
+            }
+        }
+
         $run = AutomationRun::create([
             'automation_id' => $automation->id,
             'contact_id' => $contactId,
@@ -74,34 +126,215 @@ class AutomationEngine
     }
 
     /**
-     * Resume runs that are parked on an "Ask question" node, waiting for this
-     * contact's next inbound message. The reply body is stored in the configured
-     * context variable and the run continues from the node after the question.
+     * Resume runs that are parked on an "Ask question" node or "Wait for Customer Reply" fork node,
+     * waiting for this contact's next inbound message.
      */
     public function resumeAwaitingReplies(int $workspaceId, int $contactId, string $messageBody): void
     {
         $runs = AutomationRun::where('contact_id', $contactId)
             ->where('status', 'waiting')
             ->whereHas('automation', fn ($q) => $q->where('workspace_id', $workspaceId))
+            ->with('automation')
             ->get();
 
         foreach ($runs as $run) {
             $context = $run->context ?? [];
-            if (empty($context['_awaiting_reply'])) {
-                continue; // a plain wait/delay — not waiting for a reply
+
+            // Case 1: Parked on "Ask question" node
+            if (! empty($context['_awaiting_reply'])) {
+                $var = $context['_reply_var'] ?? 'answer';
+                $context[$var] = $messageBody;
+                unset($context['_awaiting_reply'], $context['_reply_var']);
+                $run->update(['context' => $context, 'status' => 'pending']);
+                dispatch(new ExecuteAutomationRunJob($run->id))->onQueue('automation');
+                continue;
             }
 
-            $var = $context['_reply_var'] ?? 'answer';
-            $context[$var] = $messageBody;
-            unset($context['_awaiting_reply'], $context['_reply_var']);
-            $run->update(['context' => $context]);
+            // Case 2: Parked on "Wait for Customer Reply" fork node
+            if (! empty($context['_waiting_for_reply'])) {
+                $matchType = $context['_reply_match_type'] ?? 'any';
+                $matchPhrase = trim((string) ($context['_reply_match_phrase'] ?? ''));
+                $matched = true;
 
-            dispatch(new ExecuteAutomationRunJob($run->id))->onQueue('automation');
+                if ($matchType === 'contains' && $matchPhrase !== '') {
+                    $matched = str_contains(mb_strtolower($messageBody), mb_strtolower($matchPhrase));
+                } elseif ($matchType === 'exact' && $matchPhrase !== '') {
+                    $matched = mb_strtolower(trim($messageBody)) === mb_strtolower($matchPhrase);
+                }
+
+                if (! $matched) {
+                    continue; // Didn't match requirement; continue waiting until matching reply or timeout
+                }
+
+                $replyVar = $context['_reply_var'] ?? 'customer_reply';
+                $waitingNodeId = $context['_waiting_for_reply_node_id'] ?? $run->current_node_id;
+                $edges = collect($run->automation->edges ?? []);
+
+                // Find edge from 'replied' sourceHandle
+                $repliedEdge = $edges->first(fn ($e) => $e['source'] === $waitingNodeId && ($e['sourceHandle'] ?? '') === 'replied')
+                    ?? $edges->first(fn ($e) => $e['source'] === $waitingNodeId && in_array($e['sourceHandle'] ?? '', ['true', 'yes', 'replied']))
+                    ?? $edges->first(fn ($e) => $e['source'] === $waitingNodeId);
+
+                $targetNodeId = $repliedEdge['target'] ?? null;
+
+                $context[$replyVar] = $messageBody;
+                $context['_reply_received_at'] = now()->toIso8601String();
+                unset(
+                    $context['_waiting_for_reply'],
+                    $context['_waiting_for_reply_node_id'],
+                    $context['_reply_var'],
+                    $context['_reply_match_type'],
+                    $context['_reply_match_phrase'],
+                    $context['_reply_timeout_at']
+                );
+
+                $run->update([
+                    'context' => $context,
+                    'status' => 'pending',
+                    'resume_node_id' => $targetNodeId,
+                ]);
+
+                dispatch(new ExecuteAutomationRunJob($run->id))->onQueue('automation');
+                continue;
+            }
         }
+    }
+
+    /**
+     * Stop waiting runs for this contact when they send an inbound reply,
+     * if the automation has "stop_on_response" safeguard enabled.
+     */
+    public function handleCustomerReplyStopDrip(int $workspaceId, int $contactId): void
+    {
+        $runs = AutomationRun::where('contact_id', $contactId)
+            ->where('status', 'waiting')
+            ->whereHas('automation', fn ($q) => $q->where('workspace_id', $workspaceId))
+            ->with('automation')
+            ->get();
+
+        foreach ($runs as $run) {
+            $automation = $run->automation;
+            if (! $automation) {
+                continue;
+            }
+
+            // Check if stop_on_response is enabled on trigger_config or any trigger node
+            $stopOnResponse = ! empty($automation->trigger_config['stop_on_response']);
+            if (! $stopOnResponse && is_array($automation->nodes)) {
+                foreach ($automation->nodes as $node) {
+                    $isTrigger = ($node['type'] ?? '') === 'triggerNode' || ($node['type'] ?? '') === 'trigger';
+                    if ($isTrigger && ! empty($node['data']['triggerConfig']['stop_on_response'])) {
+                        $stopOnResponse = true;
+                        break;
+                    }
+                }
+            }
+
+            // Don't halt if it was waiting on an "ask_question" reply or "wait_for_reply" fork
+            $context = $run->context ?? [];
+            if (! empty($context['_awaiting_reply']) || ! empty($context['_waiting_for_reply'])) {
+                continue;
+            }
+
+            if ($stopOnResponse) {
+                $run->update([
+                    'status' => 'cancelled',
+                    'completed_at' => now(),
+                    'error' => 'Stopped on customer reply (Stop on Response safeguard)',
+                ]);
+
+                \App\Modules\Automation\Models\AutomationRunLog::create([
+                    'automation_run_id' => $run->id,
+                    'node_id' => $run->current_node_id ?? 'system',
+                    'node_type' => 'system',
+                    'status' => 'skipped',
+                    'message' => 'Automation paused/cancelled because contact replied (Stop on Customer Response safeguard).',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Extract all trigger definitions from an automation (from nodes array + fallback).
+     * Returns list of ['id' => string, 'trigger_type' => string, 'trigger_name' => string, 'trigger_config' => array].
+     */
+    public function getAutomationTriggers(Automation $automation): array
+    {
+        $triggers = [];
+
+        if (is_array($automation->nodes)) {
+            foreach ($automation->nodes as $node) {
+                $isTrigger = ($node['type'] ?? '') === 'triggerNode'
+                    || ($node['type'] ?? '') === 'trigger'
+                    || isset($node['data']['triggerType']);
+
+                if ($isTrigger) {
+                    $type = $node['data']['triggerType'] ?? $node['data']['trigger_type'] ?? $automation->trigger_type;
+                    $config = $node['data']['triggerConfig'] ?? $node['data']['trigger_config'] ?? $automation->trigger_config ?? [];
+                    $name = $node['data']['triggerName'] ?? $node['data']['trigger_name'] ?? $node['data']['label'] ?? null;
+                    if (! $name && $type) {
+                        $name = match ($type) {
+                            'form.submitted' => 'Form Submitted',
+                            'contact.created' => 'Contact Created',
+                            'contact.tag_added' => 'Tag Added',
+                            'message.received' => 'Message Received',
+                            'customer.replied' => 'Customer Replied',
+                            'opportunity.created' => 'Opportunity Created',
+                            'opportunity.pipeline_changed' => 'Opportunity Pipeline Changed',
+                            'opportunity.stage_changed' => 'Opportunity Stage Changed',
+                            'opportunity.status_changed' => 'Opportunity Status Changed',
+                            'opportunity.won' => 'Opportunity Won',
+                            'opportunity.lost' => 'Opportunity Lost',
+                            'opportunity.abandoned' => 'Opportunity Abandoned',
+                            default => ucfirst(str_replace(['.', '_'], ' ', (string) $type)),
+                        };
+                    }
+                    if ($type) {
+                        $triggers[] = [
+                            'id' => $node['id'] ?? 'trigger-1',
+                            'trigger_type' => $type,
+                            'trigger_name' => $name,
+                            'trigger_config' => is_array($config) ? $config : [],
+                        ];
+                    }
+                }
+            }
+        }
+
+        if (empty($triggers) && ! empty($automation->trigger_type)) {
+            $defaultName = $automation->trigger_config['trigger_name'] ?? match ($automation->trigger_type) {
+                'form.submitted' => 'Form Submitted',
+                'contact.created' => 'Contact Created',
+                'contact.tag_added' => 'Tag Added',
+                'message.received' => 'Message Received',
+                'customer.replied' => 'Customer Replied',
+                'opportunity.created' => 'Opportunity Created',
+                'opportunity.pipeline_changed' => 'Opportunity Pipeline Changed',
+                'opportunity.stage_changed' => 'Opportunity Stage Changed',
+                'opportunity.status_changed' => 'Opportunity Status Changed',
+                'opportunity.won' => 'Opportunity Won',
+                'opportunity.lost' => 'Opportunity Lost',
+                'opportunity.abandoned' => 'Opportunity Abandoned',
+                default => ucfirst(str_replace(['.', '_'], ' ', (string) $automation->trigger_type)),
+            };
+
+            $triggers[] = [
+                'id' => 'trigger-1',
+                'trigger_type' => $automation->trigger_type,
+                'trigger_name' => $defaultName,
+                'trigger_config' => is_array($automation->trigger_config) ? $automation->trigger_config : [],
+            ];
+        }
+
+        return $triggers;
     }
 
     public function executeRun(AutomationRun $run): void
     {
+        if (in_array($run->status, ['completed', 'failed', 'cancelled'])) {
+            return;
+        }
+
         $run->update(['status' => 'running']);
         $automation = $run->automation;
 
@@ -113,6 +346,23 @@ class AutomationEngine
         if ($run->resume_node_id) {
             $currentId = $run->resume_node_id;
             $run->update(['resume_node_id' => null]);
+        } elseif (! empty($context['_waiting_for_reply'])) {
+            // Scheduled wakeup fired while still waiting for customer reply -> Timeout branch!
+            $waitingNodeId = $context['_waiting_for_reply_node_id'] ?? $run->current_node_id;
+            $timeoutEdge = $edges->first(fn ($e) => $e['source'] === $waitingNodeId && ($e['sourceHandle'] ?? '') === 'timeout')
+                ?? $edges->first(fn ($e) => $e['source'] === $waitingNodeId && in_array($e['sourceHandle'] ?? '', ['false', 'no', 'timeout', 'timed_out']));
+
+            $currentId = $timeoutEdge['target'] ?? null;
+            unset(
+                $context['_waiting_for_reply'],
+                $context['_waiting_for_reply_node_id'],
+                $context['_reply_var'],
+                $context['_reply_match_type'],
+                $context['_reply_match_phrase'],
+                $context['_reply_timeout_at']
+            );
+            $context['_reply_timed_out'] = true;
+            $run->update(['context' => $context]);
         } else {
             // Find trigger node and start from the first node after it
             $matchedTriggerId = $context['_matched_trigger_id'] ?? null;
@@ -160,7 +410,7 @@ class AutomationEngine
             AutomationRunLog::create([
                 'run_id' => $run->id,
                 'node_id' => $currentId,
-                'node_type' => $node['type'] ?? 'unknown',
+                'node_type' => $node['data']['nodeType'] ?? $node['data']['type'] ?? $node['type'] ?? 'unknown',
                 'result' => match ($result['status'] ?? 'ok') {
                     'error' => 'error',
                     'skipped' => 'skipped',
@@ -181,12 +431,25 @@ class AutomationEngine
                 return;
             }
 
+            // Exit early if requested by remove_from_workflow or stop_flow
+            if (! empty($result['stop_flow']) || ($result['status'] ?? '') === 'exited') {
+                $run->update(['status' => 'completed', 'completed_at' => now()]);
+                return;
+            }
+
+            // Direct step redirect (e.g. go_to_step from wait node or jump action)
+            if (! empty($result['next_node_id'])) {
+                $currentId = $result['next_node_id'];
+                $nextEdgeLabel = null;
+                continue;
+            }
+
             // Condition branching
             $nextEdgeLabel = $result['branch'] ?? null;
 
             // Find next edge
             $nextEdge = $edges->first(fn ($e) => $e['source'] === $currentId &&
-                (! isset($nextEdgeLabel) || ($e['sourceHandle'] ?? null) === $nextEdgeLabel)
+                (! isset($nextEdgeLabel) || ($e['sourceHandle'] ?? null) === $nextEdgeLabel || (($e['sourceHandle'] ?? null) === ($result['branch_base'] ?? null)))
             );
 
             $currentId = $nextEdge['target'] ?? null;
@@ -195,6 +458,22 @@ class AutomationEngine
 
         $run->update(['status' => 'completed', 'completed_at' => now()]);
         $automation->increment('run_count');
+
+        // If this was a nested child subflow with wait_completion, resume parent run
+        $parentRunId = $context['_parent_run_id'] ?? null;
+        if ($parentRunId) {
+            $parentRun = AutomationRun::find($parentRunId);
+            if ($parentRun && $parentRun->status === 'waiting') {
+                $parentContext = $parentRun->context ?? [];
+                $parentContext['_subflow_completed'] = true;
+                $parentContext['_subflow_id'] = $automation->id;
+                $parentRun->update([
+                    'context' => $parentContext,
+                    'status' => 'pending',
+                ]);
+                dispatch(new ExecuteAutomationRunJob($parentRun->id))->onQueue('automation');
+            }
+        }
     }
 
     /**
@@ -252,9 +531,9 @@ class AutomationEngine
 
             $branch = null;
             if ($type === 'condition') {
-                $passed = $this->evaluateCondition($data, $contact, $context);
-                $branch = $passed ? 'true' : 'false';
-                $result = $this->conditionResult($passed, $data['field'] ?? null, $data['operator'] ?? 'equals', $data['value'] ?? null);
+                $eval = $this->evaluateConditionNode($data, $contact, $context);
+                $branch = $eval['branch'];
+                $result = $eval;
             } else {
                 $result = $this->previewNode($type, $data, $contact, $context);
             }
@@ -276,7 +555,7 @@ class AutomationEngine
             }
 
             $nextEdge = $edgesC->first(fn ($e) => ($e['source'] ?? null) === $currentId
-                && ($branch === null || ($e['sourceHandle'] ?? null) === $branch));
+                && ($branch === null || ($e['sourceHandle'] ?? null) === $branch || (($e['sourceHandle'] ?? null) === ($result['branch_base'] ?? null))));
             $currentId = $nextEdge['target'] ?? null;
         }
 
@@ -353,10 +632,14 @@ class AutomationEngine
             'ask_question' => $ok('Would ask: "'.$this->snippet($render($data['question'] ?? '')).'" → saved to {{context.'.(($data['variable'] ?? '') ?: 'answer').'}}',
                 ['context_update' => [(($data['variable'] ?? '') ?: 'answer') => '[sample reply]']]),
             'wait' => $ok('Would wait '.((int) ($data['amount'] ?? 1)).' '.($data['unit'] ?? 'minutes').' (skipped in test).'),
+            'wait_for_reply' => $ok('Would wait up to '.((int) ($data['timeout_amount'] ?? 24)).' '.($data['timeout_unit'] ?? 'hours').' for customer reply. Branch: "replied" on message, "timeout" on expiration.', [
+                'branch' => 'replied',
+                'context_update' => [(($data['reply_variable'] ?? '') ?: 'customer_reply') => '[sample customer reply]'],
+            ]),
             'webhook' => ($data['url'] ?? '') === ''
                 ? $err('Webhook URL missing.')
                 : $ok('Would call '.strtoupper($data['method'] ?? 'POST').' '.$this->snippet($render($data['url']), 50), ['context_update' => ['webhook_status' => 200]]),
-            'run_subflow' => $ok('Would run sub-flow '.($data['subflow_name'] ?? ($data['automation_uuid'] ?? '?')).'.'),
+            'run_subflow' => $ok('Would run sub-flow '.($data['subflow_name'] ?? ($data['automation_uuid'] ?? '?')).' (Mode: '.($data['mode'] ?? 'fire_and_forget').').'),
             'ai_reply' => $ok('Would generate an AI reply'.(! empty($data['chatbot_id']) ? ' via chatbot #'.$data['chatbot_id'] : '').' and send it.', ['context_update' => ['last_ai_reply' => '[AI generated reply]']]),
             'add_tag' => ($data['tag'] ?? '') === '' ? $skip('No tag name.') : $ok('Would add tag "'.$data['tag'].'".'),
             'remove_tag' => ($data['tag'] ?? '') === '' ? $skip('No tag name.') : $ok('Would remove tag "'.$data['tag'].'".'),
@@ -379,6 +662,14 @@ class AutomationEngine
                 : (($data['mode'] ?? 'send_link') === 'read_response'
                     ? $ok('Would read the latest Google Form response.', ['context_update' => [(($data['result_var'] ?? '') ?: 'form').'_json' => '{}']])
                     : $ok('Would share the Google Form link.', ['context_update' => ['form_url' => 'https://docs.google.com/forms/d/sample/viewform']])),
+            'remove_from_workflow' => in_array($data['target_type'] ?? 'current', ['another', 'specific']) && empty($data['target_automation_id'])
+                ? $err('Target automation is required.')
+                : $ok('Would unenroll contact from '.match ($data['target_type'] ?? 'current') {
+                    'another', 'specific' => 'specified workflow',
+                    'all_except_current' => 'all workflows except current workflow',
+                    'all' => 'all workflows',
+                    default => 'this workflow',
+                }.'.'),
             default => $skip('Unknown node type: '.$type),
         };
     }
@@ -392,14 +683,32 @@ class AutomationEngine
 
     private function executeNode(array $node, AutomationRun $run, array $context): array
     {
-        $type = $node['type'] ?? 'unknown';
+        $type = $node['data']['nodeType'] ?? $node['data']['type'] ?? $node['type'] ?? 'unknown';
         $data = $node['data'] ?? [];
+
+        // Support disabling/muting steps during testing without deleting them
+        if (! empty($data['disabled'])) {
+            return ['status' => 'skipped', 'message' => 'Step skipped (disabled by user)'];
+        }
+
+        // Outbound communication safeguard: if previous wait step flagged to skip obsolete reminders
+        if (! empty($context['skip_outbound_until_next_wait']) && in_array($type, [
+            'send_whatsapp', 'send_sms', 'send_email', 'send_template', 'send_media',
+            'send_sequence', 'quick_replies', 'list_message', 'cta_button', 'send_location',
+            'send_poll', 'whatsapp_catalog', 'whatsapp_form',
+        ])) {
+            return [
+                'status' => 'skipped',
+                'message' => 'Skipped outbound communication: event reminder window has already passed.',
+            ];
+        }
 
         try {
             return match ($type) {
-                'wait' => $this->executeWait($data, $run),
-                'add_tag' => $this->executeTagAction($data, $run, 'add'),
-                'remove_tag' => $this->executeTagAction($data, $run, 'remove'),
+                'wait' => $this->executeWait($data, $run, $context),
+                'wait_for_reply' => $this->executeWaitForReply($data, $run, $context),
+                'add_tag' => $this->executeTagAction($data, $run, 'add', $context),
+                'remove_tag' => $this->executeTagAction($data, $run, 'remove', $context),
                 'update_contact' => $this->executeUpdateContact($data, $run, $context),
                 'webhook' => $this->executeWebhook($data, $run, $context),
                 'condition' => $this->executeCondition($data, $run, $context),
@@ -419,6 +728,7 @@ class AutomationEngine
                 'ask_question' => $this->executeAskQuestion($data, $run, $context),
                 // ── LOGIC ─────────────────────────────────────────────────────
                 'run_subflow' => $this->executeRunSubflow($data, $run, $context),
+                'remove_from_workflow' => $this->executeRemoveFromWorkflow($data, $run, $context),
                 // ── CONTACT ───────────────────────────────────────────────────
                 'assign_agent' => $this->executeAssignAgent($data, $run),
                 // ── ENGAGE ────────────────────────────────────────────────────
@@ -440,11 +750,16 @@ class AutomationEngine
                 // ── PIPELINES ─────────────────────────────────────────────────
                 'create_opportunity', 'create_update_opportunity' => $this->executeCreateOpportunity($data, $run, $context),
                 'change_opportunity_stage' => $this->executeChangeOpportunityStage($data, $run, $context),
+                'transfer_opportunity_pipeline' => $this->executeTransferOpportunityPipeline($data, $run, $context),
                 'update_opportunity_status' => $this->executeUpdateOpportunityStatus($data, $run, $context),
                 'remove_opportunity' => $this->executeRemoveOpportunity($data, $run, $context),
                 // ── CALENDARS ─────────────────────────────────────────────────
                 'book_system_appointment' => $this->executeSystemBookAppointment($data, $run, $context),
                 'cancel_appointment' => $this->executeCancelAppointment($data, $run, $context),
+                // ── AGENCY SUITE & PAYMENTS ───────────────────────────────────
+                'create_agency_invoice' => $this->executeCreateAgencyInvoice($data, $run, $context),
+                'send_agency_payment_link' => $this->executeSendAgencyPaymentLink($data, $run, $context),
+                'send_onboarding_form_link' => $this->executeSendOnboardingFormLink($data, $run, $context),
                 default => ['status' => 'skipped', 'message' => "Unknown node type: {$type}"],
             };
         } catch (\Throwable $e) {
@@ -496,14 +811,53 @@ class AutomationEngine
             return ['status' => 'skipped', 'message' => 'Contact has no email address.'];
         }
 
-        $subject = $this->renderTokens($data['subject'] ?? 'Message from us', $contact, $context);
-        $body = $this->renderTokens($data['body'] ?? '', $contact, $context);
+        $fromName = ! empty($data['from_name']) ? $this->renderTokens((string) $data['from_name'], $contact, $context) : null;
+        $fromEmail = ! empty($data['from_email']) ? $this->renderTokens((string) $data['from_email'], $contact, $context) : null;
+        $subject = $this->renderTokens((string) ($data['subject'] ?? 'Message from us'), $contact, $context);
+        $preheader = ! empty($data['preheader']) ? $this->renderTokens((string) $data['preheader'], $contact, $context) : null;
+        $body = $this->renderTokens((string) ($data['body'] ?? ''), $contact, $context);
+
+        if (! empty($data['utm_tracking'])) {
+            $campaignName = $run->automation->name ?? 'workflow';
+            $actionName = $data['label'] ?? 'email_action';
+            $body = $this->applyUtmTracking($body, $campaignName, $actionName);
+        }
+
+        $cc = ! empty($data['cc']) ? (is_array($data['cc']) ? $data['cc'] : array_map('trim', explode(',', (string) $data['cc']))) : [];
+        $bcc = ! empty($data['bcc']) ? (is_array($data['bcc']) ? $data['bcc'] : array_map('trim', explode(',', (string) $data['bcc']))) : [];
 
         Mail::to($contact->email)->queue(
-            new AutomationEmail($subject, $body)
+            new AutomationEmail(
+                emailSubject: $subject,
+                emailBody: $body,
+                fromName: $fromName,
+                fromEmail: $fromEmail,
+                preheader: $preheader,
+                cc: $cc,
+                bcc: $bcc,
+            )
         );
 
         return ['status' => 'ok', 'message' => "Email queued to {$contact->email}."];
+    }
+
+    private function applyUtmTracking(string $html, string $campaignName, string $actionName): string
+    {
+        $campaignSlug = \Illuminate\Support\Str::slug($campaignName) ?: 'workflow';
+        $contentSlug = \Illuminate\Support\Str::slug($actionName) ?: 'email_step';
+
+        return (string) preg_replace_callback('/<a\s+([^>]*?)href=["\'](https?:\/\/[^"\'>]+)["\']([^>]*)>/i', function ($matches) use ($campaignSlug, $contentSlug) {
+            $url = $matches[2];
+            if (str_starts_with($url, 'mailto:') || str_starts_with($url, 'tel:') || str_starts_with($url, '#')) {
+                return $matches[0];
+            }
+
+            $separator = str_contains($url, '?') ? '&' : '?';
+            $utm = "utm_source=whatsmine&utm_medium=email&utm_campaign={$campaignSlug}&utm_content={$contentSlug}";
+            $trackedUrl = $url . $separator . $utm;
+
+            return "<a {$matches[1]}href=\"{$trackedUrl}\"{$matches[3]}>";
+        }, $html);
     }
 
     /**
@@ -607,20 +961,15 @@ class AutomationEngine
 
     private function renderTokens(string $template, Contact $contact, array $context): string
     {
-        // Contact tokens: {{contact.first_name}}, {{contact.last_name}}, {{contact.email}}, etc.
-        $template = preg_replace_callback('/\{\{contact\.(\w+)\}\}/', function ($matches) use ($contact) {
-            return (string) ($contact->{$matches[1]} ?? '');
-        }, $template);
+        if ($template === '' || ! str_contains($template, '{{')) {
+            return $template;
+        }
 
-        // Contact name shorthand: {{contact.name}} -> full name
-        $template = str_replace('{{contact.name}}', $contact->full_name, $template);
+        // 1. Core token resolution via CampaignPersonalizer (supports contact, custom_fields, custom_values, trigger_links, right_now, account, user, context and fallback modifiers)
+        $personalizer = app(\App\Modules\Broadcasting\Services\CampaignPersonalizer::class);
+        $template = $personalizer->renderText($template, $contact, $context);
 
-        // Context tokens: {{context.key}}
-        $template = preg_replace_callback('/\{\{context\.(\w+)\}\}/', function ($matches) use ($context) {
-            return (string) ($context[$matches[1]] ?? '');
-        }, $template);
-
-        // Opportunity tokens: {{opportunity.name}}, {{opportunity.monetary_value}}, {{opportunity.stage}}, etc.
+        // 2. Opportunity tokens: {{opportunity.name}}, {{opportunity.monetary_value}}, {{opportunity.stage}}, etc.
         if (str_contains($template, '{{opportunity.')) {
             $deal = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $contact->workspace_id)
                 ->where('contact_id', $contact->id)
@@ -634,7 +983,9 @@ class AutomationEngine
                     '{{opportunity.monetary_value}}',
                     '{{opportunity.value}}',
                     '{{opportunity.pipeline}}',
+                    '{{opportunity.pipeline_name}}',
                     '{{opportunity.stage}}',
+                    '{{opportunity.stage_name}}',
                     '{{opportunity.status}}',
                     '{{opportunity.assigned_user}}',
                 ], [
@@ -642,6 +993,8 @@ class AutomationEngine
                     number_format((float) $deal->monetary_value, 2),
                     number_format((float) $deal->monetary_value, 2),
                     $deal->pipeline->name ?? 'Default Pipeline',
+                    $deal->pipeline->name ?? 'Default Pipeline',
+                    $deal->stage->name ?? 'Default Stage',
                     $deal->stage->name ?? 'Default Stage',
                     strtoupper($deal->status),
                     $deal->assigned_user->name ?? 'Unassigned',
@@ -649,29 +1002,180 @@ class AutomationEngine
             }
         }
 
-        // Appointment tokens: {{appointment.title}}, {{appointment.start_time}}, {{appointment.location}}, etc.
+        // 3. Appointment tokens: {{appointment.title}}, {{appointment.start_time}}, {{appointment.location}}, etc.
         if (str_contains($template, '{{appointment.')) {
-            $appointment = \App\Modules\Calendars\Models\Appointment::where('workspace_id', $contact->workspace_id)
-                ->where('contact_id', $contact->id)
-                ->with(['calendar', 'assignedUser'])
-                ->latest()
-                ->first();
+            $appointment = null;
+            if (($context['_appointment_instance'] ?? null) instanceof \App\Modules\Calendars\Models\Appointment) {
+                $appointment = $context['_appointment_instance'];
+            } elseif (($context['appointment'] ?? null) instanceof \App\Modules\Calendars\Models\Appointment) {
+                $appointment = $context['appointment'];
+            } else {
+                $appointmentId = $context['appointment_id'] ?? null;
+                try {
+                    $appointment = $appointmentId
+                        ? \App\Modules\Calendars\Models\Appointment::with(['calendar', 'assignedUser'])->find($appointmentId)
+                        : \App\Modules\Calendars\Models\Appointment::where('workspace_id', $contact->workspace_id)
+                            ->where('contact_id', $contact->id)
+                            ->with(['calendar', 'assignedUser'])
+                            ->latest()
+                            ->first();
+                } catch (\Throwable $e) {
+                    $appointment = null;
+                }
+            }
 
             if ($appointment) {
+                $isHtml = preg_match('/<(?:p|div|table|html|body|br|span|h[1-6]|a)\b/i', $template);
+                $calendarLinksBlock = $isHtml ? $appointment->getCalendarLinksHtml() : $appointment->getCalendarLinksText();
+
                 $template = str_replace([
                     '{{appointment.title}}',
+                    '{{appointment.calendar_name}}',
+                    '{{appointment.date}}',
                     '{{appointment.start_time}}',
+                    '{{appointment.end_time}}',
+                    '{{appointment.time}}',
+                    '{{appointment.timezone}}',
                     '{{appointment.location}}',
                     '{{appointment.meeting_join_url}}',
                     '{{appointment.staff_name}}',
+                    '{{appointment.reschedule_url}}',
+                    '{{appointment.reschedule_link}}',
+                    '{{appointment.cancel_url}}',
+                    '{{appointment.cancel_link}}',
+                    '{{appointment.add_to_google_calendar}}',
+                    '{{appointment.google_calendar_url}}',
+                    '{{appointment.add_to_outlook}}',
+                    '{{appointment.outlook_calendar_url}}',
+                    '{{appointment.add_to_ical}}',
+                    '{{appointment.ical_url}}',
+                    '{{appointment.calendar_links}}',
+                    '{{appointment.action_links}}',
+                    '{{appointment.status}}',
+                    '{{appointment.notes}}',
                 ], [
                     $appointment->title,
-                    $appointment->start_at->format('Y-m-d g:i A'),
+                    $appointment->calendar?->name ?? 'Calendar',
+                    $appointment->start_at ? $appointment->start_at->format('Y-m-d') : '',
+                    $appointment->start_at ? $appointment->start_at->format('g:i A') : '',
+                    $appointment->end_at ? $appointment->end_at->format('g:i A') : '',
+                    $appointment->start_at ? $appointment->start_at->format('g:i A') : '',
+                    $appointment->timezone ?? 'UTC',
                     $appointment->location ?? 'Online',
                     $appointment->meeting_join_url ?? '#',
-                    $appointment->assignedUser->name ?? 'Host Staff',
+                    $appointment->assignedUser?->name ?? 'Host Staff',
+                    $appointment->reschedule_url,
+                    $appointment->reschedule_url,
+                    $appointment->cancel_url,
+                    $appointment->cancel_url,
+                    $appointment->google_calendar_url,
+                    $appointment->google_calendar_url,
+                    $appointment->outlook_calendar_url,
+                    $appointment->outlook_calendar_url,
+                    $appointment->ical_url,
+                    $appointment->ical_url,
+                    $calendarLinksBlock,
+                    $calendarLinksBlock,
+                    $appointment->status,
+                    $appointment->notes ?? '',
+                ], $template);
+            } elseif (! empty($context['appointment_title']) || ! empty($context['reschedule_url']) || ! empty($context['add_to_google_calendar'])) {
+                $isHtml = preg_match('/<(?:p|div|table|html|body|br|span|h[1-6]|a)\b/i', $template);
+                $calendarLinksBlock = $isHtml ? ($context['calendar_links_html'] ?? '') : ($context['calendar_links_text'] ?? '');
+
+                $template = str_replace([
+                    '{{appointment.title}}',
+                    '{{appointment.calendar_name}}',
+                    '{{appointment.date}}',
+                    '{{appointment.start_time}}',
+                    '{{appointment.end_time}}',
+                    '{{appointment.time}}',
+                    '{{appointment.timezone}}',
+                    '{{appointment.location}}',
+                    '{{appointment.meeting_join_url}}',
+                    '{{appointment.staff_name}}',
+                    '{{appointment.reschedule_url}}',
+                    '{{appointment.reschedule_link}}',
+                    '{{appointment.cancel_url}}',
+                    '{{appointment.cancel_link}}',
+                    '{{appointment.add_to_google_calendar}}',
+                    '{{appointment.google_calendar_url}}',
+                    '{{appointment.add_to_outlook}}',
+                    '{{appointment.outlook_calendar_url}}',
+                    '{{appointment.add_to_ical}}',
+                    '{{appointment.ical_url}}',
+                    '{{appointment.calendar_links}}',
+                    '{{appointment.action_links}}',
+                    '{{appointment.status}}',
+                    '{{appointment.notes}}',
+                ], [
+                    $context['appointment_title'] ?? '',
+                    $context['calendar_name'] ?? 'Calendar',
+                    $context['appointment_date'] ?? '',
+                    $context['appointment_time'] ?? '',
+                    $context['appointment_end_time'] ?? '',
+                    $context['appointment_time'] ?? '',
+                    $context['appointment_timezone'] ?? 'UTC',
+                    $context['appointment_location'] ?? 'Online',
+                    $context['meeting_join_url'] ?? '#',
+                    $context['host_staff_name'] ?? 'Host Staff',
+                    $context['reschedule_url'] ?? '#',
+                    $context['reschedule_link'] ?? ($context['reschedule_url'] ?? '#'),
+                    $context['cancel_url'] ?? '#',
+                    $context['cancel_link'] ?? ($context['cancel_url'] ?? '#'),
+                    $context['add_to_google_calendar'] ?? '#',
+                    $context['google_calendar_url'] ?? ($context['add_to_google_calendar'] ?? '#'),
+                    $context['add_to_outlook'] ?? '#',
+                    $context['outlook_calendar_url'] ?? ($context['add_to_outlook'] ?? '#'),
+                    $context['add_to_ical'] ?? '#',
+                    $context['ical_url'] ?? ($context['add_to_ical'] ?? '#'),
+                    $calendarLinksBlock,
+                    $calendarLinksBlock,
+                    $context['appointment_status'] ?? '',
+                    $context['appointment_notes'] ?? '',
                 ], $template);
             }
+        }
+
+        // 4. Funnel tokens: {{funnel.name}}, {{funnel.step_name}}, {{funnel.variant}}, {{funnel.order_amount}}, etc.
+        if (str_contains($template, '{{funnel.')) {
+            $template = str_replace([
+                '{{funnel.name}}',
+                '{{funnel.step_name}}',
+                '{{funnel.variant}}',
+                '{{funnel.order_amount}}',
+                '{{funnel.order_total}}',
+                '{{funnel.bump_title}}',
+                '{{funnel.bump_price}}',
+                '{{funnel.product_name}}',
+                '{{funnel.next_step_url}}',
+            ], [
+                (string) ($context['funnel_name'] ?? ''),
+                (string) ($context['step_name'] ?? ''),
+                (string) ($context['variant'] ?? 'A'),
+                (string) ($context['order_amount'] ?? ($context['order_total'] ?? '')),
+                (string) ($context['order_total'] ?? ($context['order_amount'] ?? '')),
+                (string) ($context['bump_title'] ?? ''),
+                (string) ($context['bump_price'] ?? ''),
+                (string) ($context['product_name'] ?? ($context['upsell_product'] ?? '')),
+                (string) ($context['redirect_url'] ?? ($context['next_step_url'] ?? '')),
+            ], $template);
+        }
+
+        // 5. Inbound Message tokens: {{message.body}}, {{message.text}}, {{message.content}}
+        if (str_contains($template, '{{message.')) {
+            $msgBody = (string) ($context['message_body'] ?? ($context['message'] ?? ($context['body'] ?? '')));
+            $template = str_replace([
+                '{{message.body}}',
+                '{{message.text}}',
+                '{{message.content}}',
+            ], $msgBody, $template);
+        }
+
+        // 6. Trigger name token: {{trigger.name}}
+        if (str_contains($template, '{{trigger.name}}')) {
+            $triggerName = (string) ($context['trigger_name'] ?? ($context['trigger'] ?? ''));
+            $template = str_replace('{{trigger.name}}', $triggerName, $template);
         }
 
         return $template;
@@ -697,15 +1201,167 @@ class AutomationEngine
         );
     }
 
-    private function executeWait(array $data, AutomationRun $run): array
+    private function executeWait(array $data, AutomationRun $run, array $context = []): array
     {
+        $waitType = $data['wait_type'] ?? 'delay';
+
+        // 1. Event / Appointment or Invoice Due Date relative wait
+        if ($waitType === 'event_relative' || $waitType === 'event_appointment' || $waitType === 'invoice_due_date' || ! empty($data['event_target'])) {
+            $eventTarget = $data['event_target'] ?? 'before_start';
+            $eventTiming = $data['event_timing'] ?? (str_starts_with($eventTarget, 'after') ? 'after' : (str_starts_with($eventTarget, 'before') ? 'before' : 'at_time'));
+
+            // Calculate multi-unit offset minutes
+            if (isset($data['offset_days']) || isset($data['offset_hours']) || isset($data['offset_minutes'])) {
+                $offsetMinutes = ((int) ($data['offset_days'] ?? 0)) * 1440
+                    + ((int) ($data['offset_hours'] ?? 0)) * 60
+                    + ((int) ($data['offset_minutes'] ?? 0));
+            } else {
+                $amount = max(0, (int) ($data['amount'] ?? 1));
+                $unit = $data['unit'] ?? 'hours';
+                $offsetMinutes = match ($unit) {
+                    'days' => $amount * 1440,
+                    'hours' => $amount * 60,
+                    default => $amount,
+                };
+            }
+
+            // Determine reference timestamp
+            $refTimeStr = null;
+            if ($waitType === 'invoice_due_date' || ($data['scheduled_what_type'] ?? '') === 'invoice_due_date') {
+                // Find latest open invoice for this contact
+                $invoice = \Illuminate\Support\Facades\DB::table('invoices')
+                    ->where('workspace_id', $run->automation->workspace_id)
+                    ->where('contact_id', $run->contact_id)
+                    ->whereIn('status', ['unpaid', 'pending', 'overdue'])
+                    ->latest()
+                    ->first();
+                $refTimeStr = $invoice?->due_date ?? $invoice?->due_at;
+            } else {
+                if (str_contains($eventTarget, 'end')) {
+                    $refTimeStr = $context['appointment_end_at'] ?? $context['appointment']['end_time'] ?? $context['appointment_end'] ?? null;
+                } else {
+                    $refTimeStr = $context['appointment_start_at'] ?? $context['appointment']['start_time'] ?? $context['appointment_start'] ?? $context['event_time'] ?? null;
+                }
+
+                if (! $refTimeStr && $run->contact_id) {
+                    $appointment = \App\Modules\Calendars\Models\Appointment::where('workspace_id', $run->automation->workspace_id)
+                        ->where('contact_id', $run->contact_id)
+                        ->latest()
+                        ->first();
+                    if ($appointment) {
+                        $refTimeStr = str_contains($eventTarget, 'end')
+                            ? $appointment->end_at?->toIso8601String()
+                            : $appointment->start_at?->toIso8601String();
+                    }
+                }
+            }
+
+            if ($refTimeStr) {
+                try {
+                    $refTime = \Carbon\Carbon::parse($refTimeStr);
+                    if ($eventTiming === 'at_time') {
+                        $targetTime = $refTime->copy();
+                    } elseif ($eventTiming === 'after') {
+                        $targetTime = $refTime->copy()->addMinutes($offsetMinutes);
+                    } else {
+                        $targetTime = $refTime->copy()->subMinutes($offsetMinutes);
+                    }
+
+                    // ── Past Date Fallback Handling ──────────────────────────────────
+                    if (now()->gte($targetTime)) {
+                        $pastAction = $data['past_action'] ?? 'continue';
+
+                        if ($pastAction === 'exit') {
+                            return [
+                                'status' => 'exited',
+                                'stop_flow' => true,
+                                'message' => "Target event time ({$targetTime->toIso8601String()}) was in the past. Exited contact from workflow per policy.",
+                            ];
+                        }
+
+                        if ($pastAction === 'go_to_step' && ! empty($data['past_target_step_id'])) {
+                            $targetNodeId = $data['past_target_step_id'];
+                            return [
+                                'status' => 'ok',
+                                'next_node_id' => $targetNodeId,
+                                'message' => "Target event time was in past. Redirected to step #{$targetNodeId}.",
+                            ];
+                        }
+
+                        if ($pastAction === 'skip_outbound') {
+                            $context['skip_outbound_until_next_wait'] = true;
+                            $run->update(['context' => $context]);
+                            return [
+                                'status' => 'ok',
+                                'context_updates' => ['skip_outbound_until_next_wait' => true],
+                                'message' => "Target event time has passed. Skipping outbound reminders until next event or wait.",
+                            ];
+                        }
+
+                        return [
+                            'status' => 'ok',
+                            'message' => "Target event time ({$targetTime->toIso8601String()}) has arrived. Continuing execution.",
+                        ];
+                    }
+
+                    // Clear any previous skip_outbound flag when moving to future wait
+                    if (! empty($context['skip_outbound_until_next_wait'])) {
+                        unset($context['skip_outbound_until_next_wait']);
+                        $run->update(['context' => $context]);
+                    }
+
+                    // Apply Advance Business Hours Window if enabled
+                    if (! empty($data['advance_window_enabled'])) {
+                        $targetTime = $this->applyAdvanceWindow($targetTime, $data, $run);
+                    }
+
+                    // Schedule wakeup at target time
+                    $automation = $run->automation;
+                    $edges = collect($automation->edges ?? []);
+                    $nextEdge = $edges->first(fn ($e) => $e['source'] === $run->current_node_id);
+                    $nextNodeId = $nextEdge['target'] ?? null;
+
+                    $run->update([
+                        'status' => 'waiting',
+                        'resume_node_id' => $nextNodeId,
+                    ]);
+
+                    dispatch(new ExecuteAutomationRunJob($run->id))
+                        ->delay($targetTime)
+                        ->onQueue('automation');
+
+                    return [
+                        'status' => 'waiting',
+                        'message' => "Waiting until {$targetTime->toIso8601String()} ({$eventTiming} event).",
+                    ];
+                } catch (\Throwable $e) {
+                    // Fall through to standard delay if parsing fails
+                }
+            }
+        }
+
+        // 2. Standard Time Delay
         $amount = (int) ($data['amount'] ?? 1);
         $unit = $data['unit'] ?? 'minutes';
-        $delay = match ($unit) {
+        $delayMinutes = match ($unit) {
+            'seconds' => max(1, (int) round($amount / 60)),
             'hours' => $amount * 60,
             'days' => $amount * 1440,
             default => $amount,
         };
+
+        $targetTime = now()->addMinutes($delayMinutes);
+
+        // Apply Advance Business Hours Window if enabled
+        if (! empty($data['advance_window_enabled'])) {
+            $targetTime = $this->applyAdvanceWindow($targetTime, $data, $run);
+        }
+
+        // Clear previous skip_outbound flag when arriving at a new wait step
+        if (! empty($context['skip_outbound_until_next_wait'])) {
+            unset($context['skip_outbound_until_next_wait']);
+            $run->update(['context' => $context]);
+        }
 
         // Find the next node after this wait node so the wakeup job resumes there
         $automation = $run->automation;
@@ -721,13 +1377,55 @@ class AutomationEngine
 
         // Schedule the wakeup
         dispatch(new ExecuteAutomationRunJob($run->id))
-            ->delay(now()->addMinutes($delay))
+            ->delay($targetTime)
             ->onQueue('automation');
 
-        return ['status' => 'waiting', 'message' => "Waiting {$amount} {$unit}."];
+        return ['status' => 'waiting', 'message' => "Waiting until {$targetTime->toIso8601String()} ({$amount} {$unit})."];
     }
 
-    private function executeTagAction(array $data, AutomationRun $run, string $action): array
+    private function applyAdvanceWindow(\Carbon\Carbon $targetTime, array $data, ?AutomationRun $run = null): \Carbon\Carbon
+    {
+        $allowedDays = $data['allowed_days'] ?? ['mon', 'tue', 'wed', 'thu', 'fri'];
+        $fromTime = $data['window_from'] ?? '09:00';
+        $toTime = $data['window_to'] ?? '18:00';
+
+        $tz = $data['window_timezone'] ?? $run?->automation?->workspace?->timezone ?? config('app.timezone', 'UTC');
+        $local = $targetTime->copy()->setTimezone($tz);
+
+        $fromParts = array_map('intval', explode(':', $fromTime));
+        $toParts = array_map('intval', explode(':', $toTime));
+        $fromHour = $fromParts[0] ?? 9;
+        $fromMin = $fromParts[1] ?? 0;
+        $toHour = $toParts[0] ?? 18;
+        $toMin = $toParts[1] ?? 0;
+
+        for ($i = 0; $i < 14; $i++) {
+            $dayCode = strtolower($local->format('D'));
+            $isAllowedDay = in_array($dayCode, $allowedDays, true);
+
+            $currentMinutes = $local->hour * 60 + $local->minute;
+            $windowFromMinutes = $fromHour * 60 + $fromMin;
+            $windowToMinutes = $toHour * 60 + $toMin;
+
+            if (! $isAllowedDay || $currentMinutes > $windowToMinutes) {
+                // Move to next day at window start
+                $local->addDay()->setTime($fromHour, $fromMin, 0);
+                continue;
+            }
+
+            if ($currentMinutes < $windowFromMinutes) {
+                $local->setTime($fromHour, $fromMin, 0);
+                break;
+            }
+
+            // Within window on an allowed day
+            break;
+        }
+
+        return $local->setTimezone('UTC');
+    }
+
+    private function executeTagAction(array $data, AutomationRun $run, string $action, array $context = []): array
     {
         $tagName = $data['tag'] ?? null;
         if (! $tagName || ! $run->contact_id) {
@@ -737,6 +1435,7 @@ class AutomationEngine
         if (! $contact) {
             return ['status' => 'skipped', 'message' => 'Contact not found.'];
         }
+        $tagName = $this->renderTokens($tagName, $contact, $context);
         $tag = ContactTag::firstOrCreate(
             ['workspace_id' => $contact->workspace_id, 'name' => $tagName],
         );
@@ -858,48 +1557,305 @@ class AutomationEngine
     private function executeCondition(array $data, AutomationRun $run, array $context): array
     {
         $contact = $run->contact_id ? Contact::find($run->contact_id) : null;
-        $passed = $this->evaluateCondition($data, $contact, $context);
+
+        return $this->evaluateConditionNode($data, $contact, $context);
+    }
+
+    /**
+     * Evaluate a condition node supporting multi-branches (GHL style) or legacy 2-way Yes/No.
+     */
+    public function evaluateConditionNode(array $data, ?Contact $contact, array $context): array
+    {
+        // 1. Multi-branch condition mode (GHL style)
+        if (! empty($data['branches']) && is_array($data['branches'])) {
+            foreach ($data['branches'] as $index => $branch) {
+                $branchId = $branch['id'] ?? "branch_{$index}";
+                $branchName = $branch['name'] ?? 'Branch '.($index + 1);
+                $conditions = $branch['conditions'] ?? [];
+                $segments = $branch['segments'] ?? [];
+
+                $branchPassed = false;
+
+                if (! empty($conditions)) {
+                    if (count($conditions) > 1) {
+                        // When a branch contains multiple condition rules, each rule acts as its own branch node on canvas
+                        foreach ($conditions as $cIdx => $cond) {
+                            $cPassed = $this->evaluateSingleCondition($cond, $contact, $context);
+                            if ($cPassed) {
+                                $handleId = $cIdx === 0 ? $branchId : "{$branchId}_{$cIdx}";
+                                $condVal = $cond['value'] ?? ($cond['field'] ?? 'Rule '.($cIdx + 1));
+
+                                return [
+                                    'status' => 'ok',
+                                    'branch' => $handleId,
+                                    'branch_base' => $branchId,
+                                    'message' => "Condition: branch '{$branchName}' rule '{$condVal}' matched.",
+                                ];
+                            }
+                        }
+                    } else {
+                        $cPassed = $this->evaluateSingleCondition($conditions[0], $contact, $context);
+                        if ($cPassed) {
+                            return [
+                                'status' => 'ok',
+                                'branch' => $branchId,
+                                'branch_base' => $branchId,
+                                'message' => "Condition: branch '{$branchName}' matched.",
+                            ];
+                        }
+                    }
+                } elseif (! empty($segments)) {
+                    foreach ($segments as $sIdx => $segment) {
+                        $segConditions = $segment['conditions'] ?? [];
+                        $segPassed = false;
+                        foreach ($segConditions as $scIdx => $sCond) {
+                            $scPassed = $this->evaluateSingleCondition($sCond, $contact, $context);
+                            if ($scIdx === 0) {
+                                $segPassed = $scPassed;
+                            } else {
+                                $scLogic = strtoupper($sCond['logic'] ?? 'AND');
+                                $segPassed = ($scLogic === 'OR') ? ($segPassed || $scPassed) : ($segPassed && $scPassed);
+                            }
+                        }
+                        if ($sIdx === 0) {
+                            $branchPassed = $segPassed;
+                        } else {
+                            $sLogic = strtoupper($segment['logic'] ?? ($segment['type'] ?? 'AND'));
+                            $branchPassed = ($sLogic === 'OR') ? ($branchPassed || $segPassed) : ($branchPassed && $segPassed);
+                        }
+                    }
+
+                    if ($branchPassed) {
+                        return [
+                            'status' => 'ok',
+                            'branch' => $branchId,
+                            'branch_base' => $branchId,
+                            'message' => "Condition: branch '{$branchName}' matched.",
+                        ];
+                    }
+                }
+            }
+
+            // Fallback: None branch
+            return [
+                'status' => 'ok',
+                'branch' => 'none',
+                'message' => "Condition: no branch matched, taking 'None' fallback.",
+            ];
+        }
+
+        // 2. Legacy / 2-way Yes/No condition
+        $passed = $this->evaluateSingleCondition($data, $contact, $context);
 
         return $this->conditionResult($passed, $data['field'] ?? null, $data['operator'] ?? 'equals', $data['value'] ?? null);
     }
 
     /**
-     * Pure boolean evaluation of a condition node against a contact + run context.
-     * Read-only: shared by live execution and the builder's test simulation.
+     * Pure boolean evaluation of a single condition against contact + context.
      */
-    public function evaluateCondition(array $data, ?Contact $contact, array $context): bool
+    public function evaluateSingleCondition(array $data, ?Contact $contact, array $context): bool
     {
         $field = $data['field'] ?? null;
         $operator = $data['operator'] ?? 'equals';
         $value = $data['value'] ?? null;
 
-        // Tag membership is a boolean check, not a value comparison.
+        if (! $field) {
+            return false;
+        }
+
+        // Tag membership check
         if ($field === 'contact.tag') {
             $has = ($contact && $contact->exists) ? $contact->tags()->where('name', $value)->exists() : false;
 
-            return in_array($operator, ['not_equals', 'not_contains', 'not_exists'], true) ? ! $has : $has;
+            return in_array($operator, ['not_equals', 'is_not', 'not_contains', 'not_exists'], true) ? ! $has : $has;
         }
 
-        // Resolve the actual value from the contact, the inbound message, or the run context.
-        $actual = match (true) {
-            $field === 'contact.name' => optional($contact)->full_name,
-            (bool) $field && str_starts_with((string) $field, 'contact.') => optional($contact)->{str_replace('contact.', '', $field)},
-            $field === 'message.body' => $context['message_body'] ?? null,
-            (bool) $field && str_starts_with((string) $field, 'context.') => $context[str_replace('context.', '', $field)] ?? null,
-            default => $context[$field] ?? null,
-        };
+        // Workflow Trigger matching
+        if (in_array($field, ['trigger.name', 'workflow_trigger', 'trigger_name', 'Workflow Trigger'], true)) {
+            $actual = $context['trigger_name'] ?? $context['trigger_type'] ?? '';
+
+            return match ($operator) {
+                'equals', 'is', 'Is' => strcasecmp((string) $actual, (string) $value) === 0,
+                'not_equals', 'is_not', 'Is not' => strcasecmp((string) $actual, (string) $value) !== 0,
+                'contains' => stripos((string) $actual, (string) $value) !== false,
+                'not_contains' => stripos((string) $actual, (string) $value) === false,
+                default => strcasecmp((string) $actual, (string) $value) === 0,
+            };
+        }
+
+        if (in_array($field, ['trigger.type', 'trigger_type'], true)) {
+            $actual = $context['trigger_type'] ?? '';
+
+            return match ($operator) {
+                'equals', 'is', 'Is' => (string) $actual === (string) $value,
+                'not_equals', 'is_not', 'Is not' => (string) $actual !== (string) $value,
+                default => (string) $actual === (string) $value,
+            };
+        }
+
+        // Form fields and custom data
+        if (str_starts_with($field, 'form.field.') || str_starts_with($field, 'custom.')) {
+            $cleanKey = (!empty($data['custom_key']) && ($field === 'custom.field' || $field === 'form.field'))
+                ? $data['custom_key']
+                : preg_replace('/^(form\.field\.|custom\.)/', '', $field);
+            $submitted = $context['submitted_data'] ?? [];
+            $actual = $submitted[$cleanKey] ?? ($context[$cleanKey] ?? ($contact?->custom_fields[$cleanKey] ?? null));
+        } elseif ($field === 'form.name' || $field === 'form_name') {
+            $actual = $context['form_name'] ?? '';
+        } elseif ($field === 'form.slug' || $field === 'form_slug') {
+            $actual = $context['form_slug'] ?? '';
+        } elseif ($field === 'contact.name') {
+            $actual = optional($contact)->full_name;
+        } elseif (str_starts_with($field, 'contact.')) {
+            $contactKey = str_replace('contact.', '', $field);
+            if ($contactKey === 'phone' || $contactKey === 'whatsapp') {
+                $actual = optional($contact)->phone_e164;
+            } else {
+                $actual = optional($contact)->{$contactKey} ?? ($contact?->custom_fields[$contactKey] ?? null);
+            }
+        } elseif ($field === 'message.body') {
+            $actual = $context['message_body'] ?? null;
+        } elseif (str_starts_with($field, 'appointment.')) {
+            $aptKey = str_replace('appointment.', '', $field);
+            if ($aptKey === 'status') {
+                $actual = $context['appointment_status'] ?? ($context['status'] ?? null);
+                if ($actual === null && $contact && $contact->exists) {
+                    $apt = \App\Modules\Calendars\Models\Appointment::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $apt?->status;
+                }
+            } elseif ($aptKey === 'calendar_id') {
+                $actual = $context['calendar_id'] ?? null;
+                if ($actual === null && $contact && $contact->exists) {
+                    $apt = \App\Modules\Calendars\Models\Appointment::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $apt?->calendar_id;
+                }
+            } elseif ($aptKey === 'title') {
+                $actual = $context['appointment_title'] ?? ($context['title'] ?? null);
+                if ($actual === null && $contact && $contact->exists) {
+                    $apt = \App\Modules\Calendars\Models\Appointment::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $apt?->title;
+                }
+            } elseif ($aptKey === 'location') {
+                $actual = $context['appointment_location'] ?? ($context['location'] ?? null);
+                if ($actual === null && $contact && $contact->exists) {
+                    $apt = \App\Modules\Calendars\Models\Appointment::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $apt?->location;
+                }
+            } else {
+                $actual = $context[$field] ?? ($context[$aptKey] ?? null);
+                if ($actual === null && $contact && $contact->exists) {
+                    $apt = \App\Modules\Calendars\Models\Appointment::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $apt?->{$aptKey};
+                }
+            }
+        } elseif (str_starts_with($field, 'invoice.')) {
+            $invKey = str_replace('invoice.', '', $field);
+            if ($invKey === 'status') {
+                $actual = $context['invoice_status'] ?? ($context['status'] ?? null);
+                if ($actual === null && $contact && $contact->exists) {
+                    $inv = \App\Modules\Agency\Models\AgencyInvoice::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $inv?->status;
+                }
+            } elseif ($invKey === 'total' || $invKey === 'amount') {
+                $actual = $context['invoice_total'] ?? ($context['total'] ?? ($context['amount'] ?? null));
+                if ($actual === null && $contact && $contact->exists) {
+                    $inv = \App\Modules\Agency\Models\AgencyInvoice::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $inv?->total;
+                }
+            } else {
+                $actual = $context[$field] ?? ($context[$invKey] ?? null);
+                if ($actual === null && $contact && $contact->exists) {
+                    $inv = \App\Modules\Agency\Models\AgencyInvoice::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $inv?->{$invKey};
+                }
+            }
+        } elseif (str_starts_with($field, 'funnel.')) {
+            $funnelKey = str_replace('funnel.', '', $field);
+            $actual = match ($funnelKey) {
+                'id', 'funnel_id' => $context['funnel_id'] ?? null,
+                'name', 'funnel_name' => $context['funnel_name'] ?? null,
+                'step_id', 'funnel_step_id' => $context['funnel_step_id'] ?? null,
+                'step_name' => $context['step_name'] ?? null,
+                'step_type' => $context['step_type'] ?? null,
+                'variant' => $context['variant'] ?? 'A',
+                'order_bump', 'has_order_bump', 'order_bump_taken' => !empty($context['has_order_bump']) ? 'yes' : 'no',
+                'total_amount', 'order_total', 'order_amount' => $context['order_total'] ?? ($context['order_amount'] ?? 0),
+                default => $context[$funnelKey] ?? ($context[$field] ?? null),
+            };
+        } elseif (str_starts_with($field, 'opportunity.')) {
+            $oppKey = str_replace('opportunity.', '', $field);
+            if ($oppKey === 'status') {
+                $actual = $context['new_status'] ?? ($context['status'] ?? null);
+                if ($actual === null && $contact && $contact->exists) {
+                    $deal = \App\Modules\Pipelines\Models\Deal::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $deal?->status;
+                }
+            } elseif ($oppKey === 'stage_id') {
+                $actual = $context['stage_id'] ?? null;
+                if ($actual === null && $contact && $contact->exists) {
+                    $deal = \App\Modules\Pipelines\Models\Deal::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $deal?->stage_id;
+                }
+            } elseif ($oppKey === 'pipeline_id') {
+                $actual = $context['pipeline_id'] ?? null;
+                if ($actual === null && $contact && $contact->exists) {
+                    $deal = \App\Modules\Pipelines\Models\Deal::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $deal?->pipeline_id;
+                }
+            } elseif ($oppKey === 'lost_reason') {
+                $actual = $context['lost_reason'] ?? null;
+                if ($actual === null && $contact && $contact->exists) {
+                    $deal = \App\Modules\Pipelines\Models\Deal::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $deal?->lost_reason;
+                }
+            } elseif ($oppKey === 'monetary_value' || $oppKey === 'value') {
+                $actual = $context['opportunity_value'] ?? null;
+                if ($actual === null && $contact && $contact->exists) {
+                    $deal = \App\Modules\Pipelines\Models\Deal::where('contact_id', $contact->id)->latest()->first();
+                    $actual = $deal?->monetary_value;
+                }
+            } else {
+                $actual = $context[$field] ?? ($context[$oppKey] ?? null);
+            }
+        } elseif (str_starts_with($field, 'context.')) {
+            $actual = $context[str_replace('context.', '', $field)] ?? null;
+        } else {
+            $actual = $context[$field] ?? null;
+        }
+
+        // Normalized boolean / consent matching (e.g. yes/no with boolean true/false or 1/0)
+        if (in_array(strtolower((string) $value), ['yes', 'no'], true) && (is_bool($actual) || is_numeric($actual) || is_null($actual) || in_array(strtolower((string) $actual), ['yes', 'no', 'true', 'false', 'on', 'off'], true))) {
+            $actualBool = filter_var($actual, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? (in_array(strtolower((string) $actual), ['yes', 'on', '1'], true));
+            $valBool = strtolower((string) $value) === 'yes';
+            if (in_array($operator, ['equals', 'is', 'Is'], true)) {
+                return $actualBool === $valBool;
+            }
+            if (in_array($operator, ['not_equals', 'is_not', 'Is not'], true)) {
+                return $actualBool !== $valBool;
+            }
+        }
 
         return match ($operator) {
-            'equals' => (string) $actual === (string) $value,
-            'not_equals' => (string) $actual !== (string) $value,
-            'contains' => $value !== null && str_contains((string) $actual, (string) $value),
-            'not_contains' => $value === null || ! str_contains((string) $actual, (string) $value),
+            'equals', 'is', 'Is' => strcasecmp((string) $actual, (string) $value) === 0,
+            'not_equals', 'is_not', 'Is not' => strcasecmp((string) $actual, (string) $value) !== 0,
+            'contains' => $value !== null && stripos((string) $actual, (string) $value) !== false,
+            'not_contains' => $value === null || stripos((string) $actual, (string) $value) === false,
             'exists' => $actual !== null && $actual !== '' && $actual !== false,
             'not_exists' => $actual === null || $actual === '' || $actual === false,
             'gt' => (float) $actual > (float) $value,
             'lt' => (float) $actual < (float) $value,
-            default => false,
+            'gte', '>=' => (float) $actual >= (float) $value,
+            'lte', '<=' => (float) $actual <= (float) $value,
+            default => strcasecmp((string) $actual, (string) $value) === 0,
         };
+    }
+
+    /**
+     * Backward-compatible evaluation alias.
+     */
+    public function evaluateCondition(array $data, ?Contact $contact, array $context): bool
+    {
+        return $this->evaluateSingleCondition($data, $contact, $context);
     }
 
     private function conditionResult(bool $passed, ?string $field, string $operator, mixed $value): array
@@ -1095,9 +2051,215 @@ class AutomationEngine
             return ['status' => 'skipped', 'message' => 'Sub-flow is not active.'];
         }
 
-        $this->triggerForContact($target, $run->contact_id, $context);
+        $mode = $data['mode'] ?? 'fire_and_forget'; // 'wait_completion', 'fire_and_forget', 'handoff'
+        $passContext = ! isset($data['pass_context']) || (bool) $data['pass_context'];
+        $childContext = $passContext ? $context : [];
 
-        return ['status' => 'ok', 'message' => "Triggered sub-flow '{$target->name}'."];
+        // Determine next node in parent flow
+        $edges = collect($run->automation->edges ?? []);
+        $nextEdge = $edges->first(fn ($e) => $e['source'] === $run->current_node_id);
+        $nextNodeId = $nextEdge['target'] ?? null;
+
+        if ($mode === 'wait_completion') {
+            $childContext['_parent_run_id'] = $run->id;
+
+            $run->update([
+                'status' => 'waiting',
+                'resume_node_id' => $nextNodeId,
+            ]);
+
+            $this->triggerForContact($target, $run->contact_id, $childContext);
+
+            return [
+                'status' => 'waiting',
+                'message' => "Sub-flow '{$target->name}' initiated; waiting for completion before continuing.",
+            ];
+        }
+
+        if ($mode === 'handoff') {
+            $this->triggerForContact($target, $run->contact_id, $childContext);
+
+            return [
+                'status' => 'ok',
+                'branch' => '__halt__',
+                'message' => "Handed off contact to sub-flow '{$target->name}'. Parent workflow completed.",
+            ];
+        }
+
+        // Default 'fire_and_forget' (parallel execution)
+        $this->triggerForContact($target, $run->contact_id, $childContext);
+
+        return ['status' => 'ok', 'message' => "Triggered sub-flow '{$target->name}' in background."];
+    }
+
+    private function executeRemoveFromWorkflow(array $data, AutomationRun $run, array $context): array
+    {
+        $targetType = $data['target_type'] ?? 'current'; // 'current', 'specific', 'all'
+        $contactId = $run->contact_id;
+        $workspaceId = $run->automation->workspace_id ?? null;
+
+        if ($targetType === 'current') {
+            return [
+                'status' => 'exited',
+                'stop_flow' => true,
+                'message' => 'Contact exited from this workflow.',
+            ];
+        }
+
+        if ($targetType === 'specific' || $targetType === 'another') {
+            $targetAutomationId = $data['target_automation_id'] ?? null;
+            if (! $targetAutomationId) {
+                return [
+                    'status' => 'error',
+                    'message' => 'Target automation is required for specific workflow removal.',
+                ];
+            }
+
+            // Find target automation by id or uuid
+            $targetAutomation = Automation::where(function ($q) use ($targetAutomationId) {
+                $q->where('id', $targetAutomationId)->orWhere('uuid', $targetAutomationId);
+            })->first();
+
+            if (! $targetAutomation) {
+                return [
+                    'status' => 'skipped',
+                    'message' => 'Target automation not found.',
+                ];
+            }
+
+            $affectedRuns = AutomationRun::where('automation_id', $targetAutomation->id)
+                ->where('contact_id', $contactId)
+                ->whereIn('status', ['pending', 'waiting', 'running'])
+                ->get();
+
+            foreach ($affectedRuns as $r) {
+                $r->update([
+                    'status' => 'cancelled',
+                    'completed_at' => now(),
+                    'error' => 'Removed by workflow "'.$run->automation->name.'" (Step: Remove from Workflow)',
+                ]);
+
+                AutomationRunLog::create([
+                    'run_id' => $r->id,
+                    'node_id' => 'system',
+                    'node_type' => 'remove_from_workflow',
+                    'result' => 'ok',
+                    'message' => 'Unenrolled/cancelled by automation "'.$run->automation->name.'".',
+                ]);
+            }
+
+            return [
+                'status' => 'ok',
+                'message' => "Unenrolled contact from workflow '{$targetAutomation->name}' ({$affectedRuns->count()} active run(s) cancelled).",
+            ];
+        }
+
+        if ($targetType === 'all_except_current') {
+            $affectedRuns = AutomationRun::where('contact_id', $contactId)
+                ->where('id', '!=', $run->id)
+                ->whereIn('status', ['pending', 'waiting', 'running'])
+                ->when($workspaceId, function ($q) use ($workspaceId) {
+                    $q->whereHas('automation', fn ($aq) => $aq->where('workspace_id', $workspaceId));
+                })
+                ->get();
+
+            foreach ($affectedRuns as $r) {
+                $r->update([
+                    'status' => 'cancelled',
+                    'completed_at' => now(),
+                    'error' => 'Removed by workflow "'.$run->automation->name.'" (Step: Remove from all workflows except current)',
+                ]);
+
+                AutomationRunLog::create([
+                    'run_id' => $r->id,
+                    'node_id' => 'system',
+                    'node_type' => 'remove_from_workflow',
+                    'result' => 'ok',
+                    'message' => 'Unenrolled/cancelled by automation "'.$run->automation->name.'".',
+                ]);
+            }
+
+            return [
+                'status' => 'ok',
+                'stop_flow' => false,
+                'message' => "Unenrolled contact from all other workflows ({$affectedRuns->count()} active run(s) cancelled). Current workflow continues.",
+            ];
+        }
+
+        if ($targetType === 'all') {
+            $affectedRuns = AutomationRun::where('contact_id', $contactId)
+                ->where('id', '!=', $run->id)
+                ->whereIn('status', ['pending', 'waiting', 'running'])
+                ->when($workspaceId, function ($q) use ($workspaceId) {
+                    $q->whereHas('automation', fn ($aq) => $aq->where('workspace_id', $workspaceId));
+                })
+                ->get();
+
+            foreach ($affectedRuns as $r) {
+                $r->update([
+                    'status' => 'cancelled',
+                    'completed_at' => now(),
+                    'error' => 'Removed by workflow "'.$run->automation->name.'" (Step: Remove from All Workflows)',
+                ]);
+
+                AutomationRunLog::create([
+                    'run_id' => $r->id,
+                    'node_id' => 'system',
+                    'node_type' => 'remove_from_workflow',
+                    'result' => 'ok',
+                    'message' => 'Unenrolled/cancelled by automation "'.$run->automation->name.'".',
+                ]);
+            }
+
+            $includeThis = ! empty($data['include_current']) || ($targetType === 'all' && ! isset($data['include_current']));
+
+            return [
+                'status' => $includeThis ? 'exited' : 'ok',
+                'stop_flow' => $includeThis,
+                'message' => "Unenrolled contact from all workflows ({$affectedRuns->count()} other run(s) cancelled).",
+            ];
+        }
+
+        return ['status' => 'ok', 'message' => 'Remove from workflow processed.'];
+    }
+
+    private function executeWaitForReply(array $data, AutomationRun $run, array $context): array
+    {
+        $amount = max(1, (int) ($data['timeout_amount'] ?? ($data['amount'] ?? 24)));
+        $unit = $data['timeout_unit'] ?? ($data['unit'] ?? 'hours');
+        $delayMinutes = match ($unit) {
+            'days' => $amount * 1440,
+            'hours' => $amount * 60,
+            default => $amount,
+        };
+
+        $replyVar = ! empty($data['reply_variable']) ? $data['reply_variable'] : (! empty($data['variable']) ? $data['variable'] : 'customer_reply');
+        $matchType = $data['match_type'] ?? 'any';
+        $matchPhrase = (string) ($data['match_phrase'] ?? '');
+
+        $contextUpdate = [
+            '_waiting_for_reply' => true,
+            '_waiting_for_reply_node_id' => $run->current_node_id,
+            '_reply_var' => $replyVar,
+            '_reply_match_type' => $matchType,
+            '_reply_match_phrase' => $matchPhrase,
+            '_reply_timeout_at' => now()->addMinutes($delayMinutes)->toIso8601String(),
+        ];
+
+        $run->update([
+            'status' => 'waiting',
+            'resume_node_id' => null,
+            'context' => array_merge($context, $contextUpdate),
+        ]);
+
+        dispatch(new ExecuteAutomationRunJob($run->id))
+            ->delay(now()->addMinutes($delayMinutes))
+            ->onQueue('automation');
+
+        return [
+            'status' => 'waiting',
+            'message' => "Waiting up to {$amount} {$unit} for customer reply.",
+        ];
     }
 
     // ─── CONTACT nodes ────────────────────────────────────────────────────────
@@ -2060,19 +3222,93 @@ class AutomationEngine
             ? $this->renderTokens($data['name'], $contact, $context)
             : "Opportunity - {$contact->full_name}";
 
-        $deal = \App\Modules\Pipelines\Models\Deal::updateOrCreate(
-            ['workspace_id' => $workspaceId, 'contact_id' => $contact->id, 'pipeline_id' => $pipelineId],
-            [
+        $targetStatus = $data['status'] ?? 'open';
+        $statusPolicy = $data['status_policy'] ?? 'preserve_if_won';
+
+        $existingDeal = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $workspaceId)
+            ->where('contact_id', $contact->id)
+            ->where('pipeline_id', $pipelineId)
+            ->first();
+
+        $pipelineService = app(\App\Modules\Pipelines\Services\PipelineService::class);
+
+        if ($existingDeal) {
+            $oldStatus = $existingDeal->status;
+            $newStatus = $targetStatus;
+
+            if ($statusPolicy === 'keep_existing') {
+                $newStatus = $oldStatus;
+            } elseif ($statusPolicy === 'preserve_if_won' && $oldStatus === 'won') {
+                $newStatus = 'won';
+            }
+
+            $lostReason = ($newStatus === 'lost' || $newStatus === 'abandoned')
+                ? (! empty($data['lost_reason']) ? $this->renderTokens($data['lost_reason'], $contact, $context) : $existingDeal->lost_reason)
+                : null;
+
+            $existingDeal->update([
                 'stage_id' => $stageId,
                 'name' => $dealName,
-                'monetary_value' => (float) ($data['monetary_value'] ?? 0),
-                'assigned_user_id' => $data['assigned_user_id'] ?? null,
-                'deal_watcher_id' => $data['deal_watcher_id'] ?? null,
-                'status' => $data['status'] ?? 'open',
-            ]
-        );
+                'monetary_value' => isset($data['monetary_value']) && $data['monetary_value'] !== ''
+                    ? (float) $this->renderTokens((string) $data['monetary_value'], $contact, $context)
+                    : (float) $existingDeal->monetary_value,
+                'assigned_user_id' => $data['assigned_user_id'] ?? $existingDeal->assigned_user_id,
+                'deal_watcher_id' => $data['deal_watcher_id'] ?? $existingDeal->deal_watcher_id,
+                'status' => $newStatus,
+                'lost_reason' => $lostReason,
+            ]);
 
-        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} created/updated."];
+            if ($oldStatus !== $newStatus) {
+                \App\Modules\Pipelines\Models\DealHistory::create([
+                    'deal_id' => $existingDeal->id,
+                    'event_type' => 'status_change',
+                    'stage_from_id' => $existingDeal->stage_id,
+                    'stage_to_id' => $existingDeal->stage_id,
+                    'user_id' => null,
+                    'remarks' => "Status changed from {$oldStatus} to {$newStatus} via workflow '{$run->automation->name}'" . ($lostReason ? " (Reason: {$lostReason})" : ''),
+                    'created_at' => now(),
+                ]);
+
+                $pipelineService->triggerStatusAutomations($existingDeal, $oldStatus, $newStatus);
+            }
+
+            return ['status' => 'ok', 'message' => "Opportunity #{$existingDeal->id} updated (Status: {$newStatus})."];
+        }
+
+        $lostReason = ($targetStatus === 'lost' || $targetStatus === 'abandoned') && ! empty($data['lost_reason'])
+            ? $this->renderTokens($data['lost_reason'], $contact, $context)
+            : null;
+
+        $deal = \App\Modules\Pipelines\Models\Deal::create([
+            'workspace_id' => $workspaceId,
+            'contact_id' => $contact->id,
+            'pipeline_id' => $pipelineId,
+            'stage_id' => $stageId,
+            'name' => $dealName,
+            'monetary_value' => isset($data['monetary_value']) && $data['monetary_value'] !== ''
+                ? (float) $this->renderTokens((string) $data['monetary_value'], $contact, $context)
+                : 0.0,
+            'assigned_user_id' => $data['assigned_user_id'] ?? null,
+            'deal_watcher_id' => $data['deal_watcher_id'] ?? null,
+            'status' => $targetStatus,
+            'lost_reason' => $lostReason,
+        ]);
+
+        \App\Modules\Pipelines\Models\DealHistory::create([
+            'deal_id' => $deal->id,
+            'event_type' => 'deal_created',
+            'stage_from_id' => $stageId,
+            'stage_to_id' => $stageId,
+            'user_id' => null,
+            'remarks' => "Opportunity created via workflow '{$run->automation->name}' with status '{$targetStatus}'",
+            'created_at' => now(),
+        ]);
+
+        if ($targetStatus !== 'open') {
+            $pipelineService->triggerStatusAutomations($deal, 'open', $targetStatus);
+        }
+
+        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} created (Status: {$targetStatus})."];
     }
 
     private function executeChangeOpportunityStage(array $data, AutomationRun $run, array $context): array
@@ -2097,10 +3333,66 @@ class AutomationEngine
             return $this->executeCreateOpportunity(array_merge($data, ['stage_id' => $stageId]), $run, $context);
         }
 
+        $workflowName = $run->automation->name ?? 'Workflow';
         $pipelineService = app(\App\Modules\Pipelines\Services\PipelineService::class);
-        $pipelineService->updateStageAndPriority($deal, (int) $stageId, [$deal->id]);
+        $pipelineService->updateStageAndPriority(
+            $deal,
+            (int) $stageId,
+            [$deal->id],
+            null,
+            'automation',
+            $workflowName
+        );
 
-        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} stage updated."];
+        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} stage updated via workflow '{$workflowName}'."];
+    }
+
+    private function executeTransferOpportunityPipeline(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact) {
+            return ['status' => 'skipped', 'message' => 'Contact not found.'];
+        }
+
+        $workspaceId = $run->automation->workspace_id;
+        $targetPipelineId = (int) ($data['pipeline_id'] ?? $data['target_pipeline_id'] ?? 0);
+        $targetStageId = (int) ($data['stage_id'] ?? $data['target_stage_id'] ?? 0);
+
+        if (! $targetPipelineId || ! $targetStageId) {
+            return ['status' => 'error', 'message' => 'Target pipeline and stage are required for pipeline transfer.'];
+        }
+
+        $dealId = $context['deal_id'] ?? $context['opportunity_id'] ?? null;
+        $deal = null;
+        if ($dealId) {
+            $deal = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $workspaceId)->find($dealId);
+        }
+        if (! $deal) {
+            $deal = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $workspaceId)
+                ->where('contact_id', $contact->id)
+                ->latest()
+                ->first();
+        }
+
+        if (! $deal) {
+            return ['status' => 'skipped', 'message' => 'No opportunity found for contact to transfer.'];
+        }
+
+        $assignedUserId = ! empty($data['assigned_user_id']) ? (int) $data['assigned_user_id'] : null;
+        $workflowName = $run->automation->name ?? 'Workflow';
+
+        $pipelineService = app(\App\Modules\Pipelines\Services\PipelineService::class);
+        $pipelineService->transferPipeline(
+            deal: $deal,
+            targetPipelineId: $targetPipelineId,
+            targetStageId: $targetStageId,
+            assignedUserId: $assignedUserId,
+            userId: null,
+            changeSource: 'automation',
+            sourceName: $workflowName
+        );
+
+        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} transferred to pipeline #{$targetPipelineId} (Stage #{$targetStageId}) via workflow '{$workflowName}'."];
     }
 
     private function executeUpdateOpportunityStatus(array $data, AutomationRun $run, array $context): array
@@ -2110,7 +3402,6 @@ class AutomationEngine
             return ['status' => 'skipped', 'message' => 'Contact not found.'];
         }
 
-        $status = $data['status'] ?? 'won';
         $workspaceId = $run->automation->workspace_id;
 
         $deal = \App\Modules\Pipelines\Models\Deal::where('workspace_id', $workspaceId)
@@ -2122,9 +3413,33 @@ class AutomationEngine
             return ['status' => 'skipped', 'message' => 'No active opportunity found for contact.'];
         }
 
-        $deal->update(['status' => $status]);
+        $oldStatus = $deal->status;
+        $newStatus = $data['status'] ?? 'won';
+        $lostReason = ($newStatus === 'lost' || $newStatus === 'abandoned') && ! empty($data['lost_reason'])
+            ? $this->renderTokens($data['lost_reason'], $contact, $context)
+            : ($newStatus === 'open' || $newStatus === 'won' ? null : $deal->lost_reason);
 
-        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} status updated to '{$status}'."];
+        $deal->update([
+            'status' => $newStatus,
+            'lost_reason' => $lostReason,
+        ]);
+
+        if ($oldStatus !== $newStatus) {
+            \App\Modules\Pipelines\Models\DealHistory::create([
+                'deal_id' => $deal->id,
+                'event_type' => 'status_change',
+                'stage_from_id' => $deal->stage_id,
+                'stage_to_id' => $deal->stage_id,
+                'user_id' => null,
+                'remarks' => "Status changed from {$oldStatus} to {$newStatus} via workflow node" . ($lostReason ? " (Reason: {$lostReason})" : ''),
+                'created_at' => now(),
+            ]);
+
+            $pipelineService = app(\App\Modules\Pipelines\Services\PipelineService::class);
+            $pipelineService->triggerStatusAutomations($deal, $oldStatus, $newStatus);
+        }
+
+        return ['status' => 'ok', 'message' => "Opportunity #{$deal->id} status updated to '{$newStatus}'."];
     }
 
     private function executeRemoveOpportunity(array $data, AutomationRun $run, array $context): array
@@ -2190,5 +3505,90 @@ class AutomationEngine
         $appointmentService->cancel($appointment, $data['reason'] ?? 'Cancelled via automation workflow');
 
         return ['status' => 'ok', 'message' => "Appointment #{$appointment->id} cancelled."];
+    }
+
+    private function executeCreateAgencyInvoice(array $data, AutomationRun $run, array $context): array
+    {
+        $contactId = $run->contact_id;
+        $workspaceId = $run->automation->workspace_id;
+
+        $contractId = $context['contract_id'] ?? null;
+        $proposalId = $context['proposal_id'] ?? null;
+
+        $proposal = $proposalId ? \App\Modules\Agency\Models\AgencyProposal::find($proposalId) : null;
+        $lineItems = $proposal ? $proposal->line_items : [
+            ['name' => $data['service_name'] ?? 'Agency Service Agreement', 'price' => (float) ($data['amount'] ?? 100.00), 'quantity' => 1]
+        ];
+        $total = $proposal ? (float) $proposal->total : (float) ($data['amount'] ?? 100.00);
+
+        $invoice = \App\Modules\Agency\Models\AgencyInvoice::create([
+            'workspace_id' => $workspaceId,
+            'proposal_id' => $proposalId,
+            'contract_id' => $contractId,
+            'contact_id' => $contactId,
+            'invoice_number' => 'INV-' . strtoupper(\Illuminate\Support\Str::random(8)),
+            'status' => 'unpaid',
+            'due_date' => now()->addDays(7),
+            'line_items' => $lineItems,
+            'subtotal' => $total,
+            'total' => $total,
+        ]);
+
+        return [
+            'status' => 'completed',
+            'output' => [
+                'invoice_id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number,
+                'checkout_url' => route('agency.invoices.checkout', $invoice->uuid),
+            ]
+        ];
+    }
+
+    private function executeSendAgencyPaymentLink(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact || empty($contact->phone_e164)) {
+            return ['status' => 'skipped', 'message' => 'No contact phone available for payment link dispatch.'];
+        }
+
+        $invoiceId = $context['invoice_id'] ?? null;
+        $invoice = $invoiceId ? \App\Modules\Agency\Models\AgencyInvoice::find($invoiceId) : \App\Modules\Agency\Models\AgencyInvoice::where('contact_id', $contact->id)->latest()->first();
+
+        if (! $invoice) {
+            return ['status' => 'failed', 'message' => 'No active invoice found for contact.'];
+        }
+
+        $checkoutUrl = route('agency.invoices.checkout', $invoice->uuid);
+        $message = $data['message'] ?? "Hello {$contact->first_name}, here is your official B2B invoice link for payment: {$checkoutUrl}";
+
+        $channel = \App\Models\Channel::where('workspace_id', $run->automation->workspace_id)->where('status', 'connected')->first();
+        if ($channel) {
+            $this->channelManager->sendMessage($channel, $contact->phone_e164, $message);
+        }
+
+        return ['status' => 'completed', 'output' => ['checkout_url' => $checkoutUrl]];
+    }
+
+    private function executeSendOnboardingFormLink(array $data, AutomationRun $run, array $context): array
+    {
+        $contact = Contact::find($run->contact_id);
+        if (! $contact || empty($contact->phone_e164)) {
+            return ['status' => 'skipped', 'message' => 'No contact phone available for onboarding link dispatch.'];
+        }
+
+        $onboarding = \App\Modules\Agency\Models\AgencyOnboardingResponse::firstOrCreate([
+            'workspace_id' => $run->automation->workspace_id,
+            'contact_id' => $contact->id,
+        ], ['status' => 'pending']);
+
+        $onboardingUrl = route('agency.onboarding.show', $onboarding->uuid);
+        $message = $data['message'] ?? "Welcome aboard {$contact->first_name}! Please complete your client onboarding questionnaire here: {$onboardingUrl}";
+
+        $channel = \App\Models\Channel::where('workspace_id', $run->automation->workspace_id)->where('status', 'connected')->first();
+        if ($channel) {
+            $this->channelManager->sendMessage($channel, $contact->phone_e164, $message);
+        }
+
+        return ['status' => 'completed', 'output' => ['onboarding_url' => $onboardingUrl]];
     }
 }

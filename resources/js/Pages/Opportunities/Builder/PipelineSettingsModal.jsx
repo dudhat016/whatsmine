@@ -7,6 +7,7 @@ import Button from '@/Components/ui/Button';
 export default function PipelineSettingsModal({
     isOpen,
     onClose,
+    onSuccess,
     pipelines,
     activePipeline,
 }) {
@@ -76,11 +77,17 @@ export default function PipelineSettingsModal({
 
         if (isCreatingNew) {
             post(route('client.opportunities.pipelines.store'), {
-                onSuccess: () => onClose(),
+                onSuccess: () => {
+                    if (onSuccess) onSuccess();
+                    else onClose();
+                },
             });
         } else {
             put(route('client.opportunities.pipelines.update', selectedPipeline.id), {
-                onSuccess: () => onClose(),
+                onSuccess: () => {
+                    if (onSuccess) onSuccess();
+                    else onClose();
+                },
             });
         }
     };

@@ -3,6 +3,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const PRESET_COLORS = [
     '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e',
@@ -12,6 +13,7 @@ const PRESET_COLORS = [
 
 export default function LabelsIndex({ labels }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { flash } = usePage().props;
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -51,8 +53,14 @@ export default function LabelsIndex({ labels }) {
         });
     };
 
-    const destroy = (label) => {
-        if (!confirm(t('inbox.label_delete_confirm', { name: label.name }))) return;
+    const destroy = async (label) => {
+        const ok = await confirm({
+            title: 'Delete Label',
+            message: t('inbox.label_delete_confirm', { name: label.name }) || `Are you sure you want to delete label "${label.name}"?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.inbox.labels.destroy', label.id), { preserveScroll: true });
     };
 

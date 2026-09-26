@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Eye, EyeOff, CheckCircle, AlertCircle, Clock, Trash2, RefreshCw,
-    PlugZap, Copy, Check, ShoppingBag, Store,
+    PlugZap, Copy, Check, ShoppingBag, Store, DollarSign, Globe,
 } from 'lucide-react';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const PLATFORM_META = {
     shopify: {
@@ -88,6 +89,7 @@ function CopyField({ value }) {
 
 function ConnectedStoreCard({ store }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const meta = PLATFORM_META[store.platform] ?? {};
     const Icon = meta.Icon ?? Store;
     const [busy, setBusy] = useState(null);
@@ -100,8 +102,14 @@ function ConnectedStoreCard({ store }) {
         });
     };
 
-    const disconnect = () => {
-        if (!confirm(t('ecommerce.confirm_disconnect') || 'Disconnect this store?')) return;
+    const disconnect = async () => {
+        const ok = await confirm({
+            title: 'Disconnect Store',
+            message: t('ecommerce.confirm_disconnect') || 'Are you sure you want to disconnect this store?',
+            confirmText: 'Disconnect',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.ecommerce.stores.destroy', store.id), { preserveScroll: true });
     };
 
@@ -353,6 +361,16 @@ export default function EcommerceStoresIndex({ stores = [], platforms = [], oaut
     const { t } = useTranslation();
     const { props } = usePage();
     const flash = props.flash ?? {};
+    const displayCurrency = props.displayCurrency ?? 'USD';
+    const currencies = props.currencies ?? [];
+
+    const currencyForm = useForm({ currency_code: displayCurrency });
+    const saveCurrency = (e) => {
+        e.preventDefault();
+        currencyForm.post(route('client.workspaces.currency'), {
+            preserveScroll: true,
+        });
+    };
 
     return (
         <ClientLayout title={t('ecommerce.title') || 'E-Commerce'}>
@@ -380,8 +398,64 @@ export default function EcommerceStoresIndex({ stores = [], platforms = [], oaut
                         {stores.map(s => <ConnectedStoreCard key={s.id} store={s} />)}
                     </div>
                     {(
-                        <div>
+                        <div className="space-y-4">
                             <ConnectForm platforms={platforms} oauth={oauth} />
+
+                            {/* ── Store Currency Settings ── */}
+                            <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 rounded-xl bg-emerald-500/10">
+                                        <Globe className="h-4 w-4 text-emerald-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-neutral-900 dark:text-white">Store Currency</h3>
+                                        <p className="text-xs text-neutral-500">Applies to all products, checkout pages, and order receipts.</p>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={saveCurrency} className="space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1.5">
+                                            Select Currency
+                                        </label>
+                                        <select
+                                            value={currencyForm.data.currency_code}
+                                            onChange={(e) => currencyForm.setData('currency_code', e.target.value)}
+                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-semibold focus:ring-2 focus:ring-emerald-500"
+                                        >
+                                            {currencies.length > 0 ? currencies.map(c => (
+                                                <option key={c.code} value={c.code}>{c.code} — {c.symbol}</option>
+                                            )) : (
+                                                <>
+                                                    <option value="USD">USD — $</option>
+                                                    <option value="INR">INR — ₹</option>
+                                                    <option value="EUR">EUR — €</option>
+                                                    <option value="GBP">GBP — £</option>
+                                                    <option value="AED">AED — د.إ</option>
+                                                    <option value="SGD">SGD — S$</option>
+                                                    <option value="AUD">AUD — A$</option>
+                                                    <option value="CAD">CAD — C$</option>
+                                                    <option value="BRL">BRL — R$</option>
+                                                </>
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-1">
+                                        <div className="text-xs text-neutral-500">
+                                            Currently: <span className="font-bold text-emerald-600 dark:text-emerald-400">{displayCurrency}</span>
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            disabled={currencyForm.processing || currencyForm.data.currency_code === displayCurrency}
+                                            className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold transition flex items-center gap-1.5"
+                                        >
+                                            <DollarSign className="h-3.5 w-3.5" />
+                                            Save Currency
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     )}
                 </div>

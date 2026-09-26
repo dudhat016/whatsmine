@@ -3,8 +3,10 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { Calendar, Clock, CheckCircle2, RefreshCw } from 'lucide-react';
 import DatePicker from '@/Components/ui/DatePicker';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function Reschedule({ appointment, calendar }) {
+    const { alert } = useConfirm();
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [slots, setSlots] = useState([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
@@ -40,7 +42,11 @@ export default function Reschedule({ appointment, calendar }) {
             }
         })
         .catch(err => {
-            alert(err.response?.data?.message || 'Failed to reschedule. Please try again.');
+            alert({
+                title: 'Reschedule Notice',
+                message: err.response?.data?.message || 'Failed to reschedule. Please try again.',
+                variant: 'danger',
+            });
         })
         .finally(() => setProcessing(false));
     };

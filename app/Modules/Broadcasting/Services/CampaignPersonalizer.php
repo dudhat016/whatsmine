@@ -27,27 +27,125 @@ class CampaignPersonalizer
             return $template;
         }
 
-        // {{contact.name}} shorthand — full name
-        $template = str_replace('{{contact.name}}', $contact->full_name ?: '', $template);
+        // Helper to resolve with optional fallback
+        $resolveWithFallback = function (mixed $val, ?string $fallback = null): string {
+            $str = trim((string) $val);
+            if ($str !== '') {
+                return $str;
+            }
+            if ($fallback === null) {
+                return '';
+            }
+            return trim($fallback, " '\"");
+        };
 
-        // {{contact.custom.foo}}
-        $template = preg_replace_callback('/\{\{\s*contact\.custom\.([a-zA-Z0-9_\-]+)\s*\}\}/', function ($matches) use ($contact) {
+        // {{contact.name | ...}} shorthand — full name
+        $template = preg_replace_callback('/\{\{\s*contact\.name(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($contact, $resolveWithFallback) {
+            return $resolveWithFallback($contact->full_name, $matches[1] ?? null);
+        }, $template);
+
+        // {{contact.custom.foo | ...}}
+        $template = preg_replace_callback('/\{\{\s*contact\.custom\.([a-zA-Z0-9_\-]+)(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($contact, $resolveWithFallback) {
             $key = $matches[1];
-
-            return (string) ($contact->custom_fields[$key] ?? '');
+            return $resolveWithFallback($contact->custom_fields[$key] ?? '', $matches[2] ?? null);
         }, $template);
 
-        // {{contact.<field>}}
-        $template = preg_replace_callback('/\{\{\s*contact\.([a-zA-Z0-9_]+)\s*\}\}/', function ($matches) use ($contact) {
+        // {{contact.<field> | ...}}
+        $template = preg_replace_callback('/\{\{\s*contact\.([a-zA-Z0-9_]+)(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($contact, $resolveWithFallback) {
             $field = $matches[1];
-
-            return (string) ($contact->{$field} ?? '');
+            return $resolveWithFallback($contact->{$field} ?? '', $matches[2] ?? null);
         }, $template);
 
-        // {{context.<key>}}
+        // {{trigger_links.<slug>}} and {{trigger_link.<slug>}}
+        if (str_contains($template, 'trigger_link')) {
+            $workspaceId = $context['workspace_id'] ?? $contact->workspace_id ?? null;
+            if ($workspaceId) {
+                $template = preg_replace_callback('/\{\{\s*trigger_links?\.([a-zA-Z0-9_\-]+)(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($workspaceId, $contact, $resolveWithFallback) {
+                    $slug = $matches[1];
+                    $link = \App\Modules\Shared\Models\TriggerLink::where('workspace_id', $workspaceId)
+                        ->where(function ($q) use ($slug) {
+                            $q->where('slug', $slug)->orWhere('id', $slug);
+                        })
+                        ->first();
+
+                    if ($link) {
+                        $target = url('/l/' . $link->slug);
+                        if ($contact->id) {
+                            $target .= '?c=' . $contact->id;
+                        }
+                        return $target;
+                    }
+                    return $resolveWithFallback('', $matches[2] ?? null);
+                }, $template);
+            }
+        }
+
+        // {{custom_values.<key> | ...}} and {{custom_value.<key> | ...}}
+        if (str_contains($template, 'custom_value')) {
+            $workspaceId = $context['workspace_id'] ?? $contact->workspace_id ?? null;
+            if ($workspaceId) {
+                $customValues = \App\Modules\Shared\Models\CustomValue::where('workspace_id', $workspaceId)
+                    ->pluck('value', 'key')
+                    ->toArray();
+
+                $template = preg_replace_callback('/\{\{\s*custom_values?\.([a-zA-Z0-9_\-]+)(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($customValues, $resolveWithFallback) {
+                    return $resolveWithFallback($customValues[$matches[1]] ?? '', $matches[2] ?? null);
+                }, $template);
+            }
+        }
+
+        // {{right_now.<key>}} and {{current_year}}
+        if (str_contains($template, 'right_now') || str_contains($template, 'current_year')) {
+            $template = str_replace('{{current_year}}', date('Y'), $template);
+            $template = preg_replace_callback('/\{\{\s*right_now\.([a-zA-Z0-9_\-]+)(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($resolveWithFallback) {
+                $val = match (strtolower($matches[1])) {
+                    'day' => date('l'),
+                    'date' => date('Y-m-d'),
+                    'month' => date('F'),
+                    'year' => date('Y'),
+                    'time' => date('g:i A'),
+                    default => date('Y-m-d H:i:s'),
+                };
+                return $resolveWithFallback($val, $matches[2] ?? null);
+            }, $template);
+        }
+
+        // {{account.<field> | ...}} or {{workspace.<field> | ...}}
+        if (str_contains($template, 'account.') || str_contains($template, 'workspace.')) {
+            $workspaceId = $context['workspace_id'] ?? $contact->workspace_id ?? null;
+            if ($workspaceId) {
+                $workspace = \App\Models\Workspace::find($workspaceId);
+                if ($workspace) {
+                    $template = preg_replace_callback('/\{\{\s*(account|workspace)\.([a-zA-Z0-9_\-]+)(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($workspace, $resolveWithFallback) {
+                        return $resolveWithFallback($workspace->{$matches[2]} ?? '', $matches[3] ?? null);
+                    }, $template);
+                }
+            }
+        }
+
+        // {{user.<field> | ...}}
+        if (str_contains($template, 'user.')) {
+            $user = $context['user'] ?? null;
+            if (! $user && ! empty($context['user_id'])) {
+                $user = \App\Models\User::find($context['user_id']);
+            }
+            if (! $user && ! empty($contact->workspace_id)) {
+                $ws = \App\Models\Workspace::find($contact->workspace_id);
+                $user = $ws?->owner;
+            }
+            if ($user) {
+                $template = preg_replace_callback('/\{\{\s*user\.([a-zA-Z0-9_\-]+)(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($user, $resolveWithFallback) {
+                    $field = $matches[1];
+                    $val = ($field === 'first_name') ? (explode(' ', $user->name)[0] ?? $user->name) : (string) ($user->{$field} ?? '');
+                    return $resolveWithFallback($val, $matches[2] ?? null);
+                }, $template);
+            }
+        }
+
+        // {{context.<key> | ...}}
         if (! empty($context)) {
-            $template = preg_replace_callback('/\{\{\s*context\.([a-zA-Z0-9_]+)\s*\}\}/', function ($matches) use ($context) {
-                return (string) ($context[$matches[1]] ?? '');
+            $template = preg_replace_callback('/\{\{\s*context\.([a-zA-Z0-9_]+)(?:\s*\|\s*(?:default:\s*)?([^}]+))?\s*\}\}/', function ($matches) use ($context, $resolveWithFallback) {
+                return $resolveWithFallback($context[$matches[1]] ?? '', $matches[2] ?? null);
             }, $template);
         }
 

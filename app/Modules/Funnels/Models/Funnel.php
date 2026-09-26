@@ -32,6 +32,7 @@ class Funnel extends Model
 
     protected $fillable = [
         'workspace_id',
+        'folder_id',
         'name',
         'slug',
         'theme_color',
@@ -65,6 +66,11 @@ class Funnel extends Model
     }
 
     // ─── Relationships ────────────────────────────────────────────────────────
+
+    public function folder(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(FunnelFolder::class, 'folder_id');
+    }
 
     public function steps()
     {

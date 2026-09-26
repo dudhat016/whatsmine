@@ -3,9 +3,11 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function CannedRepliesIndex({ cannedReplies }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { flash } = usePage().props;
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -47,8 +49,14 @@ export default function CannedRepliesIndex({ cannedReplies }) {
         });
     };
 
-    const destroy = (reply) => {
-        if (!confirm(t('inbox.canned_delete_confirm', { shortcut: reply.shortcut }))) return;
+    const destroy = async (reply) => {
+        const ok = await confirm({
+            title: 'Delete Canned Reply',
+            message: t('inbox.canned_delete_confirm', { shortcut: reply.shortcut }) || `Are you sure you want to delete canned reply "${reply.shortcut}"?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.inbox.canned-replies.destroy', reply.id), { preserveScroll: true });
     };
 

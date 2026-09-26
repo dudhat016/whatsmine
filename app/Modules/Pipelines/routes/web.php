@@ -20,5 +20,7 @@ Route::middleware(['web', 'client-app'])->prefix('app/opportunities')->name('cli
     Route::post('/deals', [PipelineController::class, 'storeDeal'])->name('deals.store');
     Route::put('/deals/{deal}', [PipelineController::class, 'updateDeal'])->name('deals.update');
     Route::delete('/deals/{deal}', [PipelineController::class, 'destroyDeal'])->name('deals.destroy');
+    Route::post('/deals/{deal}/status', [PipelineController::class, 'updateDealStatus'])->name('deals.update-status');
     Route::post('/deals/update-stage-and-priority', [PipelineController::class, 'updateStageAndPriority'])->name('deals.update-stage-and-priority');
+    Route::post('/deals/transfer-pipeline', [PipelineController::class, 'transferPipeline'])->name('deals.transfer-pipeline');
 });

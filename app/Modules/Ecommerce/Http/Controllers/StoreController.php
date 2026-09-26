@@ -30,12 +30,14 @@ class StoreController extends Controller
         'bigcommerce' => [
             ['key' => 'access_token', 'label' => 'API Access Token', 'type' => 'password', 'required' => true],
         ],
+        'native' => [],
     ];
 
     public const LABELS = [
         'shopify' => 'Shopify',
         'woocommerce' => 'WooCommerce',
         'bigcommerce' => 'BigCommerce',
+        'native' => 'Native Catalog',
     ];
 
     public function index(Request $request): Response
@@ -62,11 +64,13 @@ class StoreController extends Controller
 
         return Inertia::render('Ecommerce/Stores/Index', [
             'stores' => $stores,
-            'platforms' => collect(EcommerceStore::PLATFORMS)->map(fn ($p) => [
-                'platform' => $p,
-                'label' => self::LABELS[$p],
-                'fields' => self::FIELDS[$p],
-            ])->values(),
+            'platforms' => collect(EcommerceStore::PLATFORMS)
+                ->reject(fn ($p) => $p === 'native')
+                ->map(fn ($p) => [
+                    'platform' => $p,
+                    'label' => self::LABELS[$p] ?? ucfirst($p),
+                    'fields' => self::FIELDS[$p] ?? [],
+                ])->values(),
             // Whether one-click OAuth is available per platform. Woo needs no app
             // credentials; Shopify/BigCommerce require the admin to configure them.
             'oauth' => [

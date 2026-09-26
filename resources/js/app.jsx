@@ -10,6 +10,7 @@ import LocaleSync from '@/Components/LocaleSync';
 import BrandingFavicon from '@/Components/BrandingFavicon';
 import ErrorBoundary from '@/Components/ErrorBoundary';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { ConfirmationProvider } from '@/context/ConfirmationContext';
 import { toast } from 'sonner';
 
 initI18n();
@@ -39,6 +40,11 @@ router.on('success', (event) => syncCsrfToken(event.detail.page));
 // nothing changed. Needs a <Toaster /> in the active layout (Client/Inbox/Admin).
 router.on('invalid', (event) => {
     const response = event.detail?.response;
+    if (response?.status === 419) {
+        event.preventDefault();
+        window.location.reload();
+        return;
+    }
     if (response?.status === 403 && response?.data?.code === 'demo_mode') {
         event.preventDefault();
         toast.error(response.data.message || i18n.t('demo.banner') || 'Demo mode: changes are disabled.');
@@ -77,9 +83,11 @@ createInertiaApp({
                 const Wrapped = function WrappedWithThemeAndLocale(props) {
                     return (
                         <ThemeProvider>
-                            <LocaleSync />
-                            <BrandingFavicon />
-                            <Page {...props} />
+                            <ConfirmationProvider>
+                                <LocaleSync />
+                                <BrandingFavicon />
+                                <Page {...props} />
+                            </ConfirmationProvider>
                         </ThemeProvider>
                     );
                 };

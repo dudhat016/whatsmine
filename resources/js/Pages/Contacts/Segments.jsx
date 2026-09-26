@@ -4,6 +4,7 @@ import EmptyState from '@/Components/EmptyState';
 import { useState } from 'react';
 import { Plus, Trash2, Filter, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const FIELDS = ['first_name', 'last_name', 'phone_e164', 'email', 'country', 'language', 'source', 'opt_in_whatsapp', 'opt_in_sms', 'opt_in_email'];
 const OPERATORS = ['=', '!=', 'like', 'not_like', 'is_null', 'is_not_null'];
@@ -28,6 +29,7 @@ function RuleRow({ condition, onChange, onRemove }) {
 
 export default function ContactsSegments({ segments }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const [showCreate, setShowCreate] = useState(false);
     const { data, setData, post, processing, reset } = useForm({
         name: '',
@@ -56,8 +58,14 @@ export default function ContactsSegments({ segments }) {
         post(route('client.segments.store'), { onSuccess: () => { reset(); setShowCreate(false); } });
     };
 
-    const handleDelete = (id) => {
-        if (confirm(t('contacts_page.seg_confirm_delete'))) {
+    const handleDelete = async (id) => {
+        const ok = await confirm({
+            title: 'Delete Segment',
+            message: t('contacts_page.seg_confirm_delete') || 'Are you sure you want to delete this segment?',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.segments.destroy', id), { preserveScroll: true });
         }
     };

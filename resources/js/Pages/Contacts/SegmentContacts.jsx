@@ -3,6 +3,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { useState } from 'react';
 import { UserPlus, Trash2, ArrowLeft, Search, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 function ContactRow({ contact }) {
     const name = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || '—';
@@ -21,6 +22,7 @@ function ContactRow({ contact }) {
 
 export default function SegmentContacts({ segment, segmentContacts, availableContacts, filters }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const [selected, setSelected] = useState([]);
     const [search, setSearch] = useState(filters.search ?? '');
 
@@ -44,8 +46,14 @@ export default function SegmentContacts({ segment, segmentContacts, availableCon
         });
     };
 
-    const handleDetach = (contactId) => {
-        if (!confirm(t('contacts_page.seg_confirm_remove'))) return;
+    const handleDetach = async (contactId) => {
+        const ok = await confirm({
+            title: 'Remove Contact from Segment',
+            message: t('contacts_page.seg_confirm_remove') || 'Are you sure you want to remove this contact from the segment?',
+            confirmText: 'Remove',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.segments.contacts.detach', [segment.id, contactId]), { preserveScroll: true });
     };
 

@@ -201,7 +201,15 @@ export default function MediaUpload({
             {value && (
                 <div className="flex items-center gap-3 p-2 rounded-soft bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
                     {isImage ? (
-                        <img src={value} alt="preview" className="h-10 w-10 rounded object-cover shrink-0" />
+                        <img
+                            src={value}
+                            alt="preview"
+                            className="h-10 w-10 rounded object-cover shrink-0"
+                            onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400';
+                            }}
+                        />
                     ) : (
                         <div className="h-10 w-10 rounded bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center shrink-0">
                             <FileText className="h-5 w-5 text-neutral-500" />

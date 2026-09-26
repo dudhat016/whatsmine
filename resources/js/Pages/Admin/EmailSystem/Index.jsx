@@ -5,6 +5,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { Send, Settings, Pencil, Trash2, Mail, Server, Lock, User, CheckCircle2, XCircle, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const ENCRYPTION_OPTIONS = [
     { value: 'tls', label: 'TLS' },
@@ -14,6 +15,7 @@ const ENCRYPTION_OPTIONS = [
 
 export default function AdminEmailSystemIndex({ smtpConfigurations = [], emailTemplates = [], flash = {} }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const [addSmtpOpen, setAddSmtpOpen] = useState(false);
     const [editSmtp, setEditSmtp] = useState(null);
     const [editTemplate, setEditTemplate] = useState(null);
@@ -95,8 +97,14 @@ export default function AdminEmailSystemIndex({ smtpConfigurations = [], emailTe
                                                 key={c.id}
                                                 config={c}
                                                 onEdit={() => { setEditSmtp(c); setAddSmtpOpen(true); }}
-                                                onDelete={() => {
-                                                    if (confirm(t('email_server.remove_confirm'))) {
+                                                onDelete={async () => {
+                                                    const ok = await confirm({
+                                                        title: 'Remove SMTP Configuration',
+                                                        message: t('email_server.remove_confirm') || 'Are you sure you want to remove this SMTP configuration?',
+                                                        confirmText: 'Remove',
+                                                        variant: 'danger',
+                                                    });
+                                                    if (ok) {
                                                         router.delete(route('admin.smtp-configurations.destroy', c.id));
                                                     }
                                                 }}

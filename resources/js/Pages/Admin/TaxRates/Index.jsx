@@ -3,6 +3,7 @@ import { useForm, router } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Percent, Plus, Pencil, Trash2 } from 'lucide-react';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 function TaxRateForm({ taxRate = null, onClose }) {
     const { t } = useTranslation();
@@ -101,11 +102,18 @@ function TaxRateForm({ taxRate = null, onClose }) {
 
 export default function TaxRatesIndex({ taxRates }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const [showCreate, setShowCreate] = useState(false);
     const [editing, setEditing] = useState(null);
 
-    const handleDelete = (taxRate) => {
-        if (! confirm(t('admin.tax_delete_confirm', { name: taxRate.name }))) return;
+    const handleDelete = async (taxRate) => {
+        const ok = await confirm({
+            title: 'Delete Tax Rate',
+            message: t('admin.tax_delete_confirm', { name: taxRate.name }) || `Are you sure you want to delete tax rate "${taxRate.name}"?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('admin.tax-rates.destroy', taxRate.id));
     };
 

@@ -78,14 +78,26 @@ class ContactController extends Controller
     {
         $this->authoriseContact($request, $contact);
 
-        $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
-        $contact->load(['tags', 'segments', 'conversations' => fn ($q) => $q->with(['messages' => fn ($q) => $q->latest('sent_at')->limit(5)])->latest('last_message_at')->limit(10)]);
+        $workspaceId = (int) ($request->user()->current_workspace_id ?? $request->user()->workspace_id);
+        \App\Http\Controllers\Client\CustomFieldController::ensureWorkspaceFolders($workspaceId);
+
+        $contact->load([
+            'tags',
+            'segments',
+            'conversations' => fn ($q) => $q->with(['messages' => fn ($q) => $q->latest('sent_at')->limit(5)])->latest('last_message_at')->limit(10),
+        ]);
 
         $staticSegments = Segment::where('workspace_id', $workspaceId)->where('type', 'static')->orderBy('name')->get(['id', 'name']);
+        $availableFolders = \App\Modules\Shared\Models\CustomFieldFolder::where('workspace_id', $workspaceId)->orderBy('sort_order', 'asc')->get();
+        $customFields = \App\Modules\Shared\Models\CustomField::where('workspace_id', $workspaceId)->where('is_active', true)->get();
+        $contactSubmissions = \App\Modules\Funnels\Models\SubscriptionFormSubmission::where('contact_id', $contact->id)->with('form')->latest()->get();
 
         return Inertia::render('Contacts/Show', [
-            'contact' => $contact,
-            'staticSegments' => $staticSegments,
+            'contact'            => $contact,
+            'staticSegments'     => $staticSegments,
+            'availableFolders'   => $availableFolders,
+            'customFields'       => $customFields,
+            'contactSubmissions' => $contactSubmissions,
         ]);
     }
 

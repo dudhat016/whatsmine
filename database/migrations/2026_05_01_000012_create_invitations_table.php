@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('token', 64)->unique();
             $table->foreignId('invited_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('accepted_at')->nullable();
-            $table->timestamp('expires_at');
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
 
             $table->index(['token']);

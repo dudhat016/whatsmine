@@ -3,6 +3,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { Share2, Plus, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SocialBrandIcon } from '@/Components/BrandIcons';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const NETWORKS = [
     { id: 'facebook',  label: 'Facebook',  descriptionKey: 'social.network_desc_facebook' },
@@ -20,6 +21,7 @@ const STATUS_DOT = {
 
 export default function SocialAccountsIndex({ accounts }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
 
@@ -30,8 +32,14 @@ export default function SocialAccountsIndex({ accounts }) {
         return acc;
     }, {});
 
-    const disconnect = (account) => {
-        if (confirm(t('social.disconnect_confirm', { name: account.name }))) {
+    const disconnect = async (account) => {
+        const ok = await confirm({
+            title: 'Disconnect Account',
+            message: t('social.disconnect_confirm', { name: account.name }) || `Are you sure you want to disconnect ${account.name}?`,
+            confirmText: 'Disconnect',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.social.accounts.disconnect', account.id), { preserveScroll: true });
         }
     };

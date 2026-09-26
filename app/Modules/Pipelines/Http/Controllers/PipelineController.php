@@ -5,6 +5,7 @@ namespace App\Modules\Pipelines\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Pipelines\Models\Deal;
+use App\Modules\Pipelines\Models\DealHistory;
 use App\Modules\Pipelines\Models\LeadPipeline;
 use App\Modules\Pipelines\Models\PipelineStage;
 use App\Modules\Pipelines\Services\PipelineService;
@@ -62,7 +63,7 @@ class PipelineController extends Controller
         $pipelineId = (int) $request->input('pipeline_id');
         $searchText = trim($request->input('search', ''));
         $agentId = $request->input('agent_id');
-        $status = $request->input('status', 'all');
+        $status = $request->input('status', 'open');
 
         $pipeline = LeadPipeline::where('workspace_id', $wid)
             ->where('id', $pipelineId)
@@ -70,6 +71,31 @@ class PipelineController extends Controller
                 $q->orderBy('priority', 'asc');
             }])
             ->firstOrFail();
+
+        // Calculate overall status counts for this pipeline & active search/agent filters
+        $baseCountQuery = Deal::where('workspace_id', $wid)->where('pipeline_id', $pipeline->id);
+        if ($searchText !== '') {
+            $baseCountQuery->where(function ($q) use ($searchText) {
+                $q->where('name', 'like', "%{$searchText}%")
+                    ->orWhereHas('contact', function ($cq) use ($searchText) {
+                        $cq->where('first_name', 'like', "%{$searchText}%")
+                            ->orWhere('last_name', 'like', "%{$searchText}%")
+                            ->orWhere('phone_e164', 'like', "%{$searchText}%")
+                            ->orWhere('email', 'like', "%{$searchText}%");
+                    });
+            });
+        }
+        if ($agentId && $agentId !== 'all') {
+            $baseCountQuery->where('assigned_user_id', (int) $agentId);
+        }
+
+        $statusCounts = [
+            'all' => (clone $baseCountQuery)->count(),
+            'open' => (clone $baseCountQuery)->where('status', 'open')->count(),
+            'won' => (clone $baseCountQuery)->where('status', 'won')->count(),
+            'lost' => (clone $baseCountQuery)->where('status', 'lost')->count(),
+            'abandoned' => (clone $baseCountQuery)->where('status', 'abandoned')->count(),
+        ];
 
         $boardColumns = [];
 
@@ -123,6 +149,7 @@ class PipelineController extends Controller
             'status' => 'success',
             'pipeline' => $pipeline,
             'boardColumns' => $boardColumns,
+            'statusCounts' => $statusCounts,
         ]);
     }
 
@@ -328,6 +355,75 @@ class PipelineController extends Controller
         return response()->json([
             'status' => 'success',
             'deal' => $updatedDeal,
+        ]);
+    }
+
+    public function updateDealStatus(Request $request, Deal $deal): JsonResponse
+    {
+        $wid = $this->workspaceId($request);
+        abort_unless((int) $deal->workspace_id === $wid, 403);
+
+        $validated = $request->validate([
+            'status' => ['required', 'in:open,won,lost,abandoned'],
+            'lost_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $oldStatus = $deal->status;
+        $newStatus = $validated['status'];
+
+        $deal->status = $newStatus;
+        if (array_key_exists('lost_reason', $validated)) {
+            $deal->lost_reason = $validated['lost_reason'];
+        }
+        $deal->save();
+
+        // Audit log in DealHistory
+        DealHistory::create([
+            'deal_id' => $deal->id,
+            'event_type' => 'status_change',
+            'stage_from_id' => $deal->stage_id,
+            'stage_to_id' => $deal->stage_id,
+            'user_id' => $request->user()?->id,
+            'remarks' => "Status changed from {$oldStatus} to {$newStatus}" . ($deal->lost_reason ? " (Reason: {$deal->lost_reason})" : ''),
+            'created_at' => now(),
+        ]);
+
+        // Trigger automations for status transition
+        $this->pipelineService->triggerStatusAutomations($deal, $oldStatus, $newStatus);
+
+        return response()->json([
+            'status' => 'success',
+            'deal' => $deal->fresh(['contact:id,uuid,first_name,last_name,phone_e164,email', 'assignedUser:id,name', 'dealWatcher:id,name']),
+            'message' => "Opportunity status updated to {$newStatus}.",
+        ]);
+    }
+
+    public function transferPipeline(Request $request): JsonResponse
+    {
+        $wid = $this->workspaceId($request);
+        $validated = $request->validate([
+            'deal_id' => ['required', 'integer'],
+            'target_pipeline_id' => ['required', 'integer'],
+            'target_stage_id' => ['required', 'integer'],
+            'assigned_user_id' => ['nullable', 'integer'],
+        ]);
+
+        $deal = Deal::where('workspace_id', $wid)->where('id', $validated['deal_id'])->firstOrFail();
+
+        $updatedDeal = $this->pipelineService->transferPipeline(
+            deal: $deal,
+            targetPipelineId: (int) $validated['target_pipeline_id'],
+            targetStageId: (int) $validated['target_stage_id'],
+            assignedUserId: ! empty($validated['assigned_user_id']) ? (int) $validated['assigned_user_id'] : null,
+            userId: $request->user()?->id,
+            changeSource: 'manual',
+            sourceName: $request->user()?->name ?? 'User'
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'deal' => $updatedDeal->fresh(['contact:id,uuid,first_name,last_name,phone_e164,email', 'assignedUser:id,name', 'dealWatcher:id,name']),
+            'message' => 'Opportunity transferred successfully.',
         ]);
     }
 }

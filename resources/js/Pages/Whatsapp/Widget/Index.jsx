@@ -5,15 +5,23 @@ import { Plus, Trash2, Code, ExternalLink, Pencil, Check, Clock, Globe } from 'l
 import { ChannelBrandIcon } from '@/Components/BrandIcons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function WhatsappWidgetIndex({ widgets }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
     const [copied, setCopied] = useState(null);
 
-    const handleDelete = (id) => {
-        if (confirm(t('whatsapp.widget_delete_confirm'))) {
+    const handleDelete = async (id) => {
+        const ok = await confirm({
+            title: 'Delete Widget',
+            message: t('whatsapp.widget_delete_confirm') || 'Are you sure you want to delete this WhatsApp widget?',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.whatsapp.widgets.destroy', id), { preserveScroll: true });
         }
     };

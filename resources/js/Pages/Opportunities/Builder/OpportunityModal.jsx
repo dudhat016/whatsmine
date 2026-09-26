@@ -5,10 +5,12 @@ import Input from '@/Components/ui/Input';
 import Select from '@/Components/ui/Select';
 import DatePicker from '@/Components/ui/DatePicker';
 import Button from '@/Components/ui/Button';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function OpportunityModal({
     isOpen,
     onClose,
+    onSuccess,
     deal,
     pipelineId,
     stageId,
@@ -19,6 +21,7 @@ export default function OpportunityModal({
     if (!isOpen) return null;
 
     const isEdit = !!deal;
+    const { confirm } = useConfirm();
 
     const { data, setData, post, put, delete: destroy, processing, errors, reset } = useForm({
         name: deal?.name ?? '',
@@ -56,25 +59,36 @@ export default function OpportunityModal({
         if (isEdit) {
             put(route('client.opportunities.deals.update', deal.id), {
                 onSuccess: () => {
-                    onClose();
+                    if (onSuccess) onSuccess();
+                    else onClose();
                     reset();
                 },
             });
         } else {
             post(route('client.opportunities.deals.store'), {
                 onSuccess: () => {
-                    onClose();
+                    if (onSuccess) onSuccess();
+                    else onClose();
                     reset();
                 },
             });
         }
     };
 
-    const handleDelete = () => {
-        if (!deal || !confirm('Are you sure you want to delete this opportunity?')) return;
+    const handleDelete = async () => {
+        if (!deal) return;
+        const ok = await confirm({
+            title: 'Delete Opportunity',
+            message: 'Are you sure you want to delete this opportunity? This action cannot be undone.',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (!ok) return;
+
         destroy(route('client.opportunities.deals.destroy', deal.id), {
             onSuccess: () => {
-                onClose();
+                if (onSuccess) onSuccess();
+                else onClose();
             },
         });
     };
@@ -206,6 +220,19 @@ export default function OpportunityModal({
                             placeholder="Pick close date..."
                         />
                     </div>
+
+                    {/* Lost or Abandoned Reason */}
+                    {(data.status === 'lost' || data.status === 'abandoned') && (
+                        <div>
+                            <Input
+                                label={data.status === 'lost' ? 'Lost Reason' : 'Abandonment Reason'}
+                                value={data.lost_reason}
+                                onChange={(e) => setData('lost_reason', e.target.value)}
+                                placeholder={data.status === 'lost' ? 'e.g. Competitor Chosen, Budget Too High...' : 'e.g. Lead Unresponsive, Project Cancelled...'}
+                                error={errors.lost_reason}
+                            />
+                        </div>
+                    )}
 
                     {/* Footer Actions */}
                     <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">

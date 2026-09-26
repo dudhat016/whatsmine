@@ -11,10 +11,13 @@ import {
     Paintbrush,
     Sparkles,
     Variable,
+    Undo2,
+    Redo2,
 } from 'lucide-react';
 import { blocksToHtml, htmlToBlocks } from './blocks';
 import { EMAIL_TEMPLATES } from './templates';
 import VisualCanvas from './VisualCanvas';
+import useHistoryState from '@/hooks/useHistoryState';
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
@@ -27,27 +30,37 @@ const btnBase =
 // ─── Main EmailEditor ─────────────────────────────────────────────────────────
 
 const TABS = [
-    { id: 'templates', labelKey: 'email_editor.tab_templates', Icon: Paintbrush },
-    { id: 'visual', labelKey: 'email_editor.tab_visual', Icon: Layers },
-    { id: 'html', labelKey: 'email_editor.tab_html', Icon: Code2 },
-    { id: 'ai', labelKey: 'email_editor.tab_ai', Icon: Sparkles },
+    { id: 'visual', labelKey: 'email_editor.tab_visual', fallbackLabel: 'Editor', Icon: Layers },
+    { id: 'templates', labelKey: 'email_editor.tab_templates', fallbackLabel: 'Template', Icon: Paintbrush },
+    { id: 'html', labelKey: 'email_editor.tab_html', fallbackLabel: 'HTML', Icon: Code2 },
+    { id: 'ai', labelKey: 'email_editor.tab_ai', fallbackLabel: 'AI Write', Icon: Sparkles },
 ];
 
 export default function EmailEditor({
-    subject,
-    body,
+    subject = '',
+    body = '',
     onSubjectChange,
     onBodyChange,
     contactTokens = [],
     campaignName = '',
+    hideSubject = false,
+    defaultTab,
 }) {
     const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState('templates');
-    const [blocks, setBlocks] = useState(() => htmlToBlocks(body));
+    const [activeTab, setActiveTab] = useState(defaultTab || (body ? 'visual' : 'templates'));
+    const [blocks, setBlocks, { undo, redo, canUndo, canRedo, setPast, setFuture }] = useHistoryState(() => htmlToBlocks(body));
     const [showPreview, setShowPreview] = useState(false);
     const [justGenerated, setJustGenerated] = useState(false);
     const bodyRef = useRef(null);
     const lastBlocksHtml = useRef(body);
+
+    // Sync external body changes into blocks
+    useEffect(() => {
+        if (body !== lastBlocksHtml.current) {
+            lastBlocksHtml.current = body;
+            setBlocks(htmlToBlocks(body));
+        }
+    }, [body, setBlocks]);
 
     // Sync blocks → body while editing visually
     useEffect(() => {
@@ -102,22 +115,24 @@ export default function EmailEditor({
     return (
         <div className="space-y-3">
             {/* Subject */}
-            <div>
-                <div className="mb-1 flex items-center justify-between gap-2">
-                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('email_editor.subject')}</label>
-                    <div className="flex items-center gap-2">
-                        <SubjectImprover subject={subject} body={body} onPick={onSubjectChange} />
-                        <TokenPickerInline tokens={contactTokens} onPick={(token) => onSubjectChange(subject + token)} />
+            {!hideSubject && (
+                <div>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                        <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('email_editor.subject')}</label>
+                        <div className="flex items-center gap-2">
+                            <SubjectImprover subject={subject} body={body} onPick={onSubjectChange} />
+                            <TokenPickerInline tokens={contactTokens} onPick={(token) => onSubjectChange(subject + token)} />
+                        </div>
                     </div>
+                    <input
+                        type="text"
+                        value={subject}
+                        onChange={(e) => onSubjectChange(e.target.value)}
+                        className={inputClass}
+                        placeholder="Welcome, {{contact.first_name}}"
+                    />
                 </div>
-                <input
-                    type="text"
-                    value={subject}
-                    onChange={(e) => onSubjectChange(e.target.value)}
-                    className={inputClass}
-                    placeholder="Welcome, {{contact.first_name}}"
-                />
-            </div>
+            )}
 
             {/* AI generated banner */}
             {justGenerated && (
@@ -129,7 +144,7 @@ export default function EmailEditor({
 
             {/* Tab bar */}
             <div className="flex items-center gap-1 border-b border-neutral-200 dark:border-neutral-700">
-                {TABS.map(({ id, labelKey, Icon }) => (
+                {TABS.map(({ id, labelKey, fallbackLabel, Icon }) => (
                     <button
                         key={id}
                         type="button"
@@ -141,24 +156,46 @@ export default function EmailEditor({
                         }`}
                     >
                         <Icon className="h-3.5 w-3.5" />
-                        {t(labelKey)}
+                        {t(labelKey) || fallbackLabel}
                     </button>
                 ))}
 
-                {/* Preview toggle (HTML/Visual tabs) */}
+                {/* Undo / Redo & Preview toggle (HTML/Visual tabs) */}
                 {(activeTab === 'html' || activeTab === 'visual') && (
-                    <button
-                        type="button"
-                        onClick={() => setShowPreview((v) => !v)}
-                        className={`mb-1 ml-auto inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                            showPreview
-                                ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400'
-                                : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
-                        }`}
-                    >
-                        <Eye className="h-3.5 w-3.5" />
-                        {t('email_editor.preview')}
-                    </button>
+                    <div className="mb-1 ml-auto flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 border-r border-neutral-200 dark:border-neutral-700 pr-2 mr-1">
+                            <button
+                                type="button"
+                                onClick={undo}
+                                disabled={!canUndo}
+                                title="Undo (Ctrl+Z)"
+                                className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 disabled:opacity-30 disabled:hover:text-neutral-400 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                            >
+                                <Undo2 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={redo}
+                                disabled={!canRedo}
+                                title="Redo (Ctrl+Y or Ctrl+Shift+Z)"
+                                className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 disabled:opacity-30 disabled:hover:text-neutral-400 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+                            >
+                                <Redo2 className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setShowPreview((v) => !v)}
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                                showPreview
+                                    ? 'bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400'
+                                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
+                            }`}
+                        >
+                            <Eye className="h-3.5 w-3.5" />
+                            {t('email_editor.preview')}
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -493,20 +530,24 @@ function TokenPickerInline({ tokens, onPick }) {
                     className="absolute right-0 z-30 mt-1 w-56 rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800"
                     onMouseLeave={() => setOpen(false)}
                 >
-                    {tokens.map((token) => (
-                        <button
-                            key={token.key}
-                            type="button"
-                            onClick={() => {
-                                onPick(token.key);
-                                setOpen(false);
-                            }}
-                            className="flex w-full items-center justify-between px-3 py-1.5 text-left text-xs hover:bg-neutral-50 dark:hover:bg-neutral-700"
-                        >
-                            <span>{token.label}</span>
-                            <span className="font-mono text-neutral-400">{token.key}</span>
-                        </button>
-                    ))}
+                    {tokens.map((token) => {
+                        const key = typeof token === 'string' ? token : token.key;
+                        const label = typeof token === 'string' ? token : (token.label || token.key);
+                        return (
+                            <button
+                                key={key}
+                                type="button"
+                                onClick={() => {
+                                    onPick(key);
+                                    setOpen(false);
+                                }}
+                                className="flex w-full items-center justify-between px-3 py-1.5 text-left text-xs hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                            >
+                                <span>{label}</span>
+                                <span className="font-mono text-neutral-400">{key}</span>
+                            </button>
+                        );
+                    })}
                 </div>
             )}
         </div>

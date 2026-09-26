@@ -30,6 +30,7 @@ class Deal extends Model
         'currency_code',
         'status',
         'source',
+        'custom_fields',
         'column_priority',
         'next_follow_up',
         'expected_close_date',
@@ -40,6 +41,7 @@ class Deal extends Model
     {
         return [
             'monetary_value' => 'float',
+            'custom_fields' => 'array',
             'column_priority' => 'integer',
             'expected_close_date' => 'date',
         ];

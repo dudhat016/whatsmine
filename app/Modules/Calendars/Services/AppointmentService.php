@@ -149,28 +149,170 @@ class AppointmentService
     }
 
     /**
+     * Update appointment status (e.g. showed, no_show, completed, cancelled) and fire triggers.
+     */
+    public function updateStatus(Appointment $appointment, string $status): Appointment
+    {
+        $appointment->update(['status' => $status]);
+
+        // Dispatch general appointment status trigger
+        $this->dispatchAutomationTrigger($appointment, 'appointment.status');
+
+        if ($status === 'cancelled') {
+            $this->dispatchAutomationTrigger($appointment, 'appointment.cancelled');
+        } elseif ($status === 'rescheduled') {
+            $this->dispatchAutomationTrigger($appointment, 'appointment.rescheduled');
+        }
+
+        return $appointment;
+    }
+
+    /**
      * Dispatch automation engine triggers for appointment events.
      */
     public function dispatchAutomationTrigger(Appointment $appointment, string $triggerType): void
     {
         try {
+            $appointment->loadMissing(['calendar', 'contact.tags', 'assignedUser']);
             $engine = app(\App\Modules\Automation\Services\AutomationEngine::class);
+
             $automations = \App\Modules\Automation\Models\Automation::where('workspace_id', $appointment->workspace_id)
                 ->where('status', 'active')
-                ->where('trigger_type', $triggerType)
                 ->get();
 
+            $contact = $appointment->contact;
+            $calendar = $appointment->calendar;
+
             foreach ($automations as $automation) {
-                $engine->triggerForContact($automation, (int) $appointment->contact_id, [
-                    'appointment_id' => $appointment->id,
-                    'appointment_title' => $appointment->title,
-                    'appointment_start_at' => $appointment->start_at->toIso8601String(),
-                    'meeting_join_url' => $appointment->meeting_join_url,
-                    'calendar_id' => $appointment->calendar_id,
-                ]);
+                foreach ($engine->getAutomationTriggers($automation) as $tr) {
+                    $trType = $tr['trigger_type'] ?? '';
+
+                    // Match exact trigger type or general 'appointment.status'
+                    if ($trType !== $triggerType && $trType !== 'appointment.status') {
+                        continue;
+                    }
+
+                    $config = $tr['trigger_config'] ?? [];
+                    $filters = $config['filters'] ?? [];
+
+                    // 1. Calendar filter
+                    $calendarFilter = $config['calendar_id'] ?? null;
+                    if (! $calendarFilter && ! empty($filters)) {
+                        $fCal = collect($filters)->firstWhere('type', 'calendar_is');
+                        if ($fCal && ! empty($fCal['value'])) {
+                            $calendarFilter = $fCal['value'];
+                        }
+                    }
+                    if ($calendarFilter && (int) $calendarFilter !== (int) $appointment->calendar_id) {
+                        continue;
+                    }
+
+                    // 2. Appointment status filter
+                    $statusFilter = $config['appointment_status'] ?? null;
+                    if (! $statusFilter && ! empty($filters)) {
+                        $fStat = collect($filters)->firstWhere('type', 'appointment_status_is');
+                        if ($fStat && ! empty($fStat['value'])) {
+                            $statusFilter = $fStat['value'];
+                        }
+                    }
+                    if ($statusFilter) {
+                        $currentStatus = strtolower(trim((string) $appointment->status));
+                        $targetStatus = strtolower(trim((string) $statusFilter));
+
+                        // Treat 'completed' and 'showed' as interchangeable
+                        $isStatusMatch = ($currentStatus === $targetStatus)
+                            || ($currentStatus === 'completed' && $targetStatus === 'showed')
+                            || ($currentStatus === 'showed' && $targetStatus === 'completed');
+
+                        if (! $isStatusMatch) {
+                            continue;
+                        }
+                    }
+
+                    // 3. Event type filter (personal, team, round_robin, class)
+                    $eventTypeFilter = $config['event_type'] ?? null;
+                    if (! $eventTypeFilter && ! empty($filters)) {
+                        $fType = collect($filters)->firstWhere('type', 'event_type_is');
+                        if ($fType && ! empty($fType['value'])) {
+                            $eventTypeFilter = $fType['value'];
+                        }
+                    }
+                    if ($eventTypeFilter && $calendar && strtolower((string) $calendar->type) !== strtolower((string) $eventTypeFilter)) {
+                        continue;
+                    }
+
+                    // 4. Assigned staff filter
+                    $staffFilter = $config['assigned_user_id'] ?? null;
+                    if (! $staffFilter && ! empty($filters)) {
+                        $fStaff = collect($filters)->firstWhere('type', 'assigned_user_is');
+                        if ($fStaff && ! empty($fStaff['value'])) {
+                            $staffFilter = $fStaff['value'];
+                        }
+                    }
+                    if ($staffFilter && (int) $staffFilter !== (int) $appointment->assigned_user_id) {
+                        continue;
+                    }
+
+                    // 5. Contact tag filters
+                    if (! empty($filters) && $contact) {
+                        $tagIs = collect($filters)->firstWhere('type', 'tag_is');
+                        if ($tagIs && ! empty($tagIs['value'])) {
+                            if (! $contact->tags->contains('name', $tagIs['value'])) {
+                                continue;
+                            }
+                        }
+
+                        $tagIsNot = collect($filters)->firstWhere('type', 'tag_is_not');
+                        if ($tagIsNot && ! empty($tagIsNot['value'])) {
+                            if ($contact->tags->contains('name', $tagIsNot['value'])) {
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Prepare enriched appointment context
+                    $context = [
+                        'appointment_id' => $appointment->id,
+                        'appointment_title' => $appointment->title,
+                        'appointment_start_at' => $appointment->start_at->toIso8601String(),
+                        'appointment_end_at' => $appointment->end_at->toIso8601String(),
+                        'appointment_date' => $appointment->start_at->format('Y-m-d'),
+                        'appointment_time' => $appointment->start_at->format('g:i A'),
+                        'appointment_end_time' => $appointment->end_at->format('g:i A'),
+                        'appointment_timezone' => $appointment->timezone ?? 'UTC',
+                        'appointment_location' => $appointment->location ?? 'Online',
+                        'meeting_join_url' => $appointment->meeting_join_url ?? '#',
+                        'calendar_id' => $appointment->calendar_id,
+                        'calendar_name' => $calendar?->name ?? 'Calendar',
+                        'reschedule_url' => $appointment->reschedule_url,
+                        'reschedule_link' => $appointment->reschedule_url,
+                        'cancel_url' => $appointment->cancel_url,
+                        'cancel_link' => $appointment->cancel_url,
+                        'add_to_google_calendar' => $appointment->google_calendar_url,
+                        'google_calendar_url' => $appointment->google_calendar_url,
+                        'add_to_outlook' => $appointment->outlook_calendar_url,
+                        'outlook_calendar_url' => $appointment->outlook_calendar_url,
+                        'add_to_ical' => $appointment->ical_url,
+                        'ical_url' => $appointment->ical_url,
+                        'calendar_links_html' => $appointment->getCalendarLinksHtml(),
+                        'calendar_links_text' => $appointment->getCalendarLinksText(),
+                        'host_staff_name' => $appointment->assignedUser?->name ?? 'Host Staff',
+                        'appointment_status' => $appointment->status,
+                        'trigger_name' => $tr['trigger_name'],
+                        'trigger_type' => $tr['trigger_type'],
+                        '_matched_trigger_id' => $tr['id'],
+                    ];
+
+                    $audience = $config['enroll_audience'] ?? 'contact';
+                    if ($audience === 'contact' || $audience === 'both') {
+                        $engine->triggerForContact($automation, (int) $appointment->contact_id, $context);
+                    }
+
+                    break; // Triggered once per automation
+                }
             }
         } catch (\Throwable $e) {
-            Log::error("Failed to dispatch appointment automation [{$triggerType}]: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Failed to dispatch appointment automation [{$triggerType}]: " . $e->getMessage());
         }
     }
 }

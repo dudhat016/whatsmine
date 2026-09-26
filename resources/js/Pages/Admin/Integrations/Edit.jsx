@@ -5,6 +5,7 @@ import { Eye, EyeOff, FlaskConical, RotateCcw, ArrowLeft, CheckCircle, XCircle, 
 import axios from 'axios';
 import { formatInTz } from '@/Utils/datetime';
 import { useTranslation, Trans } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const SETUP_GUIDES = {
     storage_s3: {
@@ -633,8 +634,16 @@ export default function IntegrationsEdit({ provider, label, category, fields, co
         }
     };
 
+    const { confirm } = useConfirm();
+
     const handleRotate = async () => {
-        if (! confirm(t('integrations.rotate_confirm'))) return;
+        const ok = await confirm({
+            title: 'Rotate Secret Key',
+            message: t('integrations.rotate_confirm') || 'Are you sure you want to rotate the secret key? Any webhook verification or credentials using the previous key will need to be updated.',
+            confirmText: 'Rotate Key',
+            variant: 'warning',
+        });
+        if (!ok) return;
         setRotating(true);
         try {
             await axios.post(route('admin.integrations.rotate', provider));

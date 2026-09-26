@@ -4,6 +4,7 @@ import EmptyState from '@/Components/EmptyState';
 import { useState, useRef, useCallback } from 'react';
 import { UserPlus, Upload, Search, Tag, Trash2, Eye, Users, Table2, Download, CheckSquare, Square, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 function ContactAvatar({ contact, size = 8 }) {
     const { t } = useTranslation();
@@ -86,6 +87,7 @@ function ContactRow({ contact, selected, onToggle, onDelete }) {
 
 export default function ContactsIndex({ contacts, filters, segments = [] }) {
     const { t } = useTranslation();
+    const { confirm, alert } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
     const [search, setSearch] = useState(filters.search ?? '');
@@ -122,14 +124,26 @@ export default function ContactsIndex({ contacts, filters, segments = [] }) {
         router.get(route('client.contacts.index'), { search }, { preserveState: true, replace: true });
     };
 
-    const handleDelete = (uuid) => {
-        if (confirm(t('contacts_page.confirm_delete_one'))) {
+    const handleDelete = async (uuid) => {
+        const ok = await confirm({
+            title: t('contacts_page.confirm_delete_title') || 'Delete Contact',
+            message: t('contacts_page.confirm_delete_one') || 'Are you sure you want to delete this contact?',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.contacts.destroy', uuid), { preserveScroll: true });
         }
     };
 
-    const handleBulkDelete = () => {
-        if (!confirm(t('contacts_page.confirm_delete_selected', { count: selected.size }))) return;
+    const handleBulkDelete = async () => {
+        const ok = await confirm({
+            title: 'Delete Selected Contacts',
+            message: t('contacts_page.confirm_delete_selected', { count: selected.size }) || `Are you sure you want to delete ${selected.size} contacts?`,
+            confirmText: 'Delete Selected',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.contacts.bulk-destroy'), {
             data: { uuids: [...selected] },
             preserveScroll: true,
@@ -175,7 +189,7 @@ export default function ContactsIndex({ contacts, filters, segments = [] }) {
     const submitAdd = (e) => {
         e.preventDefault();
         if (!data.phone_e164.trim() && !data.email.trim()) {
-            alert(t('contacts_page.alert_phone_or_email'));
+            alert(t('contacts_page.alert_phone_or_email') || 'Please provide either a phone number or an email address.');
             return;
         }
         post(route('client.contacts.store'), { onSuccess: () => { reset(); setShowAddModal(false); } });

@@ -4,11 +4,45 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import KanbanBoard from './Kanban/KanbanBoard';
 import OpportunityModal from './Builder/OpportunityModal';
 import PipelineSettingsModal from './Builder/PipelineSettingsModal';
-import { Plus, Settings, Search, GitBranch } from 'lucide-react';
+import { Plus, Settings, Search, GitBranch, Trophy, XCircle, Archive, LayoutGrid, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import Button from '@/Components/ui/Button';
 import Input from '@/Components/ui/Input';
 import Select from '@/Components/ui/Select';
+import Skeleton from '@/Components/ui/Skeleton';
+
+const STATUS_TABS = [
+    {
+        key: 'open',
+        label: 'Open',
+        icon: <span className="w-2 h-2 rounded-full bg-emerald-500" />,
+        badgeClass: (active) => active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400',
+    },
+    {
+        key: 'won',
+        label: 'Won',
+        icon: <Trophy className="h-3.5 w-3.5 text-amber-500" />,
+        badgeClass: (active) => active ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400',
+    },
+    {
+        key: 'lost',
+        label: 'Lost',
+        icon: <XCircle className="h-3.5 w-3.5 text-rose-500" />,
+        badgeClass: (active) => active ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400',
+    },
+    {
+        key: 'abandoned',
+        label: 'Abandoned',
+        icon: <Archive className="h-3.5 w-3.5 text-slate-500" />,
+        badgeClass: (active) => active ? 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400',
+    },
+    {
+        key: 'all',
+        label: 'All Deals',
+        icon: <LayoutGrid className="h-3.5 w-3.5 text-neutral-500" />,
+        badgeClass: (active) => active ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300' : 'bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400',
+    },
+];
 
 export default function OpportunitiesIndex({ pipelines, activePipelineId, contacts, users }) {
     const { props } = usePage();
@@ -16,10 +50,20 @@ export default function OpportunitiesIndex({ pipelines, activePipelineId, contac
 
     const [selectedPipelineId, setSelectedPipelineId] = useState(activePipelineId);
     const [boardColumns, setBoardColumns] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [agentFilter, setAgentFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('open');
+    const [statusCounts, setStatusCounts] = useState({
+        open: 0,
+        won: 0,
+        lost: 0,
+        abandoned: 0,
+        all: 0,
+    });
 
     // Modals
     const [isOppModalOpen, setIsOppModalOpen] = useState(false);
@@ -28,27 +72,46 @@ export default function OpportunitiesIndex({ pipelines, activePipelineId, contac
 
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-    const fetchBoardData = async () => {
-        setLoading(true);
+    // Debounce search input to avoid re-triggering rapid requests on every keystroke
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const fetchBoardData = async (isBackground = false) => {
+        if (!isBackground && boardColumns.length === 0) {
+            setInitialLoading(true);
+        } else {
+            setIsRefreshing(true);
+        }
+
         try {
             const res = await axios.get(route('client.opportunities.board-data'), {
                 params: {
                     pipeline_id: selectedPipelineId,
-                    search: search,
+                    search: debouncedSearch,
                     agent_id: agentFilter,
+                    status: statusFilter,
                 },
             });
             setBoardColumns(res.data.boardColumns || []);
+            if (res.data.statusCounts) {
+                setStatusCounts(res.data.statusCounts);
+            }
         } catch (err) {
             console.error('Failed to load board data:', err);
         } finally {
-            setLoading(false);
+            setInitialLoading(false);
+            setIsRefreshing(false);
         }
     };
 
     useEffect(() => {
-        fetchBoardData();
-    }, [selectedPipelineId, search, agentFilter]);
+        const isBg = boardColumns.length > 0;
+        fetchBoardData(isBg);
+    }, [selectedPipelineId, debouncedSearch, agentFilter, statusFilter]);
 
     const activePipeline = pipelines.find((p) => p.id === selectedPipelineId) || pipelines[0];
     const totalDeals = boardColumns.reduce((sum, col) => sum + (col.deals_count || 0), 0);
@@ -139,6 +202,15 @@ export default function OpportunitiesIndex({ pipelines, activePipelineId, contac
                                 <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                                     Total Value: ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
+                                {isRefreshing && (
+                                    <>
+                                        <span>•</span>
+                                        <span className="inline-flex items-center gap-1 text-brand-600 dark:text-brand-400 font-medium animate-pulse">
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                            <span>Syncing...</span>
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -166,28 +238,80 @@ export default function OpportunitiesIndex({ pipelines, activePipelineId, contac
                     </div>
                 </div>
 
+                {/* Opportunity Status Switcher Tabs (Open, Won, Lost, Abandoned, All) */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-neutral-900 p-2 rounded-soft-lg border border-soft border-neutral-200 dark:border-neutral-800 shadow-soft">
+                    <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+                        {STATUS_TABS.map((tab) => {
+                            const isActive = statusFilter === tab.key;
+                            return (
+                                <button
+                                    key={tab.key}
+                                    type="button"
+                                    onClick={() => setStatusFilter(tab.key)}
+                                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                                        isActive
+                                            ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm border border-neutral-200/80 dark:border-neutral-700'
+                                            : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'
+                                    }`}
+                                >
+                                    {tab.icon}
+                                    <span>{tab.label}</span>
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold transition-colors ${tab.badgeClass(isActive)}`}>
+                                        {statusCounts[tab.key] ?? 0}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {statusFilter !== 'open' && (
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 px-2 font-medium">
+                            Viewing <span className="font-semibold text-neutral-800 dark:text-neutral-200 capitalize">{statusFilter}</span> opportunities
+                        </div>
+                    )}
+                </div>
+
                 {/* Kanban Board Canvas */}
-                {loading ? (
-                    <div className="h-96 rounded-soft-lg border border-soft border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-center text-sm text-neutral-500">
-                        Loading board opportunities...
+                {initialLoading && boardColumns.length === 0 ? (
+                    <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-230px)] custom-scrollbar">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="flex flex-col flex-shrink-0 w-80 rounded-2xl bg-neutral-100/60 dark:bg-neutral-900/40 border border-neutral-200/60 dark:border-neutral-800/60 p-3 space-y-3">
+                                <div className="flex items-center justify-between pb-2 border-b border-neutral-200/60 dark:border-neutral-800">
+                                    <Skeleton className="h-4 w-28 rounded-md" />
+                                    <Skeleton className="h-5 w-8 rounded-full" />
+                                </div>
+                                <Skeleton className="h-7 w-full rounded-lg" />
+                                <div className="space-y-2.5">
+                                    <Skeleton className="h-28 w-full rounded-xl" />
+                                    <Skeleton className="h-28 w-full rounded-xl" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : (
-                    <KanbanBoard
-                        columns={boardColumns}
-                        setColumns={setBoardColumns}
-                        onEditDeal={handleEditOpportunity}
-                        onAddDeal={handleAddOpportunity}
-                        activePipelineId={selectedPipelineId}
-                    />
+                    <div className={`transition-opacity duration-150 ${isRefreshing ? 'opacity-85' : 'opacity-100'}`}>
+                        <KanbanBoard
+                            columns={boardColumns}
+                            setColumns={setBoardColumns}
+                            onEditDeal={handleEditOpportunity}
+                            onAddDeal={handleAddOpportunity}
+                            activePipelineId={selectedPipelineId}
+                            statusFilter={statusFilter}
+                            onDealStatusUpdated={() => fetchBoardData(true)}
+                            pipelines={pipelines}
+                            users={users}
+                        />
+                    </div>
                 )}
             </div>
 
             {/* Opportunity Modal / Drawer */}
             <OpportunityModal
                 isOpen={isOppModalOpen}
-                onClose={() => {
+                onClose={() => setIsOppModalOpen(false)}
+                onSuccess={() => {
                     setIsOppModalOpen(false);
-                    fetchBoardData();
+                    fetchBoardData(true);
                 }}
                 deal={editingDeal}
                 pipelineId={selectedPipelineId}
@@ -200,9 +324,10 @@ export default function OpportunitiesIndex({ pipelines, activePipelineId, contac
             {/* Pipeline Settings Modal */}
             <PipelineSettingsModal
                 isOpen={isSettingsModalOpen}
-                onClose={() => {
+                onClose={() => setIsSettingsModalOpen(false)}
+                onSuccess={() => {
                     setIsSettingsModalOpen(false);
-                    fetchBoardData();
+                    fetchBoardData(true);
                 }}
                 pipelines={pipelines}
                 activePipeline={activePipeline}

@@ -76,14 +76,14 @@ export default function DatePicker({
     const lang = i18n?.language || 'en';
 
     const [open, setOpen] = useState(false);
-    const [view, setView] = useState('days'); // 'days' | 'months'
+    const [view, setView] = useState('days'); // 'days' | 'months' | 'years'
     const containerRef = useRef(null);
     const popoverRef = useRef(null);
     const [dropUp, setDropUp] = useState(false);
 
     const selected = useMemo(() => parseValue(value), [value]);
 
-    // Month currently shown in the calendar.
+    // Month & year currently shown in the calendar.
     const [cursor, setCursor] = useState(() => {
         const base = selected || null;
         const now = new Date();
@@ -93,13 +93,16 @@ export default function DatePicker({
         };
     });
 
+    // Base year for 12-year decade view
+    const [yearPage, setYearPage] = useState(() => Math.floor(cursor.year / 12) * 12);
+
     // Open the popover, jumping the calendar to the selected month (or today).
     const openPicker = () => {
         const now = new Date();
-        setCursor({
-            year: selected ? selected.year : now.getFullYear(),
-            month: selected ? selected.month : now.getMonth(),
-        });
+        const y = selected ? selected.year : now.getFullYear();
+        const m = selected ? selected.month : now.getMonth();
+        setCursor({ year: y, month: m });
+        setYearPage(Math.floor(y / 12) * 12);
         setView('days');
         setOpen(true);
     };
@@ -150,7 +153,6 @@ export default function DatePicker({
     // Localized weekday narrow labels, week starting Sunday.
     const weekdays = useMemo(() => {
         const fmt = new Intl.DateTimeFormat(lang, { weekday: 'narrow' });
-        // 2023-01-01 was a Sunday.
         return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(2023, 0, 1 + i)));
     }, [lang]);
 
@@ -159,11 +161,14 @@ export default function DatePicker({
         return Array.from({ length: 12 }, (_, i) => fmt.format(new Date(2023, i, 1)));
     }, [lang]);
 
-    const headerLabel = useMemo(
-        () => new Intl.DateTimeFormat(lang, { month: 'long', year: 'numeric' })
-            .format(new Date(cursor.year, cursor.month, 1)),
-        [lang, cursor],
-    );
+    const monthFullName = useMemo(() => {
+        const fmt = new Intl.DateTimeFormat(lang, { month: 'long' });
+        return fmt.format(new Date(cursor.year, cursor.month, 1));
+    }, [lang, cursor.year, cursor.month]);
+
+    const yearsList = useMemo(() => {
+        return Array.from({ length: 12 }, (_, i) => yearPage + i);
+    }, [yearPage]);
 
     const triggerLabel = useMemo(() => {
         if (!selected) {
@@ -240,13 +245,34 @@ export default function DatePicker({
         if (isDisabledDay(c)) return;
         selectDay(c);
         setCursor({ year: c.year, month: c.month });
+        setYearPage(Math.floor(c.year / 12) * 12);
+        setView('days');
     };
 
-    const stepMonth = (delta) => {
-        setCursor((c) => {
-            const d = new Date(c.year, c.month + delta, 1);
-            return { year: d.getFullYear(), month: d.getMonth() };
-        });
+    const handlePrev = () => {
+        if (view === 'days') {
+            setCursor((c) => {
+                const d = new Date(c.year, c.month - 1, 1);
+                return { year: d.getFullYear(), month: d.getMonth() };
+            });
+        } else if (view === 'months') {
+            setCursor((c) => ({ ...c, year: c.year - 1 }));
+        } else {
+            setYearPage((p) => p - 12);
+        }
+    };
+
+    const handleNext = () => {
+        if (view === 'days') {
+            setCursor((c) => {
+                const d = new Date(c.year, c.month + 1, 1);
+                return { year: d.getFullYear(), month: d.getMonth() };
+            });
+        } else if (view === 'months') {
+            setCursor((c) => ({ ...c, year: c.year + 1 }));
+        } else {
+            setYearPage((p) => p + 12);
+        }
     };
 
     const todayKey = useMemo(() => {
@@ -297,22 +323,42 @@ export default function DatePicker({
             {open && (
                 <div
                     ref={popoverRef}
-                    className={`absolute z-50 w-[17rem] rounded-soft-lg border border-soft border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3 shadow-soft-lg ${dropUp ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 rtl:left-auto rtl:right-0`}
+                    className={`absolute z-50 w-[17.5rem] rounded-soft-lg border border-soft border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-3 shadow-soft-lg ${dropUp ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 rtl:left-auto rtl:right-0`}
                     role="dialog"
                 >
-                    {/* Header */}
-                    <div className="mb-2 flex items-center justify-between">
-                        <button
-                            type="button"
-                            onClick={() => setView((v) => (v === 'days' ? 'months' : 'days'))}
-                            className="rounded-soft px-2 py-1 text-sm font-semibold text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                        >
-                            {view === 'days' ? headerLabel : cursor.year}
-                        </button>
+                    {/* Header with Custom Buttons */}
+                    <div className="mb-2.5 flex items-center justify-between gap-1">
                         <div className="flex items-center gap-1">
                             <button
                                 type="button"
-                                onClick={() => (view === 'days' ? stepMonth(-1) : setCursor((c) => ({ ...c, year: c.year - 1 })))}
+                                onClick={() => setView((v) => (v === 'months' ? 'days' : 'months'))}
+                                className={`rounded-soft px-2 py-1 text-xs font-semibold transition ${
+                                    view === 'months'
+                                        ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400'
+                                        : 'text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                                }`}
+                            >
+                                {monthFullName}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setYearPage(Math.floor(cursor.year / 12) * 12);
+                                    setView((v) => (v === 'years' ? 'days' : 'years'));
+                                }}
+                                className={`rounded-soft px-2 py-1 text-xs font-semibold transition ${
+                                    view === 'years'
+                                        ? 'bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400'
+                                        : 'text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                                }`}
+                            >
+                                {view === 'years' ? `${yearPage} – ${yearPage + 11}` : cursor.year}
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                            <button
+                                type="button"
+                                onClick={handlePrev}
                                 className="rounded-soft p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
                                 aria-label={t('ui.date_prev', 'Previous')}
                             >
@@ -320,7 +366,7 @@ export default function DatePicker({
                             </button>
                             <button
                                 type="button"
-                                onClick={() => (view === 'days' ? stepMonth(1) : setCursor((c) => ({ ...c, year: c.year + 1 })))}
+                                onClick={handleNext}
                                 className="rounded-soft p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
                                 aria-label={t('ui.date_next', 'Next')}
                             >
@@ -329,7 +375,8 @@ export default function DatePicker({
                         </div>
                     </div>
 
-                    {view === 'days' ? (
+                    {/* View: Days */}
+                    {view === 'days' && (
                         <>
                             <div className="grid grid-cols-7 gap-0.5">
                                 {weekdays.map((w, i) => (
@@ -395,23 +442,57 @@ export default function DatePicker({
                                 </div>
                             )}
                         </>
-                    ) : (
-                        <div className="grid grid-cols-3 gap-1.5">
-                            {monthNames.map((mName, i) => (
-                                <button
-                                    type="button"
-                                    key={i}
-                                    onClick={() => { setCursor((c) => ({ ...c, month: i })); setView('days'); }}
-                                    className={[
-                                        'rounded-soft py-2 text-sm transition',
-                                        i === cursor.month
-                                            ? 'bg-brand-500 text-white font-semibold'
-                                            : 'text-neutral-700 dark:text-neutral-200 hover:bg-brand-50 dark:hover:bg-neutral-800',
-                                    ].join(' ')}
-                                >
-                                    {mName}
-                                </button>
-                            ))}
+                    )}
+
+                    {/* View: Months */}
+                    {view === 'months' && (
+                        <div className="grid grid-cols-3 gap-1.5 py-1">
+                            {monthNames.map((mName, i) => {
+                                const isCurrentMonth = i === cursor.month;
+                                return (
+                                    <button
+                                        type="button"
+                                        key={i}
+                                        onClick={() => {
+                                            setCursor((c) => ({ ...c, month: i }));
+                                            setView('days');
+                                        }}
+                                        className={`rounded-soft py-2 text-xs font-medium transition ${
+                                            isCurrentMonth
+                                                ? 'bg-brand-500 text-white font-semibold shadow-soft'
+                                                : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                                        }`}
+                                    >
+                                        {mName}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* View: Years */}
+                    {view === 'years' && (
+                        <div className="grid grid-cols-3 gap-1.5 py-1">
+                            {yearsList.map((y) => {
+                                const isCurrentYear = y === cursor.year;
+                                return (
+                                    <button
+                                        type="button"
+                                        key={y}
+                                        onClick={() => {
+                                            setCursor((c) => ({ ...c, year: y }));
+                                            setView('months');
+                                        }}
+                                        className={`rounded-soft py-2 text-xs font-medium transition ${
+                                            isCurrentYear
+                                                ? 'bg-brand-500 text-white font-semibold shadow-soft'
+                                                : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                                        }`}
+                                    >
+                                        {y}
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
 

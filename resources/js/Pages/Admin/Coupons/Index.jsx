@@ -5,6 +5,7 @@ import { DatePicker } from '@/Components/ui';
 import { Tag, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { formatDateTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 function CouponForm({ coupon = null, onClose }) {
     const { t } = useTranslation();
@@ -128,12 +129,19 @@ function CouponForm({ coupon = null, onClose }) {
 
 export default function CouponsIndex({ coupons }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const adminTz = usePage().props.timezone || 'Asia/Dhaka';
     const [showCreate, setShowCreate] = useState(false);
     const [editing, setEditing] = useState(null);
 
-    const handleDelete = (coupon) => {
-        if (! confirm(t('coupons.delete_confirm', { code: coupon.code }))) return;
+    const handleDelete = async (coupon) => {
+        const ok = await confirm({
+            title: 'Delete Coupon',
+            message: t('coupons.delete_confirm', { code: coupon.code }) || `Are you sure you want to delete coupon "${coupon.code}"?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('admin.coupons.destroy', coupon.id));
     };
 

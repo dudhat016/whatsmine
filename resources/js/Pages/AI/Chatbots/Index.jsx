@@ -5,6 +5,7 @@ import { Plus, Bot, Trash2, Play, Settings, Send, X, BookOpen, Zap, MessageSquar
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import MarkdownLite from '@/Components/MarkdownLite';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const TONE_OPTIONS = ['professional', 'friendly', 'formal', 'casual'];
 
@@ -134,6 +135,7 @@ function PlaygroundPanel({ chatbot }) {
 
 function ChatbotCard({ chatbot, knowledgeBases }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const [tab, setTab] = useState(null); // null | 'settings' | 'playground'
 
     const { data, setData, put, processing } = useForm({
@@ -151,8 +153,14 @@ function ChatbotCard({ chatbot, knowledgeBases }) {
         put(route('client.ai.chatbots.update', chatbot.uuid), { preserveScroll: true });
     };
 
-    const handleDelete = () => {
-        if (confirm(t('ai.delete_chatbot_confirm', { name: chatbot.name }))) {
+    const handleDelete = async () => {
+        const ok = await confirm({
+            title: 'Delete Chatbot',
+            message: t('ai.delete_chatbot_confirm', { name: chatbot.name }) || `Are you sure you want to delete chatbot "${chatbot.name}"?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.ai.chatbots.destroy', chatbot.uuid), { preserveScroll: true });
         }
     };

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Funnels\Models\Funnel;
+use App\Modules\Funnels\Models\FunnelFolder;
 use App\Modules\Funnels\Models\FunnelSubmission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,11 +23,35 @@ class FunnelReportController extends Controller
     public function index(Request $request): Response
     {
         $wid = $this->workspaceId($request);
+        $folderId = $request->query('folder_id');
+        $search = $request->query('search');
 
-        $funnels = Funnel::forWorkspace($wid)
+        $folders = FunnelFolder::where('workspace_id', $wid)
+            ->withCount('funnels')
+            ->orderBy('name')
+            ->get();
+
+        $rootFunnelsCount = Funnel::forWorkspace($wid)->whereNull('folder_id')->count();
+        $totalFunnelsCount = Funnel::forWorkspace($wid)->count();
+
+        $query = Funnel::forWorkspace($wid)
+            ->with(['folder:id,name,color'])
             ->withCount(['submissions', 'submissions as customer_count' => fn ($q) => $q->where('status', 'customer')])
-            ->latest()
-            ->get()
+            ->latest();
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        if ($folderId !== null && $folderId !== '' && $folderId !== 'all') {
+            if ($folderId === 'root') {
+                $query->whereNull('folder_id');
+            } else {
+                $query->where('folder_id', (int) $folderId);
+            }
+        }
+
+        $funnels = $query->get()
             ->map(fn ($f) => [
                 'id'               => $f->id,
                 'uuid'             => $f->uuid,
@@ -38,10 +63,22 @@ class FunnelReportController extends Controller
                 'total_revenue'    => $f->total_revenue,
                 'submissions_count' => $f->submissions_count,
                 'customer_count'   => $f->customer_count,
+                'folder'           => $f->folder ? [
+                    'id'    => $f->folder->id,
+                    'name'  => $f->folder->name,
+                    'color' => $f->folder->color,
+                ] : null,
             ]);
 
         return Inertia::render('Reports/Funnels/Index', [
-            'funnels' => $funnels,
+            'funnels'           => $funnels,
+            'folders'           => $folders,
+            'rootFunnelsCount'  => $rootFunnelsCount,
+            'totalFunnelsCount' => $totalFunnelsCount,
+            'filters'           => [
+                'folder_id' => $folderId ?? 'all',
+                'search'    => $search ?? '',
+            ],
         ]);
     }
 

@@ -8,6 +8,7 @@ import {
     Trash2, CheckCircle, XCircle, Pause, Play, ChevronRight,
     Coins, BarChart2, ExternalLink, AlertTriangle,
 } from 'lucide-react';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 const STATUS_COLORS = {
@@ -21,6 +22,7 @@ const fmtCurrency = (n) => `$${fmt(n)}`;
 
 export default function FunnelAffiliates({ affiliates, funnels }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
 
@@ -57,8 +59,14 @@ export default function FunnelAffiliates({ affiliates, funnels }) {
     };
 
     // ── Delete ────────────────────────────────────────────────────────────────
-    const handleDelete = (affiliate) => {
-        if (!confirm(`Remove affiliate "${affiliate.name}"?`)) return;
+    const handleDelete = async (affiliate) => {
+        const ok = await confirm({
+            title: 'Remove Affiliate',
+            message: `Remove affiliate "${affiliate.name}"? This action cannot be undone.`,
+            confirmText: 'Remove',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.affiliates.destroy', affiliate.id), { preserveScroll: true });
     };
 

@@ -3,8 +3,10 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { Calendar, Clock, Video, CheckCircle2, Globe, ShieldCheck } from 'lucide-react';
 import DatePicker from '@/Components/ui/DatePicker';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function Widget({ calendar, customFormFields = [] }) {
+    const { alert } = useConfirm();
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedTimezone, setSelectedTimezone] = useState(
         Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
@@ -101,7 +103,11 @@ export default function Widget({ calendar, customFormFields = [] }) {
             }
         })
         .catch(err => {
-            alert(err.response?.data?.message || 'Failed to confirm booking. Please try again.');
+            alert({
+                title: 'Booking Notice',
+                message: err.response?.data?.message || 'Failed to confirm booking. Please try again.',
+                variant: 'danger',
+            });
         })
         .finally(() => setBookingProcessing(false));
     };

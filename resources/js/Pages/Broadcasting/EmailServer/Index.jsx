@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Eye, EyeOff, Mail, Send, Trash2, CheckCircle, AlertCircle, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const SMTP_GUIDES = [
     {
@@ -147,6 +148,7 @@ export default function EmailServerIndex({ config }) {
     const [testEmail, setTestEmail] = useState('');
     const [testLoading, setTestLoading] = useState(false);
     const [testResult, setTestResult] = useState(null);
+    const { confirm } = useConfirm();
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
         host: config?.host ?? '',
@@ -168,8 +170,14 @@ export default function EmailServerIndex({ config }) {
         }
     };
 
-    const handleDelete = () => {
-        if (!confirm(t('email_server.remove_confirm'))) return;
+    const handleDelete = async () => {
+        const ok = await confirm({
+            title: 'Remove SMTP Configuration',
+            message: t('email_server.remove_confirm'),
+            confirmText: 'Remove',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.email-server.destroy'), { preserveScroll: true });
     };
 

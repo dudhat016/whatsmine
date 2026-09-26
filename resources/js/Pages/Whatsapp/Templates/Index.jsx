@@ -5,6 +5,7 @@ import TemplatePreview from '@/Components/TemplatePreview';
 import { Plus, RefreshCw, CheckCircle, XCircle, Clock, PauseCircle, FileText, Search, Phone, Pencil, Trash2 } from 'lucide-react';
 import { useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const STATUS_CONFIG = {
     APPROVED: { color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: <CheckCircle className="h-3 w-3" />, labelKey: 'whatsapp.templates_status_approved' },
@@ -15,6 +16,7 @@ const STATUS_CONFIG = {
 
 export default function WhatsappTemplatesIndex({ templates, phoneNumbers = [], filters }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
     const pageErrors = props.errors ?? {};
@@ -23,11 +25,9 @@ export default function WhatsappTemplatesIndex({ templates, phoneNumbers = [], f
     const debounceTimer = useRef(null);
 
     const applyFilters = useCallback((patch) => {
-        router.get(
-            route('client.whatsapp.templates.index'),
-            { ...filters, ...patch },
-            { preserveState: true, replace: true },
-        );
+        const next = { ...filters, ...patch };
+        Object.keys(next).forEach(k => !next[k] && delete next[k]);
+        router.get(route('client.whatsapp.templates.index'), next, { preserveState: true, replace: true });
     }, [filters]);
 
     const handleSearch = (e) => {
@@ -43,8 +43,14 @@ export default function WhatsappTemplatesIndex({ templates, phoneNumbers = [], f
     const handleStatus = (status) => applyFilters({ status: status || undefined });
     const handlePhone = (e) => applyFilters({ phone_number_id: e.target.value || undefined });
 
-    const handleDelete = (tpl) => {
-        if (!window.confirm(t('whatsapp.templates_delete_confirm', { name: tpl.name }))) return;
+    const handleDelete = async (tpl) => {
+        const ok = await confirm({
+            title: 'Delete Template',
+            message: t('whatsapp.templates_delete_confirm', { name: tpl.name }) || `Are you sure you want to delete template "${tpl.name}"?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.whatsapp.templates.destroy', tpl.id), { preserveScroll: true });
     };
 

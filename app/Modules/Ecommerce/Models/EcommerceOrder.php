@@ -26,6 +26,7 @@ class EcommerceOrder extends Model
         'workspace_id', 'store_id', 'contact_id', 'external_order_id', 'platform',
         'number', 'status', 'financial_status', 'fulfillment_status', 'currency',
         'total', 'line_items', 'tracking_url', 'tracking_number', 'placed_at', 'raw',
+        'access_token', 'download_count',
     ];
 
     /** `raw` holds the full platform payload incl. customer PII — never serialize it. */

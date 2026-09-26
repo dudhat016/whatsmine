@@ -35,7 +35,45 @@
         "deleting": "Excluindo…",
         "dismiss": "Dispensar",
         "view": "Visualizar",
-        "settings": "Configurações"
+        "settings": "Configurações",
+        "heading_placeholder": "Heading Placeholder",
+        "text_placeholder": "Text Placeholder",
+        "button_placeholder": "Button Placeholder",
+        "click_to_add_image": "Click To Add Image",
+        "select_option": "Select Option",
+        "submit": "Submit",
+        "heading_level": "Heading Level",
+        "alignment": "Alignment",
+        "button_url": "Button Url",
+        "button_color": "Button Color",
+        "text_color": "Text Color",
+        "image_url": "Image Url",
+        "alt_text": "Alt Text",
+        "click_link": "Click Link",
+        "field_label": "Field Label",
+        "field_name": "Field Name",
+        "placeholder": "Placeholder",
+        "required_field": "Required Field",
+        "height_px": "Height Px",
+        "divider_color": "Divider Color",
+        "delete_block": "Delete Block",
+        "done": "Done",
+        "visual_editor": "Visual Editor",
+        "code_view": "Code View",
+        "templates": "Templates",
+        "mode": "Mode",
+        "link_placeholder": "Link Placeholder",
+        "apply": "Apply",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "insert_link": "Insert Link",
+        "clear_formatting": "Clear Formatting",
+        "insert_variable": "Insert Variable",
+        "empty_canvas": "Empty Canvas",
+        "confirm": "Confirm",
+        "notice": "Notice",
+        "ok": "Ok"
     },
     "nav": {
         "home": "Início",
@@ -115,7 +153,11 @@
         "group_reports": "Relatórios",
         "group_support": "Suporte",
         "group_billing": "Faturamento",
-        "group_developer": "Desenvolvedor"
+        "group_developer": "Desenvolvedor",
+        "funnels": "Funnels",
+        "affiliates": "Affiliates",
+        "funnel_reports": "Funnel Reports",
+        "group_funnels": "Funnels & Pages"
     },
     "welcome": {
         "title": "Crie sites com IA.",
@@ -175,8 +217,13 @@
     "client": {
         "profile": {
             "edit": "Editar",
-            "2fa": "2Fa",
-            "sessions": "Sessions",
+            "2fa": {
+                "enable": "Enable",
+                "disable": "Disable"
+            },
+            "sessions": {
+                "destroy": "Destroy"
+            },
             "destroy": "Destroy",
             "update": "Update"
         },
@@ -340,7 +387,10 @@
             "index": "Lista",
             "store": "Salvar",
             "destroy": "Excluir",
-            "contacts": "Contacts"
+            "contacts": {
+                "attach": "Attach",
+                "detach": "Detach"
+            }
         },
         "whatsapp": {
             "templates": {
@@ -362,9 +412,7 @@
                 "create": "Criar",
                 "edit": "Editar"
             },
-            "setup": {
-                "destroy": "Destroy"
-            }
+            "setup": "Setup"
         },
         "broadcasts": {
             "campaigns": {
@@ -395,7 +443,9 @@
             "start": "Iniciar",
             "templates": "Modelos",
             "assign": "Atribuir",
-            "setup": "Setup"
+            "setup": {
+                "destroy": "Destroy"
+            }
         },
         "ai": {
             "providers": {
@@ -474,6 +524,10 @@
             },
             "social": {
                 "index": "Lista"
+            },
+            "funnels": {
+                "index": "Index",
+                "show": "Show"
             }
         },
         "push": {
@@ -536,7 +590,11 @@
             },
             "products": {
                 "index": "Lista",
-                "search": "Pesquisar"
+                "search": "Pesquisar",
+                "duplicate": "Duplicate",
+                "destroy": "Destroy",
+                "update": "Update",
+                "store": "Store"
             },
             "contacts": {
                 "orders": "Pedidos"
@@ -546,9 +604,7 @@
             }
         },
         "workspaces": {
-            "switch": "Switch",
-            "index": "Index",
-            "store": "Store"
+            "currency": "Currency"
         },
         "settings": {
             "update": "Atualizar",
@@ -565,6 +621,132 @@
             "destroy": "Excluir",
             "invoice": "Fatura",
             "show": "Exibir"
+        },
+        "opportunities": {
+            "index": "Index",
+            "deals": {
+                "update": "Update",
+                "store": "Store",
+                "destroy": "Destroy"
+            },
+            "pipelines": {
+                "store": "Store",
+                "update": "Update"
+            }
+        },
+        "calendars": {
+            "index": "Index",
+            "update": "Update",
+            "store": "Store",
+            "manual_book": "Manual Book",
+            "destroy": "Destroy",
+            "appointments": {
+                "status": "Status"
+            }
+        },
+        "agency": {
+            "proposals": {
+                "index": "Index",
+                "update": "Update",
+                "store": "Store",
+                "create": "Create",
+                "edit": "Edit"
+            },
+            "invoices": {
+                "index": "Index",
+                "store": "Store"
+            }
+        },
+        "funnels": {
+            "index": "Index",
+            "pages": {
+                "render": "Render",
+                "save": "Save"
+            },
+            "sections": {
+                "index": "Index",
+                "show": "Show",
+                "store": "Store"
+            },
+            "steps": {
+                "store": "Store",
+                "destroy": "Destroy",
+                "update": "Update",
+                "variant": "Variant",
+                "declareWinner": "Declarewinner",
+                "split": "Split",
+                "products": {
+                    "store": "Store",
+                    "destroy": "Destroy"
+                }
+            },
+            "publish": "Publish",
+            "store": "Store",
+            "destroy": "Destroy",
+            "edit": "Edit",
+            "show": "Show",
+            "duplicate": "Duplicate",
+            "folders": {
+                "update": "Update",
+                "store": "Store",
+                "destroy": "Destroy"
+            },
+            "move_to_folder": "Move To Folder",
+            "settings": {
+                "update": "Update"
+            }
+        },
+        "forms": {
+            "index": "Index",
+            "store": "Store",
+            "update": "Update",
+            "destroy": "Destroy",
+            "create": "Create",
+            "show": "Show",
+            "edit": "Edit",
+            "duplicate": "Duplicate",
+            "folders": {
+                "update": "Update",
+                "store": "Store",
+                "destroy": "Destroy"
+            },
+            "move_to_folder": "Move To Folder",
+            "submissions": {
+                "export": "Export"
+            }
+        },
+        "custom_fields": {
+            "index": "Index",
+            "store": "Store",
+            "destroy": "Destroy",
+            "folders": {
+                "store": "Store",
+                "destroy": "Destroy",
+                "update": "Update",
+                "reorder": "Reorder"
+            },
+            "restore": "Restore",
+            "force_delete": "Force Delete",
+            "check_dependencies": "Check Dependencies"
+        },
+        "affiliates": {
+            "index": "Index",
+            "store": "Store",
+            "update": "Update",
+            "destroy": "Destroy",
+            "commissions": "Commissions"
+        },
+        "custom_values": {
+            "update": "Update",
+            "store": "Store",
+            "check_dependencies": "Check Dependencies",
+            "destroy": "Destroy"
+        },
+        "trigger_links": {
+            "update": "Update",
+            "store": "Store",
+            "check_dependencies": "Check Dependencies",
+            "destroy": "Destroy"
         }
     },
     "pagination": {
@@ -808,11 +990,7 @@
         "tax_rates": "Alíquotas de impostos",
         "landing_page": "Conteúdo do site",
         "cms_pages": "Páginas do CMS",
-        "license": {
-            "index": "Index",
-            "deactivate": "Deactivate",
-            "activate": "Activate"
-        },
+        "license": "License",
         "cron_setup": "Configuração do cron",
         "support": {
             "index": "Lista",
@@ -927,40 +1105,38 @@
         "secret_key_hint": "Chave secreta do servidor — mantenha-a privada",
         "stripe_webhook_hint": "Segredo de assinatura do webhook (whsec_…) no painel do Stripe",
         "webhook_hint": "Segredo do webhook usado para verificar eventos recebidos do gateway",
-        "clients": {
+        "clients": "Clients",
+        "subscriptions": {
             "index": "Index",
-            "users": {
-                "index": "Index",
-                "store": "Store",
-                "update": "Update",
-                "destroy": "Destroy"
-            },
-            "impersonate": "Impersonate",
-            "destroy": "Destroy",
-            "export": "Export",
             "store": "Store",
-            "update": "Update"
+            "export": "Export"
         },
-        "subscriptions": "Subscriptions",
-        "payments": {
-            "index": "Index"
-        },
-        "plans": {
+        "payments": "Payments",
+        "plans": "Plans",
+        "currencies": {
             "index": "Index",
             "update": "Update",
-            "duplicate": "Duplicate",
-            "destroy": "Destroy",
-            "reorder": "Reorder",
             "store": "Store"
         },
-        "currencies": "Currencies",
-        "admins": {
+        "admins": "Admins",
+        "settings": {
             "index": "Index",
-            "destroy": "Destroy",
-            "store": "Store",
-            "update": "Update"
+            "general": {
+                "update": "Update"
+            },
+            "logo": {
+                "upload": "Upload",
+                "delete": "Delete"
+            },
+            "favicon": {
+                "upload": "Upload",
+                "delete": "Delete"
+            },
+            "update": "Update",
+            "firebase": {
+                "update": "Update"
+            }
         },
-        "settings": "Settings",
         "ai": {
             "index": "Lista"
         },
@@ -1013,7 +1189,14 @@
         "tax_type": "Tipo",
         "tax_type_inclusive": "Inclusivo",
         "tax_type_exclusive": "Exclusivo",
-        "add_currency": "Add Currency"
+        "add_currency": "Add Currency",
+        "funnels": {
+            "index": "Index",
+            "suspend": "Suspend",
+            "restore": "Restore",
+            "destroy": "Destroy",
+            "templates": "Templates"
+        }
     },
     "open_menu": "Abrir menu",
     "app": {
@@ -1448,7 +1631,8 @@
         "reachable": "Alcançáveis"
     },
     "form": {
-        "submitted": "Enviado"
+        "submitted": "Enviado",
+        "slug": "Slug"
     },
     "webhook": {
         "received": "Recebido",
@@ -1793,7 +1977,8 @@
         "view_contact": "Ver contato",
         "message": "Mensagem",
         "products_synced": "Produtos sincronizados",
-        "stock_n_low": "{{count}} baixo"
+        "stock_n_low": "{{count}} baixo",
+        "sku": "Sku"
     },
     "integrations": {
         "title": "Integrações",
@@ -2532,7 +2717,8 @@
         "save_changes": "Save Changes",
         "recent_conversations": "Recent Conversations",
         "unknown_channel": "Unknown channel",
-        "media_placeholder": "(media)"
+        "media_placeholder": "(media)",
+        "confirm_delete_title": "Confirm Delete Title"
     },
     "ui": {
         "search_placeholder": "Search clients, users, plans…",
@@ -2888,7 +3074,8 @@
         "abandoned": "Abandoned"
     },
     "customer": {
-        "created": "Created"
+        "created": "Created",
+        "replied": "Replied"
     },
     "context": {
         "key": "Key"
@@ -3830,7 +4017,10 @@
         "network_error": "Network error. Please try again.",
         "select_one_post": "Select at least one post to schedule.",
         "plan_limit_reached": "Plan limit reached. Please upgrade your plan.",
-        "scheduling_failed": "Scheduling failed. Please try again."
+        "scheduling_failed": "Scheduling failed. Please try again.",
+        "no_content": "No Content",
+        "confirm_cancel_post": "Confirm Cancel Post",
+        "cancel_scheduled": "Cancel Scheduled"
     },
     "leads": {
         "title": "Lead Scraper",
@@ -3981,7 +4171,8 @@
         "finance_b4": "Account & loan updates"
     },
     "invoice": {
-        "pdf": "Pdf"
+        "pdf": "Pdf",
+        "paid": "Paid"
     },
     "example": {
         "com": "Com"
@@ -4006,16 +4197,212 @@
         "01": "01",
         "07em": "07Em",
         "08em": "08Em",
-        "1em": "1Em"
+        "1em": "1Em",
+        "1": "1",
+        "0": "0",
+        "00": "00",
+        "5": "5",
+        "06em": "06Em",
+        "02": "02",
+        "05": "05",
+        "05em": "05Em"
     },
     "12": {
-        "01": "01"
+        "01": "01",
+        "4k": "4K"
     },
     "37": {
         "4220": "4220"
     },
     "5": {
+        "5": "5",
+        "00": "00"
+    },
+    "17": {
+        "5": "5",
+        "51": "51"
+    },
+    "6": {
         "5": "5"
+    },
+    "4": {
+        "9": "9"
+    },
+    "1000": {
+        "00": "00"
+    },
+    "agency": {
+        "invoices": {
+            "checkout": "Checkout",
+            "pay": "Pay",
+            "pdf": "Pdf"
+        },
+        "onboarding": {
+            "submit": "Submit"
+        },
+        "proposals": {
+            "show": "Show",
+            "revision": "Revision",
+            "pdf": "Pdf"
+        },
+        "contracts": {
+            "sign": "Sign"
+        }
+    },
+    "1500": {
+        "00": "00"
+    },
+    "opportunity": {
+        "created": "Created",
+        "stage_changed": "Stage Changed",
+        "stage_id": "Stage Id",
+        "status_changed": "Status Changed",
+        "won": "Won",
+        "lost": "Lost",
+        "abandoned": "Abandoned",
+        "status": "Status"
+    },
+    "appointment": {
+        "created": "Created",
+        "rescheduled": "Rescheduled",
+        "cancelled": "Cancelled"
+    },
+    "contract": {
+        "signed": "Signed"
+    },
+    "proposal": {
+        "accepted": "Accepted",
+        "revision_requested": "Revision Requested"
+    },
+    "50": {
+        "00": "00"
+    },
+    "public": {
+        "booking": {
+            "widget": "Widget"
+        },
+        "storefront": {
+            "show": "Show",
+            "download": "Download",
+            "checkout": "Checkout",
+            "index": "Index"
+        },
+        "subscribe": {
+            "show": "Show"
+        },
+        "ecommerce": {
+            "checkout": "Checkout"
+        }
+    },
+    "funnel": {
+        "report_title": "Funnel Reports",
+        "report_total_views": "Total Views",
+        "report_total_conversions": "Total Conversions",
+        "report_total_revenue": "Total Revenue",
+        "no_funnels": "No funnels yet. Create your first funnel!",
+        "status_${f": {
+            "status}": "Status}"
+        },
+        "report_aov": "Avg. Order Value (AOV)",
+        "report_rpv": "Revenue Per Visitor (RPV)",
+        "report_leads": "Leads",
+        "report_customers": "Customers",
+        "report_step_dropoff": "Step Drop-off Analysis",
+        "report_ab_matrix": "A\/B Performance Matrix",
+        "variant_${row": {
+            "variant": {
+                "toLowerCase()}": "Tolowercase()}"
+            }
+        },
+        "report_utm": "Traffic Sources",
+        "report_submissions": "Recent Submissions",
+        "error_generic": "Something went wrong. Please try again.",
+        "affiliate_title": "Affiliate Portal",
+        "affiliate_add": "Add Affiliate",
+        "affiliate_name": "Name",
+        "affiliate_ref_code": "Ref Code",
+        "affiliate_commission_rate": "Commission Rate (%)",
+        "affiliate_clicks": "Clicks",
+        "affiliate_earned": "Total Earned",
+        "affiliate_pending": "Pending Balance",
+        "affiliate_status": "Status",
+        "affiliate_commissions": "Commission History",
+        "affiliate_email": "Email",
+        "delete_confirm": "Are you sure? This will permanently delete this funnel and all its pages.",
+        "title": "Funnels",
+        "subtitle": "Build high-converting sales funnels",
+        "create_funnel": "New Funnel",
+        "status_${funnel": {
+            "status}": "Status}"
+        },
+        "copied": "Copied to clipboard",
+        "views": "Views",
+        "conversions": "Conversions",
+        "revenue": "Revenue",
+        "steps": "Steps",
+        "preview": "Preview",
+        "delete": "Delete Funnel",
+        "funnel_name": "Funnel Name",
+        "funnel_name_placeholder": "e.g. Lead Magnet Funnel",
+        "cart_abandoned": "Cart Abandoned",
+        "order_completed": "Order Completed",
+        "order_bump_purchased": "Order Bump Purchased",
+        "upsell_accepted": "Upsell Accepted",
+        "upsell_declined": "Upsell Declined",
+        "step_visited": "Step Visited",
+        "form_submitted": "Form Submitted",
+        "name": "Name",
+        "step_name": "Step Name",
+        "variant": "Variant",
+        "order_bump": "Order Bump",
+        "total_amount": "Total Amount"
+    },
+    "10": {
+        "00": "00"
+    },
+    "29": {
+        "00": "00"
+    },
+    "1": {
+        "5": "5",
+        "0": "0"
+    },
+    "8": {
+        "9k": "9K"
+    },
+    "15": {
+        "1k": "1K"
+    },
+    "20": {
+        "2k": "2K"
+    },
+    "item": {
+        "headingTag": "Headingtag"
+    },
+    "trigger": {
+        "name": "Name"
+    },
+    "custom": {
+        "field": "Field"
+    },
+    "49": {
+        "00": "00"
+    },
+    "19": {
+        "00": "00"
+    },
+    "funnels": {
+        "share": {
+            "import": "Import"
+        }
+    },
+    "2": [
+        [
+            "0"
+        ]
+    ],
+    "trigger_link": {
+        "clicked": "Clicked"
     },
     "v20": [
         "0"
@@ -4026,15 +4413,5 @@
                 "1": "1"
             }
         ]
-    ],
-    "17": {
-        "5": "5",
-        "51": "51"
-    },
-    "6": {
-        "5": "5"
-    },
-    "4": {
-        "9": "9"
-    }
+    ]
 }

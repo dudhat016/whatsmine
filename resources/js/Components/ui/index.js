@@ -14,3 +14,4 @@ export { default as Skeleton } from './Skeleton';
 export { default as Tabs } from './Tabs';
 export { default as Toggle } from './Toggle';
 export { default as Tooltip } from './Tooltip';
+export { useConfirm, ConfirmationProvider } from '@/context/ConfirmationContext';

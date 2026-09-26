@@ -242,10 +242,11 @@ class CalendarController extends Controller
     public function updateAppointmentStatus(Request $request, Appointment $appointment)
     {
         $validated = $request->validate([
-            'status' => 'required|in:confirmed,rescheduled,cancelled,no_show,completed',
+            'status' => 'required|in:confirmed,rescheduled,cancelled,no_show,completed,showed',
         ]);
 
-        $appointment->update($validated);
+        $appointmentService = app(\App\Modules\Calendars\Services\AppointmentService::class);
+        $appointmentService->updateStatus($appointment, $validated['status']);
 
         return redirect()->back()->with('flash.banner', 'Appointment status updated.');
     }

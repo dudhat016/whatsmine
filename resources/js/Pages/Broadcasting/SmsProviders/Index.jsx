@@ -4,6 +4,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, CheckCircle, Trash2, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const SETUP_GUIDES = {
     twilio: {
@@ -259,11 +260,17 @@ function ProviderBadge({ provider }) {
 
 function ProviderCard({ provider }) {
     const { t } = useTranslation();
-    const [showSecrets, setShowSecrets] = useState({});
+    const { confirm } = useConfirm();
+    const [showGuide, setShowGuide] = useState(false);
+    const [showPassword, setShowPassword] = useState({});
 
+    const fields = provider.fields ?? [];
+    const guide  = SETUP_GUIDES[provider.provider];
+
+    // Build initial credentials object from fields
     const initialCredentials = {};
-    (provider.fields ?? []).forEach(f => {
-        initialCredentials[f.key] = provider.masked?.[f.key] ?? '';
+    fields.forEach(f => {
+        initialCredentials[f.key] = provider.credentials?.[f.key] ?? '';
     });
 
     const { data, setData, put, processing, errors } = useForm({
@@ -277,8 +284,14 @@ function ProviderCard({ provider }) {
         put(route('client.sms-gateways.update', provider.provider), { preserveScroll: true });
     };
 
-    const handleDelete = () => {
-        if (!confirm(t('sms.remove_confirm', { label: provider.label }))) return;
+    const handleDelete = async () => {
+        const ok = await confirm({
+            title: 'Remove SMS Gateway',
+            message: t('sms.remove_confirm', { label: provider.label }) || `Are you sure you want to remove configuration for ${provider.label}?`,
+            confirmText: 'Remove',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.sms-gateways.destroy', provider.provider), { preserveScroll: true });
     };
 

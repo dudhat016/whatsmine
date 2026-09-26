@@ -22,13 +22,41 @@ class EcommerceStore extends Model
 {
     protected $table = 'ecommerce_stores';
 
-    public const PLATFORMS = ['shopify', 'woocommerce', 'bigcommerce'];
+    public const PLATFORMS = ['shopify', 'woocommerce', 'bigcommerce', 'native'];
 
     protected $fillable = [
-        'uuid', 'workspace_id', 'platform', 'name', 'domain', 'credentials', 'status',
+        'uuid', 'workspace_id', 'platform', 'name', 'slug', 'domain', 'credentials', 'status',
         'external_meta', 'webhook_secret', 'last_tested_at', 'last_test_status',
         'last_test_message', 'customers_synced_at', 'orders_synced_at', 'products_synced_at',
     ];
+
+    public static function getOrCreateNativeStore(int $workspaceId): self
+    {
+        $workspace = \App\Models\Workspace::find($workspaceId);
+        $slugName = $workspace && !empty($workspace->name) ? Str::slug($workspace->name) : "store-{$workspaceId}";
+        if (empty($slugName)) {
+            $slugName = "store-{$workspaceId}";
+        }
+
+        $store = self::firstOrCreate(
+            [
+                'workspace_id' => $workspaceId,
+                'platform' => 'native',
+            ],
+            [
+                'name' => $workspace ? "{$workspace->name} Store" : 'Native Catalog',
+                'slug' => $slugName,
+                'domain' => 'native.local',
+                'status' => 'active',
+            ]
+        );
+
+        if (empty($store->slug) || is_numeric($store->slug)) {
+            $store->update(['slug' => $slugName]);
+        }
+
+        return $store;
+    }
 
     protected $hidden = ['credentials', 'webhook_secret'];
 
@@ -78,6 +106,10 @@ class EcommerceStore extends Model
      */
     public static function webhookUrlFor(self $store): string
     {
+        if ($store->platform === 'native') {
+            return '';
+        }
+
         $name = match ($store->platform) {
             'shopify' => 'webhooks.ecommerce.shopify',
             'bigcommerce' => 'webhooks.ecommerce.bigcommerce',

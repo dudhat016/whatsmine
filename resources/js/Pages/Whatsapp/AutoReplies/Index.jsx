@@ -4,6 +4,7 @@ import EmptyState from '@/Components/EmptyState';
 import { Plus, Trash2, ToggleLeft, ToggleRight, Zap, Pencil, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const TRIGGER_TYPES  = ['keyword', 'welcome', 'away', 'out_of_hours'];
 const MATCH_MODES    = ['exact', 'contains', 'regex'];
@@ -218,6 +219,7 @@ function RuleForm({ data, setData, errors, onSubmit, onCancel, processing, submi
 
 export default function WhatsappAutoRepliesIndex({ rules }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
     const [showCreate, setShowCreate] = useState(false);
@@ -265,8 +267,14 @@ export default function WhatsappAutoRepliesIndex({ rules }) {
         );
     };
 
-    const handleDelete = (id) => {
-        if (confirm(t('whatsapp.auto_replies_delete_confirm'))) {
+    const handleDelete = async (id) => {
+        const ok = await confirm({
+            title: 'Delete Auto-Reply Rule',
+            message: t('whatsapp.auto_replies_delete_confirm') || 'Are you sure you want to delete this auto-reply rule?',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.whatsapp.auto-replies.destroy', id), { preserveScroll: true });
         }
     };

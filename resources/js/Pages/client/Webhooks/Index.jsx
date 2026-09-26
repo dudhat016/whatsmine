@@ -4,6 +4,7 @@ import { Head, router, useForm, usePage, Link } from '@inertiajs/react';
 import { Webhook, Plus, Pencil, Trash2, RefreshCw, Play, Eye, ChevronRight, Check, X } from 'lucide-react';
 import { formatInTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const EVENTS = [
     'subscription.created', 'subscription.cancelled', 'subscription.renewed',
@@ -94,14 +95,21 @@ function EndpointForm({ endpoint = null, onClose }) {
 
 export default function WebhooksIndex({ endpoints }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { flash, timezone } = usePage().props;
     const userTz = timezone || 'Asia/Dhaka';
     const [showCreate, setShowCreate] = useState(false);
     const [editing, setEditing] = useState(null);
     const [revealedSecret, setRevealedSecret] = useState({});
 
-    const handleDelete = (ep) => {
-        if (!confirm(t('webhook.delete_confirm', { url: ep.url }))) return;
+    const handleDelete = async (ep) => {
+        const ok = await confirm({
+            title: 'Delete Webhook',
+            message: t('webhook.delete_confirm', { url: ep.url }) || `Are you sure you want to delete webhook for ${ep.url}?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.webhooks.destroy', ep.id));
     };
 
@@ -110,7 +118,13 @@ export default function WebhooksIndex({ endpoints }) {
     };
 
     const handleRotateSecret = async (ep) => {
-        if (!confirm(t('webhook.rotate_confirm'))) return;
+        const ok = await confirm({
+            title: 'Rotate Secret',
+            message: t('webhook.rotate_confirm') || 'Are you sure you want to rotate this secret key? Any integrations using the old secret will fail until updated.',
+            confirmText: 'Rotate Secret',
+            variant: 'warning',
+        });
+        if (!ok) return;
         const res = await fetch(route('client.webhooks.rotate-secret', ep.id), {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },

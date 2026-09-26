@@ -40,7 +40,7 @@ class OrderController extends Controller
 
         $orders = (clone $base)
             ->with('contact:id,uuid,first_name,last_name,email,phone_e164')
-            ->latest('placed_at')
+            ->latest('id')
             ->paginate(25)
             ->withQueryString()
             ->through(fn (EcommerceOrder $o) => [
@@ -52,12 +52,16 @@ class OrderController extends Controller
                 'fulfillment_status' => $o->fulfillment_status,
                 'currency' => $o->currency,
                 'total' => $o->total,
-                'placed_at' => $o->placed_at,
+                'placed_at' => $o->placed_at ? $o->placed_at->toFormattedDateString() : ($o->created_at ? $o->created_at->toFormattedDateString() : '—'),
                 'contact' => $o->contact ? [
                     'uuid' => $o->contact->uuid,
                     'name' => Demo::name(trim(($o->contact->first_name ?? '').' '.($o->contact->last_name ?? '')) ?: $o->contact->email),
                     'email' => Demo::email($o->contact->email),
-                ] : null,
+                ] : (isset($o->raw['customer_name']) ? [
+                    'uuid' => null,
+                    'name' => Demo::name($o->raw['customer_name']),
+                    'email' => Demo::email($o->raw['email'] ?? ''),
+                ] : null),
             ]);
 
         return Inertia::render('Ecommerce/Orders/Index', [
@@ -155,11 +159,24 @@ class OrderController extends Controller
     {
         $this->authorizeOrder($request, $order);
         $validated = $request->validate([
+            'fulfillment_status' => ['nullable', 'string', 'in:processing,shipped,fulfilled,cancelled'],
             'tracking_number' => ['nullable', 'string', 'max:128'],
             'tracking_url' => ['nullable', 'url', 'max:512'],
         ]);
 
         $store = EcommerceStore::find($order->store_id);
+        
+        // Handle native store orders
+        if ($store && $store->platform === 'native') {
+            $order->update([
+                'fulfillment_status' => $validated['fulfillment_status'] ?? 'fulfilled',
+                'tracking_number' => $validated['tracking_number'] ?? $order->tracking_number,
+                'tracking_url' => $validated['tracking_url'] ?? $order->tracking_url,
+            ]);
+
+            return back()->with('success', 'Native order fulfillment status updated.');
+        }
+
         if (! $store) {
             return back()->with('error', 'Store not found.');
         }
@@ -181,7 +198,7 @@ class OrderController extends Controller
         }
 
         $order->update([
-            'fulfillment_status' => 'fulfilled',
+            'fulfillment_status' => $validated['fulfillment_status'] ?? 'fulfilled',
             'tracking_number' => $validated['tracking_number'] ?? $order->tracking_number,
             'tracking_url' => $validated['tracking_url'] ?? $order->tracking_url,
         ]);

@@ -119,7 +119,7 @@ class FunnelPageController extends Controller
     /**
      * Create the Variant B challenger page for A/B split testing.
      */
-    public function createVariant(Request $request, Funnel $funnel, FunnelStep $step): JsonResponse
+    public function createVariant(Request $request, Funnel $funnel, FunnelStep $step)
     {
         $this->authoriseFunnel($request, $funnel);
         abort_unless((int) $step->funnel_id === $funnel->id, 403);
@@ -133,6 +133,9 @@ class FunnelPageController extends Controller
             ->exists();
 
         if ($alreadyExists) {
+            if ($request->header('X-Inertia')) {
+                return back()->with('error', 'Variant B already exists.');
+            }
             return response()->json(['ok' => false, 'message' => 'Variant B already exists.'], 422);
         }
 
@@ -147,7 +150,119 @@ class FunnelPageController extends Controller
         // Set variant A traffic split to 50% as well
         $controlPage->update(['traffic_split' => 50]);
 
+        if ($request->header('X-Inertia')) {
+            return back()->with('success', 'Variant B created successfully.');
+        }
+
         return response()->json(['ok' => true, 'variant_b' => $variantB]);
+    }
+
+    /**
+     * Update traffic split percentage between Variant A and Variant B.
+     */
+    public function updateSplit(Request $request, Funnel $funnel, FunnelStep $step)
+    {
+        $this->authoriseFunnel($request, $funnel);
+        abort_unless((int) $step->funnel_id === $funnel->id, 403);
+
+        $validated = $request->validate([
+            'traffic_split_a' => 'sometimes|integer|min:0|max:100',
+            'control_split'   => 'sometimes|integer|min:0|max:100',
+        ]);
+
+        $splitA = (int) ($validated['traffic_split_a'] ?? $validated['control_split'] ?? 50);
+        $splitB = 100 - $splitA;
+
+        $pageA = FunnelPage::where('funnel_step_id', $step->id)->where('variant', 'A')->first();
+        $pageB = FunnelPage::where('funnel_step_id', $step->id)->where('variant', 'B')->first();
+
+        if ($pageA) {
+            $pageA->update(['traffic_split' => $splitA]);
+        }
+        if ($pageB) {
+            $pageB->update(['traffic_split' => $splitB]);
+        }
+
+        if ($request->header('X-Inertia')) {
+            return back()->with('success', 'Traffic split percentage updated.');
+        }
+
+        return response()->json(['ok' => true, 'split_a' => $splitA, 'split_b' => $splitB]);
+    }
+
+    /**
+     * Declare a winner variant: makes winner the sole control page (Variant A) and deletes Variant B.
+     */
+    public function declareWinner(Request $request, Funnel $funnel, FunnelStep $step)
+    {
+        $this->authoriseFunnel($request, $funnel);
+        abort_unless((int) $step->funnel_id === $funnel->id, 403);
+
+        $winner = $request->input('winning_variant');
+        if (! $winner && $request->filled('winning_page_id')) {
+            $p = FunnelPage::find($request->input('winning_page_id'));
+            $winner = $p ? $p->variant : 'A';
+        }
+        $winner = in_array($winner, ['A', 'B']) ? $winner : 'A';
+
+        $pageA = FunnelPage::where('funnel_step_id', $step->id)->where('variant', 'A')->first();
+        $pageB = FunnelPage::where('funnel_step_id', $step->id)->where('variant', 'B')->first();
+
+        if (! $pageA || ! $pageB) {
+            if ($request->header('X-Inertia')) {
+                return back()->with('error', 'Both variants must exist to declare a winner.');
+            }
+            return response()->json(['ok' => false, 'message' => 'Both variants must exist to declare a winner.'], 422);
+        }
+
+        if ($winner === 'B') {
+            // Apply Variant B's content to Variant A
+            $pageA->update([
+                'canvas_json'       => $pageB->canvas_json,
+                'html_cache'        => $pageB->html_cache,
+                'css_cache'         => $pageB->css_cache,
+                'cache_compiled_at' => $pageB->cache_compiled_at,
+                'meta_title'        => $pageB->meta_title,
+                'meta_description'  => $pageB->meta_description,
+                'traffic_split'     => 100,
+            ]);
+        } else {
+            $pageA->update(['traffic_split' => 100]);
+        }
+
+        // Delete challenger Variant B
+        $pageB->delete();
+
+        if ($request->header('X-Inertia')) {
+            return back()->with('success', "Variant {$winner} declared winner and set as primary page.");
+        }
+
+        return response()->json(['ok' => true, 'message' => "Variant {$winner} declared winner and set as primary page."]);
+    }
+
+    /**
+     * Delete Variant B and restore Variant A to 100% traffic.
+     */
+    public function deleteVariant(Request $request, Funnel $funnel, FunnelStep $step)
+    {
+        $this->authoriseFunnel($request, $funnel);
+        abort_unless((int) $step->funnel_id === $funnel->id, 403);
+
+        $pageB = FunnelPage::where('funnel_step_id', $step->id)->where('variant', 'B')->first();
+        if ($pageB) {
+            $pageB->delete();
+        }
+
+        $pageA = FunnelPage::where('funnel_step_id', $step->id)->where('variant', 'A')->first();
+        if ($pageA) {
+            $pageA->update(['traffic_split' => 100]);
+        }
+
+        if ($request->header('X-Inertia')) {
+            return back()->with('success', 'Variant B deleted successfully.');
+        }
+
+        return response()->json(['ok' => true, 'message' => 'Variant B deleted successfully.']);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

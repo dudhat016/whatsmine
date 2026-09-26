@@ -14,13 +14,19 @@ export default function Cancelled({ appointment, calendar }) {
                     Your appointment for <strong>{calendar.name}</strong> has been cancelled.
                 </p>
 
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
                     <a
-                        href={`/b/${calendar.slug}`}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all"
+                        href={`/b/reschedule/${appointment.reschedule_token}`}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all"
                     >
                         <Calendar className="w-4 h-4" />
-                        <span>Book a New Appointment</span>
+                        <span>Reschedule to Another Time</span>
+                    </a>
+                    <a
+                        href={`/b/${calendar.slug}`}
+                        className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline pt-1"
+                    >
+                        Or book a brand new slot
                     </a>
                 </div>
             </div>

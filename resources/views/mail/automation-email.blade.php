@@ -1,3 +1,8 @@
 <x-mail::message>
-{!! nl2br(e($emailBody)) !!}
+@if(!empty($preheader))
+<span style="display:none !important; visibility:hidden; mso-hide:all; font-size:1px; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden;">
+{{ $preheader }}
+</span>
+@endif
+{!! $emailBody !!}
 </x-mail::message>

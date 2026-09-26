@@ -4,6 +4,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Image, Upload, Trash2, Copy, Check } from 'lucide-react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 function formatBytes(bytes) {
     if (bytes < 1024) return bytes + ' B';
@@ -70,6 +71,7 @@ function MediaCard({ file, onDelete }) {
 
 export default function MediaIndex({ files, usedBytes, quotaBytes }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { flash } = usePage().props;
     const fileRef = useRef(null);
     const [uploading, setUploading] = useState(false);
@@ -96,7 +98,13 @@ export default function MediaIndex({ files, usedBytes, quotaBytes }) {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm(t('media.delete_confirm'))) return;
+        const ok = await confirm({
+            title: 'Delete File',
+            message: t('media.delete_confirm') || 'Are you sure you want to delete this file? Any links pointing to it will stop working.',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (!ok) return;
         try {
             await axios.delete(route('client.media.destroy', id));
             router.reload();

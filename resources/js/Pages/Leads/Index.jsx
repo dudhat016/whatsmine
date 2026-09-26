@@ -4,6 +4,7 @@ import EmptyState from '@/Components/EmptyState';
 import { Search, MapPin, UserPlus, Trash2, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const JOB_STATUS = {
     pending:  'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
@@ -22,10 +23,11 @@ const TABLE_HEADERS = [
 
 export default function LeadsIndex({ leads, scrapeJobs }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
-    const [selected, setSelected] = useState([]);
     const [showScraper, setShowScraper] = useState(false);
+    const [selected, setSelected] = useState([]);
 
     const { data, setData, post, processing, reset } = useForm({
         keyword: '',
@@ -46,8 +48,14 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
         router.post(route('client.leads.push-to-contacts'), { ids: selected }, { preserveScroll: true, onSuccess: () => setSelected([]) });
     };
 
-    const handleDelete = (id) => {
-        if (confirm(t('leads.confirm_delete'))) {
+    const handleDelete = async (id) => {
+        const ok = await confirm({
+            title: 'Delete Lead',
+            message: t('leads.confirm_delete') || 'Are you sure you want to delete this lead?',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.leads.destroy', id), { preserveScroll: true });
         }
     };

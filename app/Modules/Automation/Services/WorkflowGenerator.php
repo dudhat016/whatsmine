@@ -18,7 +18,7 @@ class WorkflowGenerator
     /** Node types the engine can execute (mirrors AutomationEngine::executeNode + the builder palette). */
     private const NODE_TYPES = [
         'send_whatsapp', 'send_template', 'send_media', 'send_sequence', 'quick_replies', 'list_message',
-        'send_sms', 'send_email', 'ask_question', 'condition', 'wait', 'webhook', 'run_subflow', 'ai_reply',
+        'send_sms', 'send_email', 'ask_question', 'condition', 'wait', 'wait_for_reply', 'webhook', 'run_subflow', 'ai_reply',
         'add_tag', 'remove_tag', 'update_contact', 'assign_agent', 'add_to_campaign', 'cta_button',
         'send_location', 'send_poll', 'run_chatbot', 'book_appointment', 'google_meet', 'whatsapp_form',
         'whatsapp_catalog', 'woocommerce_product', 'shopify_product', 'google_sheets', 'google_docs',
@@ -28,6 +28,8 @@ class WorkflowGenerator
     private const TRIGGER_TYPES = [
         'contact.created', 'contact.tag_added', 'message.received', 'campaign.sent', 'form.submitted',
         'webhook.received', 'order.placed', 'order.fulfilled', 'order.cancelled', 'cart.abandoned', 'customer.created',
+        'funnel.step_visited', 'funnel.form_submitted', 'funnel.order_completed', 'funnel.order_bump_purchased',
+        'funnel.upsell_accepted', 'funnel.upsell_declined', 'funnel.cart_abandoned',
     ];
 
     public function __construct(private readonly LlmGateway $llmGateway) {}

@@ -133,16 +133,25 @@ class InboxController extends Controller
                 ->where('status', 'connected')
                 ->exists();
 
+        $availableFolders = \App\Modules\Shared\Models\CustomFieldFolder::where('workspace_id', $workspaceId)->orderBy('sort_order', 'asc')->get();
+        $customFields = \App\Modules\Shared\Models\CustomField::where('workspace_id', $workspaceId)->where('is_active', true)->get();
+        $contactSubmissions = $conversation->contact_id
+            ? \App\Modules\Funnels\Models\SubscriptionFormSubmission::where('contact_id', $conversation->contact_id)->with('form')->latest()->limit(5)->get()
+            : collect();
+
         return Inertia::render('Inbox/Show', [
-            'conversation' => $conversation,
-            'messages' => $messages,
-            'allLabels' => $allLabels,
-            'conversations' => $conversations,
-            'filters' => $filters,
-            'teamMembers' => $teamMembers,
-            'whatsappTemplates' => $whatsappTemplates,
-            'channelAccounts' => $channelAccounts,
-            'hasEcommerceStore' => $hasEcommerceStore,
+            'conversation'       => $conversation,
+            'messages'           => $messages,
+            'allLabels'          => $allLabels,
+            'conversations'      => $conversations,
+            'filters'            => $filters,
+            'teamMembers'        => $teamMembers,
+            'whatsappTemplates'  => $whatsappTemplates,
+            'channelAccounts'    => $channelAccounts,
+            'hasEcommerceStore'  => $hasEcommerceStore,
+            'availableFolders'   => $availableFolders,
+            'customFields'       => $customFields,
+            'contactSubmissions' => $contactSubmissions,
         ]);
     }
 
@@ -351,6 +360,108 @@ class InboxController extends Controller
         MessageSent::dispatch($message);
 
         return response()->json(['message' => $message, 'error' => $sendError]);
+    }
+
+    public function shareProposal(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorise($request, $conversation);
+
+        $validated = $request->validate(['proposal_id' => ['required', 'integer']]);
+        $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
+
+        $proposal = DB::table('agency_proposals')
+            ->where('workspace_id', $workspaceId)
+            ->where('id', $validated['proposal_id'])
+            ->first();
+
+        abort_unless($proposal, 404, 'Proposal not found.');
+
+        $channel = $conversation->channelAccount?->channel ?? 'whatsapp';
+
+        if ($channel === 'whatsapp' && ! $conversation->isWhatsappWindowOpen()) {
+            return response()->json([
+                'error' => 'WhatsApp 24-hour session is closed. Use an approved template to re-engage this contact.',
+            ], 422);
+        }
+
+        $url = route('agency.proposals.show', $proposal->uuid);
+        $caption = "*📄 Proposal: {$proposal->title}*\nTotal: $" . number_format($proposal->total, 2) . "\n\nReview & sign online: {$url}";
+
+        $message = Message::create([
+            'conversation_id' => $conversation->id,
+            'direction' => 'out',
+            'channel' => $channel,
+            'type' => 'text',
+            'body' => $caption,
+            'status' => 'queued',
+            'sent_by' => 'human',
+            'user_id' => $request->user()->id,
+            'sent_at' => now(),
+        ]);
+
+        try {
+            $messageId = $this->channelManager->driver($channel)->send($message);
+            $message->update(['status' => 'sent', 'provider_message_id' => $messageId]);
+        } catch (\Throwable $e) {
+            $message->update(['status' => 'failed', 'error_json' => ['message' => $e->getMessage()]]);
+        }
+
+        $conversation->update(['last_message_at' => now()]);
+        $message->load('conversation');
+        MessageSent::dispatch($message);
+
+        return response()->json(['message' => $message]);
+    }
+
+    public function shareInvoice(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorise($request, $conversation);
+
+        $validated = $request->validate(['invoice_id' => ['required', 'integer']]);
+        $workspaceId = $request->user()->current_workspace_id ?? $request->user()->workspace_id;
+
+        $invoice = DB::table('agency_invoices')
+            ->where('workspace_id', $workspaceId)
+            ->where('id', $validated['invoice_id'])
+            ->first();
+
+        abort_unless($invoice, 404, 'Invoice not found.');
+
+        $channel = $conversation->channelAccount?->channel ?? 'whatsapp';
+
+        if ($channel === 'whatsapp' && ! $conversation->isWhatsappWindowOpen()) {
+            return response()->json([
+                'error' => 'WhatsApp 24-hour session is closed. Use an approved template to re-engage this contact.',
+            ], 422);
+        }
+
+        $url = route('agency.invoices.checkout', $invoice->uuid);
+        $caption = "*💳 Invoice #{$invoice->invoice_number}*\nAmount Due: $" . number_format($invoice->total, 2) . "\n\nPay 1-click via secure checkout: {$url}";
+
+        $message = Message::create([
+            'conversation_id' => $conversation->id,
+            'direction' => 'out',
+            'channel' => $channel,
+            'type' => 'text',
+            'body' => $caption,
+            'status' => 'queued',
+            'sent_by' => 'human',
+            'user_id' => $request->user()->id,
+            'sent_at' => now(),
+        ]);
+
+        try {
+            $messageId = $this->channelManager->driver($channel)->send($message);
+            $message->update(['status' => 'sent', 'provider_message_id' => $messageId]);
+        } catch (\Throwable $e) {
+            $message->update(['status' => 'failed', 'error_json' => ['message' => $e->getMessage()]]);
+        }
+
+        $conversation->update(['last_message_at' => now()]);
+        $message->load('conversation');
+        MessageSent::dispatch($message);
+
+        return response()->json(['message' => $message]);
     }
 
     /**

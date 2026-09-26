@@ -16,18 +16,53 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// ─── Public Funnel Pages ──────────────────────────────────────────────────────
+// ─── Public Funnel Pages & Actions ──────────────────────────────────────────
 // Format: /f/{workspace_slug}/{funnel_slug}
-// Serves pre-compiled HTML cache — no auth required, no Inertia overhead.
 Route::get('/f/{workspaceSlug}/{funnelSlug}', [FunnelRenderController::class, 'show'])
     ->name('funnel.public')
     ->middleware('throttle:120,1');
 
-// Funnel Share Preview (public, no auth)
-Route::get('/funnels/share/{shareToken}', [FunnelRenderController::class, 'sharePreview'])
+Route::post('/f/{workspaceSlug}/{funnelSlug}/step-1-lead', [FunnelRenderController::class, 'captureStep1Lead'])
+    ->name('funnel.public.step1_lead')
+    ->middleware('throttle:60,1');
+
+Route::post('/f/{workspaceSlug}/{funnelSlug}/optin', [FunnelRenderController::class, 'submitOptin'])
+    ->name('funnel.public.optin')
+    ->middleware('throttle:60,1');
+
+Route::post('/f/{workspaceSlug}/{funnelSlug}/checkout', [FunnelRenderController::class, 'processCheckout'])
+    ->name('funnel.public.checkout')
+    ->middleware('throttle:60,1');
+
+Route::post('/f/{workspaceSlug}/{funnelSlug}/upsell-action', [FunnelRenderController::class, 'processUpsellAction'])
+    ->name('funnel.public.upsell_action')
+    ->middleware('throttle:60,1');
+
+Route::get('/f/{workspaceSlug}/{funnelSlug}/{stepSlug}', [FunnelRenderController::class, 'show'])
+    ->name('funnel.public.step')
+    ->middleware('throttle:120,1');
+
+use App\Modules\Funnels\Http\Controllers\FunnelShareController;
+
+// Funnel Share Preview & 1-Click Import (public / authenticated)
+Route::get('/funnels/share/{shareToken}', [FunnelShareController::class, 'sharePreview'])
     ->name('funnels.share.preview');
 
+Route::post('/funnels/share/{shareToken}/import', [FunnelShareController::class, 'import'])
+    ->name('funnels.share.import');
 
+
+
+// ─── Public Storefront Routes (Fixed Prefixes) ─────────────────────────────────
+use App\Modules\Ecommerce\Http\Controllers\PublicStorefrontController;
+
+// Backward Compatible Legacy /s/ and /p/ Fallback Routes
+Route::get('/s/{slug}', [PublicStorefrontController::class, 'index'])->name('public.storefront.legacy.index');
+Route::get('/s/{slug}/p/{productSlug}', [PublicStorefrontController::class, 'show'])->name('public.storefront.legacy.show');
+Route::post('/s/{slug}/checkout', [PublicStorefrontController::class, 'checkout'])->name('public.storefront.legacy.checkout');
+
+Route::get('/d/{token}', [PublicStorefrontController::class, 'digitalVault'])->name('public.storefront.vault');
+Route::get('/d/{token}/download', [PublicStorefrontController::class, 'downloadDigitalFile'])->name('public.storefront.download');
 
 // Home / Landing
 Route::get('/', [LandingController::class, 'index'])->name('home');
@@ -45,11 +80,55 @@ Route::middleware(['web', 'client-app'])->prefix('app/forms')->name('client.form
     Route::get('/', [SubscriptionFormController::class, 'index'])->name('index');
     Route::get('/create', [SubscriptionFormController::class, 'create'])->name('create');
     Route::post('/', [SubscriptionFormController::class, 'store'])->name('store');
+    Route::get('/submissions/export', [SubscriptionFormController::class, 'exportSubmissions'])->name('submissions.export');
+    Route::post('/folders', [SubscriptionFormController::class, 'storeFolder'])->name('folders.store');
+    Route::put('/folders/{id}', [SubscriptionFormController::class, 'updateFolder'])->name('folders.update');
+    Route::delete('/folders/{id}', [SubscriptionFormController::class, 'destroyFolder'])->name('folders.destroy');
+    Route::post('/move-to-folder', [SubscriptionFormController::class, 'moveToFolder'])->name('move_to_folder');
     Route::get('/{form}', [SubscriptionFormController::class, 'show'])->name('show');
     Route::get('/{form}/edit', [SubscriptionFormController::class, 'edit'])->name('edit');
     Route::put('/{form}', [SubscriptionFormController::class, 'update'])->name('update');
     Route::delete('/{form}', [SubscriptionFormController::class, 'destroy'])->name('destroy');
+    Route::post('/{form}/duplicate', [SubscriptionFormController::class, 'duplicate'])->name('duplicate');
 });
+
+// ─── Client App: Global Custom Fields Management ───────────────────────────────
+Route::middleware(['web', 'client-app'])->prefix('app/custom-fields')->name('client.custom_fields.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Client\CustomFieldController::class, 'index'])->name('index');
+    Route::post('/', [\App\Http\Controllers\Client\CustomFieldController::class, 'store'])->name('store');
+    Route::put('/{customField}', [\App\Http\Controllers\Client\CustomFieldController::class, 'update'])->name('update');
+    Route::get('/{customField}/check-dependencies', [\App\Http\Controllers\Client\CustomFieldController::class, 'checkDependencies'])->name('check_dependencies');
+    Route::delete('/{customField}', [\App\Http\Controllers\Client\CustomFieldController::class, 'destroy'])->name('destroy');
+    Route::post('/{id}/restore', [\App\Http\Controllers\Client\CustomFieldController::class, 'restore'])->name('restore');
+    Route::delete('/{id}/force', [\App\Http\Controllers\Client\CustomFieldController::class, 'forceDelete'])->name('force_delete');
+
+    // Custom Field Folders
+    Route::post('/folders', [\App\Http\Controllers\Client\CustomFieldController::class, 'storeFolder'])->name('folders.store');
+    Route::put('/folders/{id}', [\App\Http\Controllers\Client\CustomFieldController::class, 'updateFolder'])->name('folders.update');
+    Route::delete('/folders/{id}', [\App\Http\Controllers\Client\CustomFieldController::class, 'destroyFolder'])->name('folders.destroy');
+    Route::post('/folders/reorder', [\App\Http\Controllers\Client\CustomFieldController::class, 'reorderFolders'])->name('folders.reorder');
+});
+
+// ─── Client App: Global Custom Values Management ───────────────────────────────
+Route::middleware(['web', 'client-app'])->prefix('app/custom-values')->name('client.custom_values.')->group(function () {
+    Route::get('/list', [\App\Http\Controllers\Client\CustomValueController::class, 'list'])->name('list');
+    Route::get('/{customValue}/check-dependencies', [\App\Http\Controllers\Client\CustomValueController::class, 'checkDependencies'])->name('check_dependencies');
+    Route::post('/', [\App\Http\Controllers\Client\CustomValueController::class, 'store'])->name('store');
+    Route::put('/{customValue}', [\App\Http\Controllers\Client\CustomValueController::class, 'update'])->name('update');
+    Route::delete('/{customValue}', [\App\Http\Controllers\Client\CustomValueController::class, 'destroy'])->name('destroy');
+});
+
+// ─── Client App: Global Trigger Links Management ───────────────────────────────
+Route::middleware(['web', 'client-app'])->prefix('app/trigger-links')->name('client.trigger_links.')->group(function () {
+    Route::get('/list', [\App\Http\Controllers\Client\TriggerLinkController::class, 'list'])->name('list');
+    Route::get('/{triggerLink}/check-dependencies', [\App\Http\Controllers\Client\TriggerLinkController::class, 'checkDependencies'])->name('check_dependencies');
+    Route::post('/', [\App\Http\Controllers\Client\TriggerLinkController::class, 'store'])->name('store');
+    Route::put('/{triggerLink}', [\App\Http\Controllers\Client\TriggerLinkController::class, 'update'])->name('update');
+    Route::delete('/{triggerLink}', [\App\Http\Controllers\Client\TriggerLinkController::class, 'destroy'])->name('destroy');
+});
+
+// Public Trigger Link Click Tracker & Redirect
+Route::get('/l/{slug}', \App\Http\Controllers\TriggerLinkRedirectController::class)->name('public.trigger_link');
 
 // Calendars & Appointments Client Management Routes
 Route::middleware(['web', 'client-app'])->prefix('app/calendars')->name('client.calendars.')->group(function () {
@@ -66,6 +145,7 @@ Route::prefix('b')->name('public.booking.')->group(function () {
     Route::get('/reschedule/{token}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'showReschedule'])->name('reschedule.show');
     Route::post('/reschedule/{token}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'processReschedule'])->name('reschedule.submit');
     Route::get('/cancel/{token}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'processCancel'])->name('cancel');
+    Route::get('/appointment/{token}/invite.ics', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'downloadIcs'])->name('ics');
     Route::get('/{slug}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'showWidget'])->name('widget');
     Route::get('/{slug}/slots', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'getSlots'])->name('slots');
     Route::post('/{slug}/book', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'processBooking'])->name('book');
@@ -197,3 +277,19 @@ Route::middleware('throttle:30,1')->group(function () {
         }
     })->name('healthz.queue');
 });
+
+// ─── Public Storefront Catch-All Routes (Option 1 Direct Clean Brand Paths) ───
+$storeSlugPattern = '^(?!(app|login|logout|register|dashboard|admin|api|subscribe|funnels|healthz|d|f|storage|sanctum|_debugbar)\b)[A-Za-z0-9_-]+';
+
+Route::get('/{slug}', [PublicStorefrontController::class, 'index'])
+    ->name('public.storefront.index')
+    ->where('slug', $storeSlugPattern);
+
+Route::get('/{slug}/{productSlug}', [PublicStorefrontController::class, 'show'])
+    ->name('public.storefront.show')
+    ->where('slug', $storeSlugPattern);
+
+Route::post('/{slug}/checkout', [PublicStorefrontController::class, 'checkout'])
+    ->name('public.storefront.checkout')
+    ->where('slug', $storeSlugPattern);
+

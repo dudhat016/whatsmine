@@ -72,4 +72,23 @@ class WorkspaceController extends Controller
 
         return redirect()->route('client.dashboard')->with('success', __('Workspace created.'));
     }
+    /**
+     * Update the workspace-level store currency (applies to all products/orders/storefront).
+     */
+    public function updateCurrency(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'currency_code' => ['required', 'string', 'max:10'],
+        ]);
+
+        $workspaceId = $request->session()->get('current_workspace_id') ?? $request->user()->workspace_id;
+        $workspace = Workspace::findOrFail($workspaceId);
+
+        $this->authorize('update', $workspace);
+
+        $workspace->update(['currency_code' => strtoupper($validated['currency_code'])]);
+
+        return back()->with('success', 'Store currency updated to ' . strtoupper($validated['currency_code']) . '. All products and checkout pages will now use this currency.');
+    }
 }
+

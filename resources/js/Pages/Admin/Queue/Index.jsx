@@ -3,9 +3,11 @@ import { router, Link, usePage } from '@inertiajs/react';
 import { Server, RefreshCw, Trash2, AlertTriangle } from 'lucide-react';
 import { formatUnixTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function QueueIndex({ tab, failedJobs, batches }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const adminTz = usePage().props.timezone || 'Asia/Dhaka';
     const tabs = [
         { id: 'failed', label: t('queue.failed_jobs') },
@@ -13,7 +15,25 @@ export default function QueueIndex({ tab, failedJobs, batches }) {
     ];
 
     const retry = (id) => router.post(route('admin.queue.retry', id));
-    const del   = (id) => { if (confirm(t('queue.delete_job_confirm'))) router.delete(route('admin.queue.delete-failed', id)); };
+    const del   = async (id) => {
+        const ok = await confirm({
+            title: 'Delete Failed Job',
+            message: t('queue.delete_job_confirm') || 'Are you sure you want to delete this failed job?',
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) router.delete(route('admin.queue.delete-failed', id));
+    };
+
+    const flush = async () => {
+        const ok = await confirm({
+            title: 'Flush All Failed Jobs',
+            message: t('queue.flush_confirm') || 'Are you sure you want to flush and delete all failed jobs? This cannot be undone.',
+            confirmText: 'Flush All',
+            variant: 'danger',
+        });
+        if (ok) router.post(route('admin.queue.flush'));
+    };
 
     return (
         <AdminLayout title={t('queue.title')}>
@@ -29,7 +49,7 @@ export default function QueueIndex({ tab, failedJobs, batches }) {
                             <button onClick={() => router.post(route('admin.queue.retry-all'))} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <RefreshCw className="h-3.5 w-3.5" /> {t('queue.retry_all')}
                             </button>
-                            <button onClick={() => { if (confirm(t('queue.flush_confirm'))) router.post(route('admin.queue.flush')); }} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10">
+                            <button onClick={flush} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10">
                                 <Trash2 className="h-3.5 w-3.5" /> {t('queue.flush_all')}
                             </button>
                         </div>

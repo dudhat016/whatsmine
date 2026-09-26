@@ -141,17 +141,67 @@ class PublicBookingController extends Controller
     /**
      * Process appointment cancellation self-service.
      */
-    public function processCancel(string $token): Response
+    public function processCancel(Request $request, string $token): Response
     {
         $appointment = Appointment::where('reschedule_token', $token)
             ->with(['calendar', 'contact'])
             ->firstOrFail();
 
-        $appointment->update(['status' => 'cancelled']);
+        $this->appointmentService->cancel($appointment, $request->input('reason'));
 
         return Inertia::render('Public/Booking/Cancelled', [
             'appointment' => $appointment,
             'calendar' => $appointment->calendar,
         ]);
+    }
+
+    /**
+     * Download an .ics calendar file for the appointment.
+     */
+    public function downloadIcs(string $token): \Illuminate\Http\Response
+    {
+        $appointment = Appointment::where('reschedule_token', $token)
+            ->with(['calendar', 'contact'])
+            ->firstOrFail();
+
+        $startUtc = $appointment->start_at->copy()->setTimezone('UTC')->format('Ymd\THis\Z');
+        $endUtc = $appointment->end_at->copy()->setTimezone('UTC')->format('Ymd\THis\Z');
+        $nowUtc = now('UTC')->format('Ymd\THis\Z');
+
+        $summary = $this->escapeIcsString($appointment->title ?: ($appointment->calendar?->name ?? 'Appointment'));
+        $location = $this->escapeIcsString($appointment->location ?: ($appointment->meeting_join_url ?: 'Online'));
+        $description = $this->escapeIcsString("Meeting with: " . ($appointment->calendar?->name ?? 'WhatsMine') . "\nJoin link: " . ($appointment->meeting_join_url ?? ''));
+
+        $ics = "BEGIN:VCALENDAR\r\n" .
+            "VERSION:2.0\r\n" .
+            "PRODID:-//WhatsMine//Appointment Booking//EN\r\n" .
+            "CALSCALE:GREGORIAN\r\n" .
+            "METHOD:REQUEST\r\n" .
+            "BEGIN:VEVENT\r\n" .
+            "UID:appt-{$appointment->id}-{$appointment->reschedule_token}@whatsmine.com\r\n" .
+            "DTSTAMP:{$nowUtc}\r\n" .
+            "DTSTART:{$startUtc}\r\n" .
+            "DTEND:{$endUtc}\r\n" .
+            "SUMMARY:{$summary}\r\n" .
+            "DESCRIPTION:{$description}\r\n" .
+            "LOCATION:{$location}\r\n" .
+            "STATUS:CONFIRMED\r\n" .
+            "BEGIN:VALARM\r\n" .
+            "TRIGGER:-PT15M\r\n" .
+            "ACTION:DISPLAY\r\n" .
+            "DESCRIPTION:Reminder: {$summary}\r\n" .
+            "END:VALARM\r\n" .
+            "END:VEVENT\r\n" .
+            "END:VCALENDAR\r\n";
+
+        return response($ics, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="invite-' . $appointment->id . '.ics"',
+        ]);
+    }
+
+    private function escapeIcsString(string $text): string
+    {
+        return str_replace(["\\", ";", ",", "\n", "\r"], ["\\\\", "\\;", "\\,", "\\n", ""], $text);
     }
 }

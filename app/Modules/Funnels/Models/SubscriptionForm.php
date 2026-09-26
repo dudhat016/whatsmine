@@ -17,6 +17,7 @@ class SubscriptionForm extends Model
 
     protected $fillable = [
         'workspace_id',
+        'folder_id',
         'name',
         'title',
         'slug',
@@ -29,6 +30,11 @@ class SubscriptionForm extends Model
         'gdpr_checkbox',
         'gdpr_text',
         'is_active',
+        'is_order_form',
+        'order_form_type',
+        'currency',
+        'order_bump_settings',
+        'coupon_enabled',
         'submissions_count',
     ];
 
@@ -37,9 +43,12 @@ class SubscriptionForm extends Model
         return [
             'fields' => 'array',
             'settings' => 'array',
+            'order_bump_settings' => 'array',
             'double_optin_enabled' => 'boolean',
             'gdpr_checkbox' => 'boolean',
             'is_active' => 'boolean',
+            'is_order_form' => 'boolean',
+            'coupon_enabled' => 'boolean',
             'submissions_count' => 'integer',
         ];
     }
@@ -53,8 +62,23 @@ class SubscriptionForm extends Model
         });
     }
 
+    public function folder(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(SubscriptionFormFolder::class, 'folder_id');
+    }
+
+    public function formProducts(): HasMany
+    {
+        return $this->hasMany(SubscriptionFormProduct::class, 'form_id')->orderBy('sort_order', 'asc');
+    }
+
     public function submissions(): HasMany
     {
         return $this->hasMany(SubscriptionFormSubmission::class, 'form_id');
+    }
+
+    public function views(): HasMany
+    {
+        return $this->hasMany(SubscriptionFormView::class, 'form_id');
     }
 }

@@ -14,7 +14,10 @@ class PersonalizerTest extends TestCase
 
     private function makeContact(array $overrides = []): Contact
     {
+        $workspace = \App\Models\Workspace::first() ?? \App\Models\Workspace::factory()->create();
+
         return Contact::factory()->create(array_merge([
+            'workspace_id' => $workspace->id,
             'first_name' => 'Ada',
             'last_name' => 'Lovelace',
             'phone_e164' => '+14155552671',
@@ -140,5 +143,67 @@ class PersonalizerTest extends TestCase
             'https://cdn.test/GB.jpg',
             $rendered[0]['parameters'][0]['image']['link'],
         );
+    }
+
+    #[Test]
+    public function it_substitutes_tokens_with_fallback_defaults(): void
+    {
+        $contact = $this->makeContact(['first_name' => '']);
+        $personalizer = new CampaignPersonalizer;
+
+        $rendered1 = $personalizer->renderText(
+            "Hello {{contact.first_name | default: 'there'}}, welcome!",
+            $contact,
+        );
+        $this->assertSame('Hello there, welcome!', $rendered1);
+
+        $rendered2 = $personalizer->renderText(
+            "Hello {{contact.first_name | 'valued customer'}}!",
+            $contact,
+        );
+        $this->assertSame('Hello valued customer!', $rendered2);
+
+        // When value exists, it should use the value and ignore the default
+        $contactWithVal = $this->makeContact(['first_name' => 'Michael', 'phone_e164' => '+14155550002']);
+        $rendered3 = $personalizer->renderText(
+            "Hello {{contact.first_name | default: 'there'}}!",
+            $contactWithVal,
+        );
+        $this->assertSame('Hello Michael!', $rendered3);
+    }
+
+    #[Test]
+    public function it_substitutes_custom_values_and_trigger_links(): void
+    {
+        $contact = $this->makeContact();
+        $personalizer = new CampaignPersonalizer;
+
+        // Custom Value
+        \App\Modules\Shared\Models\CustomValue::create([
+            'workspace_id' => $contact->workspace_id,
+            'name' => 'Google Review URI',
+            'key' => 'google_review_uri',
+            'value' => 'https://g.page/r/abc123',
+        ]);
+
+        $renderedCv = $personalizer->renderText(
+            'Review us at {{custom_values.google_review_uri}}',
+            $contact,
+        );
+        $this->assertSame('Review us at https://g.page/r/abc123', $renderedCv);
+
+        // Trigger Link
+        $triggerLink = \App\Modules\Shared\Models\TriggerLink::create([
+            'workspace_id' => $contact->workspace_id,
+            'name' => 'Feedback Form',
+            'target_url' => 'https://example.com/feedback',
+            'slug' => 'feedback_form',
+        ]);
+
+        $renderedTl = $personalizer->renderText(
+            'Give feedback: {{trigger_links.feedback_form}}',
+            $contact,
+        );
+        $this->assertStringContainsString('/l/feedback_form?c=' . $contact->id, $renderedTl);
     }
 }

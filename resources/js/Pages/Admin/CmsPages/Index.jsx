@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import { useForm, router } from '@inertiajs/react';
 import { FileText, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 function PageForm({ page = null, onClose }) {
     const { t } = useTranslation();
@@ -75,8 +76,21 @@ function PageForm({ page = null, onClose }) {
 
 export default function CmsPagesIndex({ pages }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const [showCreate, setShowCreate] = useState(false);
     const [editing, setEditing] = useState(null);
+
+    const handleDelete = async (p) => {
+        const ok = await confirm({
+            title: 'Delete CMS Page',
+            message: t('cms.delete_confirm') || `Are you sure you want to delete page "${p.title}"?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
+            router.delete(route('admin.cms-pages.destroy', p.id));
+        }
+    };
 
     return (
         <AdminLayout title={t('admin.cms_pages')}>
@@ -110,11 +124,11 @@ export default function CmsPagesIndex({ pages }) {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
-                            {pages?.map(p => (
-                                <tr key={p.id}>
+                            {pages?.map((p) => (
+                                <tr key={p.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-750">
                                     {editing?.id === p.id ? (
-                                        <td colSpan={5} className="px-4 py-4">
-                                            <PageForm page={p} onClose={() => setEditing(null)} />
+                                        <td colSpan={5} className="p-4 bg-neutral-50 dark:bg-neutral-750">
+                                            <PageForm page={editing} onClose={() => setEditing(null)} />
                                         </td>
                                     ) : (
                                         <>
@@ -129,7 +143,7 @@ export default function CmsPagesIndex({ pages }) {
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2 justify-end">
                                                     <button onClick={() => setEditing(p)} className="p-1 text-neutral-400 hover:text-brand-600 dark:hover:text-brand-400 transition"><Pencil className="h-4 w-4" /></button>
-                                                    <button onClick={() => { if (confirm(t('cms.delete_confirm'))) router.delete(route('admin.cms-pages.destroy', p.id)); }} className="p-1 text-neutral-400 hover:text-coral-600"><Trash2 className="h-4 w-4" /></button>
+                                                    <button onClick={() => handleDelete(p)} className="p-1 text-neutral-400 hover:text-coral-600"><Trash2 className="h-4 w-4" /></button>
                                                 </div>
                                             </td>
                                         </>

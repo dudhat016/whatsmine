@@ -11,6 +11,7 @@ import {
 // We use the Admin layout that already exists in the project
 // Import path mirrors how other Admin pages import their layout
 import AdminLayout from '@/Layouts/AdminLayout';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const fmt = (n) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n ?? 0);
 const fmtCurrency = (n) => `$${fmt(n)}`;
@@ -23,6 +24,7 @@ const STATUS_COLORS = {
 
 export default function AdminFunnelsIndex({ funnels, filters }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
 
@@ -84,8 +86,14 @@ export default function AdminFunnelsIndex({ funnels, filters }) {
     };
 
     // ── Force Delete ──────────────────────────────────────────────────────────
-    const handleDelete = (funnel) => {
-        if (!confirm(`Permanently delete "${funnel.name}"? This cannot be undone.`)) return;
+    const handleDelete = async (funnel) => {
+        const ok = await confirm({
+            title: 'Delete Funnel',
+            message: `Permanently delete "${funnel.name}"? This cannot be undone.`,
+            confirmText: 'Delete Permanently',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('admin.funnels.destroy', funnel.id));
     };
 

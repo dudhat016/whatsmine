@@ -5,11 +5,12 @@ import {
     Plus, Zap, Play, Pause, Trash2, BarChart2, Pencil, Clock,
     UserRound, Tag, MessageCircle, Megaphone, FileText, Link2,
     ShoppingBag, PackageCheck, XCircle, ShoppingCart, UserPlus,
-    Sparkles, Loader2, AlertTriangle,
+    Sparkles, Loader2, AlertTriangle, TrendingUp, Eye, GitBranch, CheckCircle2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const STATUS_COLORS = {
     active: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
@@ -25,17 +26,32 @@ const STATUS_LABEL_KEYS = {
 
 // Maps a stored trigger_type to its display label + icon (mirrors the builder's TRIGGER_TYPES).
 const TRIGGER_META = {
-    'contact.created':   { labelKey: 'automation.trigger_contact_created',   Icon: UserRound     },
-    'contact.tag_added': { labelKey: 'automation.trigger_tag_added',         Icon: Tag           },
-    'message.received':  { labelKey: 'automation.trigger_message_received',  Icon: MessageCircle },
-    'campaign.sent':     { labelKey: 'automation.trigger_campaign_sent',     Icon: Megaphone     },
-    'form.submitted':    { labelKey: 'automation.trigger_form_submitted',    Icon: FileText      },
-    'webhook.received':  { labelKey: 'automation.trigger_webhook_received',  Icon: Link2         },
-    'order.placed':      { labelKey: 'automation.trigger_order_placed',      Icon: ShoppingBag   },
-    'order.fulfilled':   { labelKey: 'automation.trigger_order_fulfilled',   Icon: PackageCheck  },
-    'order.cancelled':   { labelKey: 'automation.trigger_order_cancelled',   Icon: XCircle       },
-    'cart.abandoned':    { labelKey: 'automation.trigger_cart_abandoned',    Icon: ShoppingCart  },
-    'customer.created':  { labelKey: 'automation.trigger_customer_created',  Icon: UserPlus      },
+    'contact.created':           { labelKey: 'automation.trigger_contact_created',   Icon: UserRound     },
+    'contact.tag_added':         { labelKey: 'automation.trigger_tag_added',         Icon: Tag           },
+    'message.received':          { labelKey: 'automation.trigger_message_received',  Icon: MessageCircle },
+    'customer.replied':          { labelKey: 'Customer Replied',                    Icon: MessageCircle },
+    'opportunity.created':          { labelKey: 'Opportunity Created',                 Icon: GitBranch     },
+    'opportunity.pipeline_changed':  { labelKey: 'Pipeline Changed',                    Icon: GitBranch     },
+    'opportunity.stage_changed':    { labelKey: 'Opportunity Stage Changed',           Icon: GitBranch     },
+    'opportunity.status_changed':{ labelKey: 'Opportunity Status Changed',          Icon: TrendingUp    },
+    'opportunity.won':           { labelKey: 'Opportunity Won',                      Icon: CheckCircle2  },
+    'opportunity.lost':          { labelKey: 'Opportunity Lost',                     Icon: XCircle       },
+    'opportunity.abandoned':     { labelKey: 'Opportunity Abandoned',                Icon: AlertTriangle },
+    'campaign.sent':             { labelKey: 'automation.trigger_campaign_sent',     Icon: Megaphone     },
+    'form.submitted':            { labelKey: 'automation.trigger_form_submitted',    Icon: FileText      },
+    'webhook.received':          { labelKey: 'automation.trigger_webhook_received',  Icon: Link2         },
+    'order.placed':              { labelKey: 'automation.trigger_order_placed',      Icon: ShoppingBag   },
+    'order.fulfilled':           { labelKey: 'automation.trigger_order_fulfilled',   Icon: PackageCheck  },
+    'order.cancelled':           { labelKey: 'automation.trigger_order_cancelled',   Icon: XCircle       },
+    'cart.abandoned':            { labelKey: 'automation.trigger_cart_abandoned',    Icon: ShoppingCart  },
+    'customer.created':          { labelKey: 'automation.trigger_customer_created',  Icon: UserPlus      },
+    'funnel.cart_abandoned':     { labelKey: 'Funnel Abandoned Cart',                Icon: ShoppingCart  },
+    'funnel.order_completed':    { labelKey: 'Funnel Order Completed',               Icon: ShoppingBag   },
+    'funnel.order_bump_purchased': { labelKey: 'Funnel Order Bump',                  Icon: Sparkles      },
+    'funnel.upsell_accepted':    { labelKey: 'Funnel Upsell Accepted',               Icon: TrendingUp    },
+    'funnel.upsell_declined':    { labelKey: 'Funnel Upsell Declined',               Icon: XCircle       },
+    'funnel.step_visited':       { labelKey: 'Funnel Step Visited',                  Icon: Eye           },
+    'funnel.form_submitted':     { labelKey: 'Funnel Opt-in Submitted',              Icon: FileText      },
 };
 
 const formatDate = (iso) => {
@@ -45,10 +61,11 @@ const formatDate = (iso) => {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
-export default function AutomationIndex({ automations }) {
+export default function AutomationIndex({ automations, flash: initialFlash }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
-    const flash = props.flash ?? {};
+    const flash = props.flash ?? initialFlash ?? {};
     const [showCreate, setShowCreate] = useState(false);
     const [showAi, setShowAi] = useState(false);
     const [aiPrompt, setAiPrompt] = useState('');
@@ -86,8 +103,14 @@ export default function AutomationIndex({ automations }) {
         router.put(route('client.automations.update', automation.uuid), { status: newStatus }, { preserveScroll: true });
     };
 
-    const handleDelete = (automation) => {
-        if (confirm(t('automation.delete_confirm', { name: automation.name }))) {
+    const handleDelete = async (automation) => {
+        const ok = await confirm({
+            title: 'Delete Workflow',
+            message: t('automation.delete_confirm', { name: automation.name }) || `Are you sure you want to delete "${automation.name}"?`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.automations.destroy', automation.uuid));
         }
     };

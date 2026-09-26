@@ -90,7 +90,7 @@ function ClientLayoutFooter() {
     );
 }
 
-export default function ClientLayout({ header, children, title }) {
+export default function ClientLayout({ header, children, title, fullWidth = false }) {
     const { t } = useTranslation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { auth, impersonation, current_workspace_usage, unreadNotificationsCount, branding, onesignal } = usePage().props;
@@ -168,32 +168,38 @@ export default function ClientLayout({ header, children, title }) {
                 </div>
             )}
 
-            <Sidebar
-                open={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
-                showCreateButton={false}
-                navGroups={clientNavGroups.map(group => ({
-                    ...group,
-                    items: group.items.map(item => ({
-                        ...item,
-                        key: item.activePattern || item.label,
-                        active: () => item.activePattern ? route().current(item.activePattern) : false,
-                    }))
-                }))}
-footer={<ClientLayoutFooter />}
-            />
-
-            <div className="lg:pl-64 rtl:lg:pl-0 rtl:lg:pr-64">
-                <Topbar
-                    showLogo={false}
-                    title={title}
-                    userNavItems={userNavItems}
-                    unreadCount={unreadCount}
-                    showGlobalSearch
+            {!fullWidth && (
+                <Sidebar
+                    open={sidebarOpen}
+                    onClose={() => setSidebarOpen(false)}
+                    showCreateButton={false}
+                    navGroups={clientNavGroups.map(group => ({
+                        ...group,
+                        items: group.items.map(item => ({
+                            ...item,
+                            key: item.activePattern || item.label,
+                            active: () => item.activePattern ? route().current(item.activePattern) : false,
+                        }))
+                    }))}
+                    footer={<ClientLayoutFooter />}
                 />
-                <UsageBanner usage={current_workspace_usage} />
+            )}
 
-                <main className={`p-4 sm:p-6 lg:p-8 ${demoMode ? 'pb-16' : ''}`}>
+            <div className={fullWidth ? 'w-full' : 'lg:pl-64 rtl:lg:pl-0 rtl:lg:pr-64'}>
+                {!fullWidth && (
+                    <>
+                        <Topbar
+                            showLogo={false}
+                            title={title}
+                            userNavItems={userNavItems}
+                            unreadCount={unreadCount}
+                            showGlobalSearch
+                        />
+                        <UsageBanner usage={current_workspace_usage} />
+                    </>
+                )}
+
+                <main className={fullWidth ? 'w-full min-h-screen p-0 m-0' : `p-4 sm:p-6 lg:p-8 ${demoMode ? 'pb-16' : ''}`}>
                     {header && typeof header === 'object' && (
                         <div className="mb-6">
                             {header}

@@ -7,8 +7,10 @@ import CalendarModal from './Builder/CalendarModal';
 import EmbedModal from './Builder/EmbedModal';
 import ManualBookingModal from './Builder/ManualBookingModal';
 import { Calendar, Plus, Users, Clock, Video, CheckCircle2, ExternalLink, Trash2, Edit2, ShieldAlert, Code, UserPlus } from 'lucide-react';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function Index({ calendars = [], appointments = [], workspaceUsers = [], workspaceForms = [], stats = {} }) {
+    const { confirm } = useConfirm();
     const [activeTab, setActiveTab] = useState('calendars');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCalendar, setSelectedCalendar] = useState(null);
@@ -31,8 +33,14 @@ export default function Index({ calendars = [], appointments = [], workspaceUser
         setIsModalOpen(true);
     };
 
-    const handleDelete = (cal) => {
-        if (confirm(`Are you sure you want to delete calendar "${cal.name}"?`)) {
+    const handleDelete = async (cal) => {
+        const ok = await confirm({
+            title: 'Delete Calendar',
+            message: `Are you sure you want to delete calendar "${cal.name}"? This action cannot be undone.`,
+            confirmText: 'Delete',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.calendars.destroy', cal.id));
         }
     };
@@ -43,10 +51,11 @@ export default function Index({ calendars = [], appointments = [], workspaceUser
 
     const getStatusBadge = (status) => {
         switch (status) {
-            case 'confirmed': return <Badge variant="success">Confirmed</Badge>;
+            case 'confirmed': return <Badge variant="primary">Confirmed</Badge>;
             case 'rescheduled': return <Badge variant="warning">Rescheduled</Badge>;
             case 'cancelled': return <Badge variant="danger">Cancelled</Badge>;
-            case 'completed': return <Badge variant="info">Completed</Badge>;
+            case 'showed':
+            case 'completed': return <Badge variant="success">Showed</Badge>;
             case 'no_show': return <Badge variant="secondary">No-Show</Badge>;
             default: return <Badge variant="outline">{status}</Badge>;
         }
@@ -254,13 +263,14 @@ export default function Index({ calendars = [], appointments = [], workspaceUser
                                             </td>
                                             <td className="p-3 text-right">
                                                 <select
-                                                    value={app.status}
+                                                    value={app.status === 'completed' ? 'showed' : app.status}
                                                     onChange={e => handleUpdateStatus(app.id, e.target.value)}
-                                                    className="text-xs p-1 rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200"
+                                                    className="text-xs p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-medium"
                                                 >
-                                                    <option value="confirmed">Mark Confirmed</option>
-                                                    <option value="completed">Mark Completed</option>
+                                                    <option value="confirmed">Confirmed</option>
+                                                    <option value="showed">Mark Showed</option>
                                                     <option value="no_show">Mark No-Show</option>
+                                                    <option value="rescheduled">Rescheduled</option>
                                                     <option value="cancelled">Mark Cancelled</option>
                                                 </select>
                                             </td>

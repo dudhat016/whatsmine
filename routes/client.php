@@ -70,6 +70,8 @@ Route::middleware(['verified'])->group(function () {
     Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');
     Route::post('/workspaces/switch', [WorkspaceController::class, 'switch'])->name('workspaces.switch');
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
+    Route::post('/workspaces/currency', [WorkspaceController::class, 'updateCurrency'])->name('workspaces.currency');
+
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -143,11 +145,25 @@ Route::middleware(['verified'])->group(function () {
     // Funnel CRUD + publish/unpublish
     Route::get('/funnels', [FunnelController::class, 'index'])->name('funnels.index');
     Route::post('/funnels', [FunnelController::class, 'store'])->name('funnels.store');
+    Route::get('/funnels/{funnel}', [FunnelController::class, 'show'])->name('funnels.show');
     Route::get('/funnels/{funnel}/edit', [FunnelController::class, 'edit'])->name('funnels.edit');
     Route::put('/funnels/{funnel}', [FunnelController::class, 'update'])->name('funnels.update');
     Route::delete('/funnels/{funnel}', [FunnelController::class, 'destroy'])->name('funnels.destroy');
     Route::post('/funnels/{funnel}/publish', [FunnelController::class, 'publish'])->name('funnels.publish');
     Route::post('/funnels/{funnel}/unpublish', [FunnelController::class, 'unpublish'])->name('funnels.unpublish');
+    Route::post('/funnels/{funnel}/duplicate', [FunnelController::class, 'duplicate'])->name('funnels.duplicate');
+    Route::put('/funnels/{funnel}/settings', [FunnelController::class, 'updateSettings'])->name('funnels.settings.update');
+
+    // Funnel Step Products (Main, Order Bump, Upsell, Downsell)
+    Route::post('/funnels/{funnel}/steps/{step}/products', [FunnelController::class, 'storeProduct'])->name('funnels.steps.products.store');
+    Route::put('/funnels/{funnel}/steps/{step}/products/{product}', [FunnelController::class, 'updateProduct'])->name('funnels.steps.products.update');
+    Route::delete('/funnels/{funnel}/steps/{step}/products/{product}', [FunnelController::class, 'destroyProduct'])->name('funnels.steps.products.destroy');
+
+    // Funnel Folders
+    Route::post('/funnels/folders', [FunnelController::class, 'storeFolder'])->name('funnels.folders.store');
+    Route::put('/funnels/folders/{id}', [FunnelController::class, 'updateFolder'])->name('funnels.folders.update');
+    Route::delete('/funnels/folders/{id}', [FunnelController::class, 'destroyFolder'])->name('funnels.folders.destroy');
+    Route::post('/funnels/move-to-folder', [FunnelController::class, 'moveToFolder'])->name('funnels.move_to_folder');
 
     // Funnel Steps (add/rename/reorder/delete)
     Route::post('/funnels/{funnel}/steps', [FunnelStepController::class, 'store'])->name('funnels.steps.store');
@@ -161,6 +177,9 @@ Route::middleware(['verified'])->group(function () {
     Route::get('/funnels/{funnel}/pages/{page}/revisions', [FunnelPageController::class, 'revisions'])->name('funnels.pages.revisions');
     Route::post('/funnels/{funnel}/pages/{page}/revisions/{revision}/rollback', [FunnelPageController::class, 'rollback'])->name('funnels.pages.rollback');
     Route::post('/funnels/{funnel}/steps/{step}/variant', [FunnelPageController::class, 'createVariant'])->name('funnels.steps.variant');
+    Route::post('/funnels/{funnel}/steps/{step}/split', [FunnelPageController::class, 'updateSplit'])->name('funnels.steps.split');
+    Route::post('/funnels/{funnel}/steps/{step}/declare-winner', [FunnelPageController::class, 'declareWinner'])->name('funnels.steps.declareWinner');
+    Route::delete('/funnels/{funnel}/steps/{step}/variant', [FunnelPageController::class, 'deleteVariant'])->name('funnels.steps.deleteVariant');
 
     // Funnel Popups (exit-intent, time-delay, scroll-depth, on-click)
     Route::get('/funnels/{funnel}/pages/{page}/popups', [FunnelPopupController::class, 'index'])->name('funnels.popups.index');

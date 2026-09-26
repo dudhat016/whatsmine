@@ -1,176 +1,191 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import EmptyState from '@/Components/EmptyState';
-import { Plus, Trash2, Code, ExternalLink, Pencil, Check, FormInput, ShieldCheck, Layers } from 'lucide-react';
+import Card from '@/Components/ui/Card';
+import Badge from '@/Components/ui/Badge';
+import Button from '@/Components/ui/Button';
+import {
+    FormInput,
+    Plus,
+    FolderPlus,
+    LayoutList,
+    FileText,
+    BarChart3,
+    Layers,
+    ShieldCheck,
+} from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import FormsListTab from './components/FormsListTab';
+import FormsSubmissionsTab from './components/FormsSubmissionsTab';
+import FormsAnalyticsTab from './components/FormsAnalyticsTab';
+import FolderModal from './components/FolderModal';
 
-export default function FormsIndex({ forms }) {
+export default function FormsIndex({
+    activeTab = 'forms',
+    folders = [],
+    activeFolder = null,
+    forms = [],
+    rootFormsCount = 0,
+    submissions = null,
+    analytics = null,
+    allWorkspaceForms = [],
+    filters = {},
+}) {
+    const { t } = useTranslation();
     const { props } = usePage();
     const flash = props.flash ?? {};
-    const [copied, setCopied] = useState(null);
 
-    const handleDelete = (id) => {
-        if (confirm('Are you sure you want to delete this subscription form?')) {
-            router.delete(route('client.forms.destroy', id), { preserveScroll: true });
-        }
+    const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+
+    const handleTabSwitch = (tabKey) => {
+        router.get(
+            route('client.forms.index'),
+            { tab: tabKey },
+            { preserveState: false, preserveScroll: true }
+        );
     };
 
-    const handleCopyIframe = (slug) => {
-        const snippet = `<iframe src="${window.location.origin}/subscribe/${slug}" width="100%" height="550" frameborder="0" style="border:0;overflow:hidden;" scrolling="no"></iframe>`;
-        navigator.clipboard?.writeText(snippet);
-        setCopied(slug);
-        setTimeout(() => setCopied(null), 2500);
-    };
+    const tabs = [
+        {
+            id: 'forms',
+            label: 'Forms Builder',
+            icon: LayoutList,
+            count: forms?.length ?? 0,
+        },
+        {
+            id: 'submissions',
+            label: 'Submissions',
+            icon: FileText,
+            count: submissions?.total ?? null,
+        },
+        {
+            id: 'analytics',
+            label: 'Analytics & UTM',
+            icon: BarChart3,
+            count: null,
+        },
+    ];
 
     return (
         <ClientLayout title="Subscription & Lead Forms">
-            <Head title="Subscription Forms" />
+            <Head title="Subscription & Lead Forms" />
 
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header Banner */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <FormInput className="w-6 h-6 text-brand-600 dark:text-brand-400" />
+                        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 flex items-center gap-2.5">
+                            <div className="p-2 bg-brand-500/10 text-brand-600 dark:text-brand-400 rounded-soft-lg">
+                                <FormInput className="w-6 h-6" />
+                            </div>
                             Subscription & Lead Forms
                         </h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Build standalone lead forms with custom fields and Double OTP verification to collect verified contacts anywhere.
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                            Build high-converting multi-step forms with folders, OTP verification, submissions hub & real-time analytics.
                         </p>
                     </div>
-                    <Link
-                        href={route('client.forms.create')}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm rounded-xl transition-colors shadow-sm shrink-0"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Create Form
-                    </Link>
+
+                    <div className="flex items-center gap-2.5 shrink-0">
+                        {activeTab === 'forms' && (
+                            <Button
+                                variant="secondary"
+                                size="md"
+                                onClick={() => setIsFolderModalOpen(true)}
+                                className="gap-2"
+                            >
+                                <FolderPlus className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+                                New Folder
+                            </Button>
+                        )}
+                        <Link
+                            href={route('client.forms.create', activeFolder?.id ? { folder_id: activeFolder.id } : {})}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-medium text-sm rounded-soft shadow-soft transition"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Create Form
+                        </Link>
+                    </div>
                 </div>
 
+                {/* Flash Messages */}
                 {flash.success && (
-                    <div className="p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-xl text-sm">
-                        {flash.success}
+                    <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 rounded-soft text-sm font-medium flex items-center justify-between">
+                        <span>{flash.success}</span>
+                    </div>
+                )}
+                {flash.error && (
+                    <div className="p-4 bg-coral-50 dark:bg-coral-950/30 border border-coral-200 dark:border-coral-800 text-coral-800 dark:text-coral-200 rounded-soft text-sm font-medium flex items-center justify-between">
+                        <span>{flash.error}</span>
                     </div>
                 )}
 
-                {/* Forms Grid */}
-                {forms.length === 0 ? (
-                    <EmptyState
-                        icon={<FormInput className="w-8 h-8" />}
-                        title="No Subscription Forms Created"
-                        description="Create your first subscription form to start collecting verified leads on external HTML sites or WordPress."
-                        action={{
-                            label: 'Create Subscription Form',
-                            href: route('client.forms.create'),
-                        }}
-                    />
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {forms.map((form) => (
-                            <div
-                                key={form.id}
-                                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition space-y-4 flex flex-col justify-between"
-                            >
-                                <div className="space-y-3">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white text-base truncate">
-                                            {form.name}
-                                        </h3>
+                {/* Navigation Tabs */}
+                <div className="border-b border-neutral-200 dark:border-neutral-800">
+                    <nav className="flex space-x-2 sm:space-x-4" aria-label="Tabs">
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => handleTabSwitch(tab.id)}
+                                    className={`flex items-center gap-2 py-3 px-3.5 border-b-2 font-medium text-sm transition-all relative ${
+                                        isActive
+                                            ? 'border-brand-600 text-brand-600 dark:text-brand-400 dark:border-brand-400 font-semibold'
+                                            : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-700'
+                                    }`}
+                                >
+                                    <Icon className={`w-4 h-4 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-400'}`} />
+                                    {tab.label}
+                                    {tab.count !== null && tab.count > 0 && (
                                         <span
-                                            className={`px-2.5 py-0.5 text-xs font-semibold rounded-full shrink-0 ${
-                                                form.is_active
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                                            className={`ml-1.5 px-2 py-0.5 text-xs rounded-full font-medium ${
+                                                isActive
+                                                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-300'
+                                                    : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
                                             }`}
                                         >
-                                            {form.is_active ? 'Active' : 'Disabled'}
+                                            {tab.count}
                                         </span>
-                                    </div>
-
-                                    {form.title && (
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-                                            "{form.title}"
-                                        </p>
                                     )}
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </div>
 
-                                    <div className="flex flex-wrap gap-2 pt-1">
-                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 text-xs rounded-lg border border-gray-200 dark:border-gray-600">
-                                            <Layers className="w-3 h-3" />
-                                            {form.type}
-                                        </span>
-                                        {form.double_optin_enabled && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium rounded-lg border border-emerald-200 dark:border-emerald-800">
-                                                <ShieldCheck className="w-3 h-3" />
-                                                OTP Verified ({form.optin_channel})
-                                            </span>
-                                        )}
-                                    </div>
+                {/* Tab Views */}
+                {activeTab === 'forms' && (
+                    <FormsListTab
+                        forms={forms}
+                        folders={folders}
+                        activeFolder={activeFolder}
+                        filters={filters}
+                    />
+                )}
 
-                                    <div className="pt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
-                                        <span>Submissions:</span>
-                                        <span className="font-bold text-gray-900 dark:text-white text-sm">
-                                            {form.submissions_count ?? 0}
-                                        </span>
-                                    </div>
-                                </div>
+                {activeTab === 'submissions' && (
+                    <FormsSubmissionsTab
+                        submissions={submissions}
+                        allWorkspaceForms={allWorkspaceForms}
+                        filters={filters}
+                    />
+                )}
 
-                                <div className="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-1">
-                                        <Link
-                                            href={route('client.forms.show', form.id)}
-                                            className="p-2 text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
-                                            title="View Embed Code & Submissions"
-                                        >
-                                            <Code className="w-4 h-4" />
-                                        </Link>
-                                        <Link
-                                            href={route('client.forms.edit', form.id)}
-                                            className="p-2 text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
-                                            title="Edit Form"
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </Link>
-                                        <a
-                                            href={route('public.subscribe.show', form.slug)}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="p-2 text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition"
-                                            title="Preview Form"
-                                        >
-                                            <ExternalLink className="w-4 h-4" />
-                                        </a>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCopyIframe(form.slug)}
-                                            className="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition flex items-center gap-1"
-                                        >
-                                            {copied === form.slug ? (
-                                                <>
-                                                    <Check className="w-3.5 h-3.5 text-green-500" />
-                                                    Copied!
-                                                </>
-                                            ) : (
-                                                'Copy iFrame'
-                                            )}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDelete(form.id)}
-                                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition"
-                                            title="Delete Form"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                {activeTab === 'analytics' && (
+                    <FormsAnalyticsTab
+                        analytics={analytics}
+                    />
                 )}
             </div>
+
+            {/* Create Folder Modal */}
+            <FolderModal
+                isOpen={isFolderModalOpen}
+                folder={null}
+                onClose={() => setIsFolderModalOpen(false)}
+            />
         </ClientLayout>
     );
 }

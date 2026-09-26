@@ -5,14 +5,14 @@ import NewConversationModal from '@/Components/Inbox/NewConversationModal';
 import {
     Send, AlertTriangle, Eye, StickyNote, MessageSquare, Phone, Globe,
     RefreshCw, Search, Inbox, User, CheckCircle, Clock, X, Smile,
-    Paperclip, Image as ImageIcon, ChevronDown, UserCheck,
+    Paperclip, Image as ImageIcon, ChevronDown, ChevronRight, Folder, FileText, UserCheck,
     LayoutTemplate, Plus, Loader2, Bot, Calendar, BarChart2, PhoneMissed,
     Volume2, VolumeX, ShoppingBag,
 } from 'lucide-react';
 import { ChannelBrandIcon, CHANNEL_LABELS } from '@/Components/BrandIcons';
 import { formatTimeTz, formatInTz } from '@/Utils/datetime';
 import { playInboundSound, getSoundPrefs, setChannelSoundEnabled, SOUND_CHANNELS } from '@/Utils/notificationSound';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
@@ -1395,6 +1395,9 @@ export default function InboxShow({
     whatsappTemplates = [],
     channelAccounts = [],
     hasEcommerceStore = false,
+    availableFolders = [],
+    customFields = [],
+    contactSubmissions = [],
 }) {
     const { t } = useTranslation();
     const { props } = usePage();
@@ -1407,6 +1410,71 @@ export default function InboxShow({
     const channel = conversation.channel_account?.channel ?? 'whatsapp';
     const isWindowOpen = conversation.is_whatsapp_window_open ?? (channel !== 'whatsapp');
     const isWhatsApp = channel === 'whatsapp';
+
+    const contactCustomMap = conversation.contact?.custom_fields || {};
+    const [openFolders, setOpenFolders] = useState({
+        general_info: true,
+        additional_info: true,
+    });
+
+    const toggleFolder = (key) => {
+        setOpenFolders(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const folderGroups = useMemo(() => {
+        const groups = {};
+
+        // 1. Initialize from available folders
+        availableFolders.forEach(folder => {
+            if (folder.key === 'contact') return; // Primary CRM profile
+            groups[folder.key] = {
+                key: folder.key,
+                name: folder.name,
+                isSystem: !!folder.is_system,
+                fields: [],
+            };
+        });
+
+        // Ensure defaults exist
+        if (!groups['general_info']) groups['general_info'] = { key: 'general_info', name: 'General Info', isSystem: true, fields: [] };
+        if (!groups['additional_info']) groups['additional_info'] = { key: 'additional_info', name: 'Additional Info', isSystem: true, fields: [] };
+
+        // 2. Put defined custom fields into folders
+        const processedKeys = new Set();
+        customFields.forEach(cf => {
+            if (['email', 'first_name', 'last_name', 'phone_e164'].includes(cf.key)) return;
+            const fKey = cf.field_group || 'general_info';
+            if (!groups[fKey]) {
+                groups[fKey] = {
+                    key: fKey,
+                    name: fKey.replace(/_/g, ' ').toUpperCase(),
+                    isSystem: false,
+                    fields: [],
+                };
+            }
+            groups[fKey].fields.push(cf);
+            processedKeys.add(cf.key);
+        });
+
+        // 3. Extra custom fields / form answers submitted by contact
+        Object.keys(contactCustomMap).forEach(k => {
+            if (!processedKeys.has(k)) {
+                const matchingFolder = Object.keys(groups).find(gKey => k.startsWith(gKey));
+                const targetKey = matchingFolder || 'additional_info';
+                if (groups[targetKey]) {
+                    groups[targetKey].fields.push({
+                        key: k,
+                        name: k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                        type: typeof contactCustomMap[k] === 'boolean' ? 'checkbox' : 'text',
+                    });
+                    processedKeys.add(k);
+                }
+            }
+        });
+
+        // Keep all folders that have fields
+        return Object.values(groups).filter(g => g.fields.length > 0);
+    }, [availableFolders, customFields, contactCustomMap]);
 
     const [messages, setMessages]           = useState(initialMessages ?? []);
     const [viewers, setViewers]             = useState([]);
@@ -2083,44 +2151,44 @@ export default function InboxShow({
                 </div>
 
                 {/* ── Contact panel (right) ── */}
-                <div className="w-60 shrink-0 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hidden lg:flex flex-col overflow-y-auto">
+                <div className="w-80 shrink-0 border-l border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 hidden xl:flex flex-col overflow-y-auto">
                     {/* Contact summary */}
                     <div className="p-4 border-b border-neutral-100 dark:border-neutral-800">
-                        <div className="flex items-center gap-2.5 mb-3">
-                            <div className="h-10 w-10 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-base font-bold text-brand-700 dark:text-brand-300 shrink-0">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="h-10 w-10 rounded-full bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-base font-bold text-brand-700 dark:text-brand-300 shrink-0 shadow-xs">
                                 {contactName[0]?.toUpperCase() ?? '?'}
                             </div>
                             <div className="min-w-0">
-                                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{contactName}</p>
-                                <p className="text-[11px] text-neutral-400 truncate">{conversation.contact?.phone_e164}</p>
+                                <p className="text-sm font-bold text-neutral-900 dark:text-neutral-100 truncate">{contactName}</p>
+                                <p className="text-xs text-neutral-500 truncate">{conversation.contact?.phone_e164 || 'No phone'}</p>
                             </div>
                         </div>
                         {conversation.contact?.email && (
-                            <p className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
-                                <ChannelBrandIcon channel="email" className="h-3.5 w-3.5 shrink-0" />
+                            <p className="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 mb-2 truncate">
+                                <ChannelBrandIcon channel="email" className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
                                 <span className="truncate">{conversation.contact.email}</span>
                             </p>
                         )}
-                        <Link href={route('client.contacts.show', conversation.contact?.uuid ?? '')} className="text-xs text-brand-600 hover:underline dark:text-brand-400">
-                            {t('inbox.view_full_profile')}
+                        <Link href={route('client.contacts.show', conversation.contact?.uuid ?? '')} className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 hover:underline">
+                            {t('inbox.view_full_profile')} →
                         </Link>
                     </div>
 
                     {/* Conversation meta */}
                     <div className="p-4 border-b border-neutral-100 dark:border-neutral-800">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">{t('inbox.conversation')}</p>
-                        <div className="space-y-1.5 text-xs">
+                        <div className="space-y-2 text-xs">
                             <div className="flex items-center justify-between">
                                 <span className="text-neutral-500">{t('inbox.status')}</span>
-                                <span className={`rounded-full px-2 py-0.5 font-medium ${STATUS_COLORS[conversation.status] ?? 'bg-neutral-100 text-neutral-600'}`}>{t(`inbox.status_${conversation.status}`)}</span>
+                                <span className={`rounded-full px-2 py-0.5 font-semibold text-[11px] ${STATUS_COLORS[conversation.status] ?? 'bg-neutral-100 text-neutral-600'}`}>{t(`inbox.status_${conversation.status}`)}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-neutral-500">{t('inbox.agent')}</span>
-                                <span className="font-medium text-neutral-800 dark:text-neutral-200 truncate max-w-[100px]">{assignedAgent?.name ?? '—'}</span>
+                                <span className="font-semibold text-neutral-800 dark:text-neutral-200 truncate max-w-[120px]">{assignedAgent?.name ?? '—'}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-neutral-500">{t('inbox.messages')}</span>
-                                <span className="font-medium text-neutral-800 dark:text-neutral-200">{messages.length}</span>
+                                <span className="font-semibold text-neutral-800 dark:text-neutral-200">{messages.length}</span>
                             </div>
                         </div>
                     </div>
@@ -2135,14 +2203,98 @@ export default function InboxShow({
                                     return (
                                         <button key={label.id} type="button" onClick={() => toggleLabel(label)}
                                             title={active ? t('inbox.remove_label', { name: label.name }) : t('inbox.add_label', { name: label.name })}
-                                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition border ${
-                                                active ? 'text-white border-transparent' : 'bg-transparent border-current opacity-40 hover:opacity-70'
+                                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition border cursor-pointer ${
+                                                active ? 'text-white border-transparent shadow-2xs' : 'bg-transparent border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-400'
                                             }`}
-                                            style={{ backgroundColor: active ? label.color : undefined, color: active ? 'white' : label.color }}>
+                                            style={{ backgroundColor: active ? label.color : undefined }}>
                                             {label.name}
                                         </button>
                                     );
                                 })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* GoHighLevel Contact Intelligence Folders & Form Questions */}
+                    <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                                <Folder className="h-3.5 w-3.5 text-brand-600" />
+                                <span>Contact Intelligence</span>
+                            </p>
+                            <span className="text-[10px] font-bold text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-1.5 py-0.5 rounded">
+                                GHL Folders
+                            </span>
+                        </div>
+
+                        {folderGroups.length === 0 ? (
+                            <p className="text-xs text-neutral-400 italic">No custom fields or form answers recorded.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {folderGroups.map(group => {
+                                    const isOpen = openFolders[group.key] ?? true;
+                                    return (
+                                        <div key={group.key} className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/30 overflow-hidden">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleFolder(group.key)}
+                                                className="w-full px-3 py-2 flex items-center justify-between text-left hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60 transition cursor-pointer"
+                                            >
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    {isOpen ? <ChevronDown className="h-3.5 w-3.5 text-brand-600 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 text-neutral-400 shrink-0" />}
+                                                    <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200 truncate">{group.name}</span>
+                                                </div>
+                                                <span className="text-[10px] font-semibold text-neutral-400 shrink-0">
+                                                    {group.fields.length}
+                                                </span>
+                                            </button>
+
+                                            {isOpen && (
+                                                <div className="px-3 py-2.5 border-t border-neutral-200/60 dark:border-neutral-800 space-y-2 bg-white dark:bg-neutral-900/60">
+                                                    {group.fields.map(field => {
+                                                        const val = contactCustomMap[field.key];
+                                                        const hasVal = val !== undefined && val !== null && val !== '';
+                                                        return (
+                                                            <div key={field.key} className="text-xs">
+                                                                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 truncate">
+                                                                    {field.name || field.label || field.key.replace(/_/g, ' ')}
+                                                                </p>
+                                                                <p className={`mt-0.5 text-xs font-medium break-words ${hasVal ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-400 italic'}`}>
+                                                                    {hasVal ? (Array.isArray(val) ? val.join(', ') : String(val)) : '—'}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Recent Form Submissions (GHL Activity) */}
+                    {contactSubmissions.length > 0 && (
+                        <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 space-y-2.5">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5 text-emerald-600" />
+                                <span>Form Submissions ({contactSubmissions.length})</span>
+                            </p>
+                            <div className="space-y-2">
+                                {contactSubmissions.map(sub => (
+                                    <div key={sub.id} className="p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/40 text-xs">
+                                        <div className="flex items-center justify-between gap-1">
+                                            <p className="font-bold text-neutral-900 dark:text-neutral-100 truncate">{sub.form?.name || 'Form Submission'}</p>
+                                            <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                                                Verified
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-neutral-400 mt-1">
+                                            {new Date(sub.created_at).toLocaleDateString()} at {new Date(sub.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -2168,14 +2320,14 @@ export default function InboxShow({
                     <div className="p-4">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-2">{t('inbox.ai_handover')}</p>
                         <div className="flex items-center justify-between">
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
                                 assignedTo === 'human' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                             }`}>
                                 {assignedTo === 'human' ? <><User className="h-3 w-3" /> {t('inbox.human')}</> : <><Bot className="h-3 w-3" /> {t('inbox.bot')}</>}
                             </span>
                             {assignedTo === 'human'
-                                ? <button onClick={() => switchHandover('bot')} className="text-xs text-brand-600 hover:underline">{t('inbox.back_to_bot')}</button>
-                                : <button onClick={() => switchHandover('human')} className="text-xs text-amber-600 hover:underline">{t('inbox.take_over')}</button>
+                                ? <button onClick={() => switchHandover('bot')} className="text-xs font-semibold text-brand-600 hover:underline">{t('inbox.back_to_bot')}</button>
+                                : <button onClick={() => switchHandover('human')} className="text-xs font-semibold text-amber-600 hover:underline">{t('inbox.take_over')}</button>
                             }
                         </div>
                     </div>

@@ -5,6 +5,7 @@ import { Key, Plus, Trash2, Copy, Check } from 'lucide-react';
 import { DatePicker } from '@/Components/ui';
 import { formatDateTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const ALL_SCOPES = [
     { scope: 'contacts:read',       labelKey: 'api.scope_contacts_read' },
@@ -175,11 +176,13 @@ function NewTokenDisplay({ token, onClose }) {
     );
 }
 
-export default function ApiTokens({ tokens: initialTokens }) {
+export default function TokensIndex({ initialTokens = [] }) {
     const { t } = useTranslation();
-    const userTz = usePage().props.timezone || 'Asia/Dhaka';
-    const formatDate = (iso) => iso ? formatDateTz(iso, userTz) : t('api.never');
-    const [tokens, setTokens] = useState(initialTokens ?? []);
+    const { confirm } = useConfirm();
+    const { timezone } = usePage().props;
+    const userTz = timezone || 'Asia/Dhaka';
+    const formatDate = (iso) => formatDateTz(iso, userTz);
+    const [tokens, setTokens] = useState(initialTokens);
     const [showCreate, setShowCreate] = useState(false);
     const [newToken, setNewToken] = useState(null);
 
@@ -190,7 +193,13 @@ export default function ApiTokens({ tokens: initialTokens }) {
     };
 
     const handleRevoke = async (id) => {
-        if (!confirm(t('api.revoke_confirm'))) return;
+        const ok = await confirm({
+            title: 'Revoke API Token',
+            message: t('api.revoke_confirm') || 'Are you sure you want to revoke this token? Any application using it will lose access immediately.',
+            confirmText: 'Revoke Token',
+            variant: 'danger',
+        });
+        if (!ok) return;
         await fetch(`/api/v1/tokens/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },

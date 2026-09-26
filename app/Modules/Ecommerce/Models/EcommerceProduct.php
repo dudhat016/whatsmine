@@ -23,11 +23,36 @@ class EcommerceProduct extends Model
     protected $table = 'ecommerce_products';
 
     protected $fillable = [
-        'workspace_id', 'store_id', 'external_id', 'platform', 'name', 'sku',
-        'price', 'inventory_quantity', 'status', 'image_url', 'raw',
+        'workspace_id', 'store_id', 'external_id', 'platform', 'name', 'slug', 'description', 'sku',
+        'price', 'compare_price', 'pricing_type', 'billing_interval', 'billing_interval_count', 'trial_days',
+        'installment_count', 'product_type', 'inventory_quantity', 'status', 'image_url', 'raw',
+        'digital_fulfillment_type', 'digital_file_url', 'digital_external_url', 'digital_license_key',
+        'digital_download_limit', 'digital_expiration_days', 'calendar_id',
     ];
 
-    protected $hidden = ['raw'];
+    protected static function booted(): void
+    {
+        static::saving(function (EcommerceProduct $product) {
+            if (empty($product->slug) && !empty($product->name)) {
+                $baseSlug = \Illuminate\Support\Str::slug($product->name);
+                $slug = $baseSlug ?: 'product';
+                $count = 1;
+
+                while (static::where('store_id', $product->store_id)
+                    ->where('slug', $slug)
+                    ->where('id', '!=', $product->id ?? 0)
+                    ->exists()
+                ) {
+                    $slug = "{$baseSlug}-{$count}";
+                    $count++;
+                }
+
+                $product->slug = $slug;
+            }
+        });
+    }
+
+    protected $hidden = [];
 
     protected function casts(): array
     {
@@ -35,11 +60,25 @@ class EcommerceProduct extends Model
             'raw' => 'array',
             'price' => 'decimal:2',
             'inventory_quantity' => 'integer',
+            'billing_interval_count' => 'integer',
+            'trial_days' => 'integer',
+            'installment_count' => 'integer',
+            'calendar_id' => 'integer',
         ];
+    }
+
+    public function prices(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EcommerceProductPrice::class, 'product_id')->orderBy('sort_order', 'asc');
     }
 
     public function store(): BelongsTo
     {
         return $this->belongsTo(EcommerceStore::class, 'store_id');
+    }
+
+    public function calendar(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Calendars\Models\BookingCalendar::class, 'calendar_id');
     }
 }

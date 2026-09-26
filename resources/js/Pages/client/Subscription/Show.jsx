@@ -4,6 +4,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Package, ArrowRightCircle, CreditCard, ChevronDown, FileText, RefreshCw } from 'lucide-react';
 import { formatDateTz } from '@/Utils/datetime';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 function formatCurrency(cents, currency = 'USD') {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency: (currency ?? 'USD').toUpperCase() }).format(cents / 100);
@@ -107,13 +108,20 @@ function ChangePlanModal({ subscription, plans, onClose }) {
 
 export default function SubscriptionShow({ subscription, canCancel, canUpgrade, plans = [], transactions = [] }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { flash, timezone } = usePage().props;
     const userTz = timezone || 'Asia/Dhaka';
     const formatDate = (iso) => formatDateTz(iso, userTz);
     const [showChangePlan, setShowChangePlan] = useState(false);
 
-    const handleCancel = () => {
-        if (!confirm(t('client.cancel_subscription_confirm') || 'Are you sure you want to cancel your subscription?')) return;
+    const handleCancel = async () => {
+        const ok = await confirm({
+            title: 'Cancel Subscription',
+            message: t('client.cancel_subscription_confirm') || 'Are you sure you want to cancel your subscription? Your access will end at the end of the current billing period.',
+            confirmText: 'Cancel Subscription',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.delete(route('client.subscription.destroy'));
     };
 

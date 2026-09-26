@@ -298,6 +298,208 @@ class AutomationNodeBehaviourTest extends TestCase
         $this->assertEquals(1, AutomationRun::where('automation_id', $sub->id)->count());
     }
 
+    public function test_run_subflow_handoff_terminates_parent_flow(): void
+    {
+        $sub = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Sub Handoff',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => []],
+                ['id' => 's1', 'type' => 'add_tag', 'position' => ['x' => 0, 'y' => 100], 'data' => ['tag' => 'from_handoff_sub']],
+            ],
+            'edges' => [['id' => 'e1', 'source' => 'trigger-1', 'target' => 's1']],
+        ]);
+
+        $parent = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Parent Flow',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => []],
+                ['id' => 'n1', 'type' => 'run_subflow', 'position' => ['x' => 0, 'y' => 100], 'data' => ['automation_uuid' => $sub->uuid, 'mode' => 'handoff']],
+                ['id' => 'n2', 'type' => 'add_tag', 'position' => ['x' => 0, 'y' => 200], 'data' => ['tag' => 'parent_should_not_run']],
+            ],
+            'edges' => [
+                ['id' => 'e1', 'source' => 'trigger-1', 'target' => 'n1'],
+                ['id' => 'e2', 'source' => 'n1', 'target' => 'n2'],
+            ],
+        ]);
+
+        $run = AutomationRun::create([
+            'automation_id' => $parent->id,
+            'contact_id' => $this->contact->id,
+            'status' => 'pending',
+            'context' => [],
+            'started_at' => now(),
+        ]);
+
+        (new ExecuteAutomationRunJob($run->id))->handle(app(AutomationEngine::class));
+
+        $this->assertEquals('completed', $run->fresh()->status);
+        $this->assertTrue($this->contact->fresh()->tags()->where('name', 'from_handoff_sub')->exists());
+        $this->assertFalse($this->contact->fresh()->tags()->where('name', 'parent_should_not_run')->exists());
+    }
+
+    public function test_run_subflow_wait_completion_parks_parent_and_resumes_on_child_completion(): void
+    {
+        $sub = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Sub Wait',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => []],
+                ['id' => 's1', 'type' => 'add_tag', 'position' => ['x' => 0, 'y' => 100], 'data' => ['tag' => 'child_executed']],
+            ],
+            'edges' => [['id' => 'e1', 'source' => 'trigger-1', 'target' => 's1']],
+        ]);
+
+        $parent = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Parent Wait Flow',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => []],
+                ['id' => 'n1', 'type' => 'run_subflow', 'position' => ['x' => 0, 'y' => 100], 'data' => ['automation_uuid' => $sub->uuid, 'mode' => 'wait_completion']],
+                ['id' => 'n2', 'type' => 'add_tag', 'position' => ['x' => 0, 'y' => 200], 'data' => ['tag' => 'parent_resumed_after_child']],
+            ],
+            'edges' => [
+                ['id' => 'e1', 'source' => 'trigger-1', 'target' => 'n1'],
+                ['id' => 'e2', 'source' => 'n1', 'target' => 'n2'],
+            ],
+        ]);
+
+        $run = AutomationRun::create([
+            'automation_id' => $parent->id,
+            'contact_id' => $this->contact->id,
+            'status' => 'pending',
+            'context' => [],
+            'started_at' => now(),
+        ]);
+
+        (new ExecuteAutomationRunJob($run->id))->handle(app(AutomationEngine::class));
+
+        // Parent should have entered waiting when triggering child
+        $this->assertEquals('waiting', $run->fresh()->status);
+        $this->assertEquals('n2', $run->fresh()->resume_node_id);
+
+        // Find child run
+        $childRun = AutomationRun::where('automation_id', $sub->id)->first();
+        $this->assertNotNull($childRun);
+        $this->assertEquals($run->id, $childRun->context['_parent_run_id']);
+
+        // Execute child run
+        (new ExecuteAutomationRunJob($childRun->id))->handle(app(AutomationEngine::class));
+
+        $this->assertEquals('completed', $childRun->fresh()->status);
+        $this->assertTrue($this->contact->fresh()->tags()->where('name', 'child_executed')->exists());
+
+        // Child completion should have marked parent run as pending
+        $this->assertEquals('pending', $run->fresh()->status);
+        $this->assertTrue(! empty($run->fresh()->context['_subflow_completed']));
+
+        // Resume parent run
+        (new ExecuteAutomationRunJob($run->id))->handle(app(AutomationEngine::class));
+
+        $this->assertEquals('completed', $run->fresh()->status);
+        $this->assertTrue($this->contact->fresh()->tags()->where('name', 'parent_resumed_after_child')->exists());
+    }
+
+    public function test_wait_for_reply_resumes_along_replied_branch_when_customer_replies(): void
+    {
+        $automation = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Wait For Reply Test',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => []],
+                ['id' => 'wfr1', 'type' => 'wait_for_reply', 'position' => ['x' => 0, 'y' => 100], 'data' => ['timeout_amount' => 2, 'timeout_unit' => 'hours', 'reply_variable' => 'user_reply']],
+                ['id' => 'r1', 'type' => 'add_tag', 'position' => ['x' => 100, 'y' => 200], 'data' => ['tag' => 'customer_has_replied']],
+                ['id' => 't1', 'type' => 'add_tag', 'position' => ['x' => -100, 'y' => 200], 'data' => ['tag' => 'reply_timed_out']],
+            ],
+            'edges' => [
+                ['id' => 'e1', 'source' => 'trigger-1', 'target' => 'wfr1'],
+                ['id' => 'e_replied', 'source' => 'wfr1', 'target' => 'r1', 'sourceHandle' => 'replied'],
+                ['id' => 'e_timeout', 'source' => 'wfr1', 'target' => 't1', 'sourceHandle' => 'timeout'],
+            ],
+        ]);
+
+        $run = AutomationRun::create([
+            'automation_id' => $automation->id,
+            'contact_id' => $this->contact->id,
+            'status' => 'pending',
+            'context' => [],
+            'started_at' => now(),
+        ]);
+
+        (new ExecuteAutomationRunJob($run->id))->handle(app(AutomationEngine::class));
+
+        $this->assertEquals('waiting', $run->fresh()->status);
+        $this->assertTrue(! empty($run->fresh()->context['_waiting_for_reply']));
+
+        // Contact sends an inbound reply
+        $engine = app(AutomationEngine::class);
+        $engine->resumeAwaitingReplies($this->workspace->id, $this->contact->id, 'Yes I am interested');
+
+        $this->assertEquals('pending', $run->fresh()->status);
+        $this->assertEquals('r1', $run->fresh()->resume_node_id);
+        $this->assertEquals('Yes I am interested', $run->fresh()->context['user_reply']);
+
+        // Execute resumed run
+        (new ExecuteAutomationRunJob($run->id))->handle($engine);
+
+        $this->assertEquals('completed', $run->fresh()->status);
+        $this->assertTrue($this->contact->fresh()->tags()->where('name', 'customer_has_replied')->exists());
+        $this->assertFalse($this->contact->fresh()->tags()->where('name', 'reply_timed_out')->exists());
+    }
+
+    public function test_wait_for_reply_resumes_along_timeout_branch_when_timer_fires(): void
+    {
+        $automation = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Wait For Reply Timeout Test',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => []],
+                ['id' => 'wfr1', 'type' => 'wait_for_reply', 'position' => ['x' => 0, 'y' => 100], 'data' => ['timeout_amount' => 1, 'timeout_unit' => 'hours']],
+                ['id' => 'r1', 'type' => 'add_tag', 'position' => ['x' => 100, 'y' => 200], 'data' => ['tag' => 'customer_has_replied']],
+                ['id' => 't1', 'type' => 'add_tag', 'position' => ['x' => -100, 'y' => 200], 'data' => ['tag' => 'reply_timed_out']],
+            ],
+            'edges' => [
+                ['id' => 'e1', 'source' => 'trigger-1', 'target' => 'wfr1'],
+                ['id' => 'e_replied', 'source' => 'wfr1', 'target' => 'r1', 'sourceHandle' => 'replied'],
+                ['id' => 'e_timeout', 'source' => 'wfr1', 'target' => 't1', 'sourceHandle' => 'timeout'],
+            ],
+        ]);
+
+        $run = AutomationRun::create([
+            'automation_id' => $automation->id,
+            'contact_id' => $this->contact->id,
+            'status' => 'pending',
+            'context' => [],
+            'started_at' => now(),
+        ]);
+
+        (new ExecuteAutomationRunJob($run->id))->handle(app(AutomationEngine::class));
+
+        $this->assertEquals('waiting', $run->fresh()->status);
+        $this->assertTrue(! empty($run->fresh()->context['_waiting_for_reply']));
+
+        // Timer fires without any customer reply
+        (new ExecuteAutomationRunJob($run->id))->handle(app(AutomationEngine::class));
+
+        $this->assertEquals('completed', $run->fresh()->status);
+        $this->assertFalse($this->contact->fresh()->tags()->where('name', 'customer_has_replied')->exists());
+        $this->assertTrue($this->contact->fresh()->tags()->where('name', 'reply_timed_out')->exists());
+        $this->assertTrue(! empty($run->fresh()->context['_reply_timed_out']));
+    }
+
     // ─── CONTACT ──────────────────────────────────────────────────────────────
 
     public function test_update_contact_maps_friendly_fields(): void
@@ -590,6 +792,268 @@ class AutomationNodeBehaviourTest extends TestCase
 
         $this->assertEquals('failed', $run->status);
         $this->assertStringContainsString('No SMS provider configured', $run->error);
+    }
+
+    public function test_customer_replied_filter_replied_to_workflow(): void
+    {
+        // 1. Create a parent marketing workflow
+        $parentWf = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'New Lead Automation',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => []],
+                ['id' => 'n1', 'type' => 'add_tag', 'position' => ['x' => 0, 'y' => 100], 'data' => ['tag' => 'lead_drip']],
+            ],
+            'edges' => [['id' => 'e1', 'source' => 'trigger-1', 'target' => 'n1']],
+        ]);
+
+        // 2. Create the listener workflow that has a trigger: Customer Replied with filter replied_to_workflow = $parentWf->id
+        $listenerWf = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Lead Responded Workflow',
+            'status' => 'active',
+            'trigger_type' => 'customer.replied',
+            'trigger_config' => [
+                'trigger_name' => 'Customer Replied To Workflow',
+                'replied_to_workflow_id' => $parentWf->id,
+                'filters' => [
+                    ['type' => 'replied_to_workflow', 'value' => (string) $parentWf->id],
+                ],
+            ],
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => [
+                    'triggerType' => 'customer.replied',
+                    'triggerConfig' => [
+                        'replied_to_workflow_id' => $parentWf->id,
+                        'filters' => [['type' => 'replied_to_workflow', 'value' => (string) $parentWf->id]],
+                    ],
+                ]],
+                ['id' => 'act1', 'type' => 'add_tag', 'position' => ['x' => 0, 'y' => 100], 'data' => ['tag' => 'replied_to_new_lead_wf']],
+            ],
+            'edges' => [['id' => 'e1', 'source' => 'trigger-1', 'target' => 'act1']],
+        ]);
+
+        // Contact A: Never ran in New Lead Automation
+        // Contact B: Ran in New Lead Automation
+        $contactB = \App\Modules\Shared\Models\Contact::create([
+            'workspace_id' => $this->workspace->id,
+            'first_name' => 'Bob',
+            'phone_e164' => '+15550002222',
+        ]);
+
+        AutomationRun::create([
+            'automation_id' => $parentWf->id,
+            'contact_id' => $contactB->id,
+            'status' => 'completed',
+            'context' => [],
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
+        // Create inbound messages
+        $convA = \App\Modules\Shared\Models\Conversation::create([
+            'workspace_id' => $this->workspace->id,
+            'contact_id' => $this->contact->id,
+            'channel' => 'whatsapp',
+            'channel_account_id' => $this->channelAccount->id,
+        ]);
+
+        $convB = \App\Modules\Shared\Models\Conversation::create([
+            'workspace_id' => $this->workspace->id,
+            'contact_id' => $contactB->id,
+            'channel' => 'whatsapp',
+            'channel_account_id' => $this->channelAccount->id,
+        ]);
+
+        $msgA = Message::create([
+            'conversation_id' => $convA->id,
+            'channel' => 'whatsapp',
+            'direction' => 'in',
+            'type' => 'text',
+            'body' => 'Hello from Contact A',
+        ]);
+
+        $msgB = Message::create([
+            'conversation_id' => $convB->id,
+            'channel' => 'whatsapp',
+            'direction' => 'in',
+            'type' => 'text',
+            'body' => 'Hello from Contact B',
+        ]);
+
+        $listener = app(\App\Listeners\AutomationTriggerListener::class);
+
+        // Event for Contact A: Should NOT trigger because Contact A never ran in parent workflow
+        $listener->handleMessageReceived(new \App\Events\MessageReceived($msgA));
+        $this->assertEquals(0, AutomationRun::where('automation_id', $listenerWf->id)->where('contact_id', $this->contact->id)->count());
+
+        // Event for Contact B: Should trigger because Contact B ran in New Lead Automation!
+        $listener->handleMessageReceived(new \App\Events\MessageReceived($msgB));
+        $this->assertEquals(1, AutomationRun::where('automation_id', $listenerWf->id)->where('contact_id', $contactB->id)->count());
+        $this->assertTrue($contactB->fresh()->tags()->where('name', 'replied_to_new_lead_wf')->exists());
+    }
+
+    public function test_prevent_duplicate_parallel_runs(): void
+    {
+        $wf = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Parallel Guard Test',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'trigger_config' => ['prevent_parallel_runs' => true],
+            'nodes' => [],
+            'edges' => [],
+        ]);
+
+        // Contact has an active waiting run
+        AutomationRun::create([
+            'automation_id' => $wf->id,
+            'contact_id' => $this->contact->id,
+            'status' => 'waiting',
+            'context' => [],
+            'started_at' => now(),
+        ]);
+
+        $engine = app(AutomationEngine::class);
+
+        // Attempting to trigger again should be skipped because a run is already active
+        $engine->triggerForContact($wf, $this->contact->id);
+        $this->assertEquals(1, AutomationRun::where('automation_id', $wf->id)->where('contact_id', $this->contact->id)->count());
+    }
+
+    public function test_re_entry_policy_once_prevents_subsequent_runs(): void
+    {
+        $wf = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Once Policy Test',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'trigger_config' => [
+                're_entry_policy' => 'once',
+                'prevent_parallel_runs' => false,
+            ],
+            'nodes' => [],
+            'edges' => [],
+        ]);
+
+        // Past completed run
+        AutomationRun::create([
+            'automation_id' => $wf->id,
+            'contact_id' => $this->contact->id,
+            'status' => 'completed',
+            'context' => [],
+            'started_at' => now()->subDays(2),
+            'completed_at' => now()->subDays(2),
+        ]);
+
+        $engine = app(AutomationEngine::class);
+
+        // Re-entry is disallowed
+        $engine->triggerForContact($wf, $this->contact->id);
+        $this->assertEquals(1, AutomationRun::where('automation_id', $wf->id)->where('contact_id', $this->contact->id)->count());
+    }
+
+    public function test_re_entry_policy_cooldown_respects_time_window(): void
+    {
+        $wf = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Cooldown Policy Test',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'trigger_config' => [
+                're_entry_policy' => 'cooldown',
+                'cooldown_amount' => 24,
+                'cooldown_unit' => 'hours',
+                'prevent_parallel_runs' => false,
+            ],
+            'nodes' => [],
+            'edges' => [],
+        ]);
+
+        // Recent run created 2 hours ago (within 24h cooldown)
+        AutomationRun::create([
+            'automation_id' => $wf->id,
+            'contact_id' => $this->contact->id,
+            'status' => 'completed',
+            'context' => [],
+            'started_at' => now()->subHours(2),
+            'completed_at' => now()->subHours(2),
+            'created_at' => now()->subHours(2),
+        ]);
+
+        $engine = app(AutomationEngine::class);
+
+        // Should be skipped due to cooldown
+        $engine->triggerForContact($wf, $this->contact->id);
+        $this->assertEquals(1, AutomationRun::where('automation_id', $wf->id)->where('contact_id', $this->contact->id)->count());
+    }
+
+    public function test_customer_replied_lookback_window(): void
+    {
+        $parentWf = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => 'Old Campaign',
+            'status' => 'active',
+            'trigger_type' => 'contact.created',
+            'nodes' => [],
+            'edges' => [],
+        ]);
+
+        $listenerWf = Automation::create([
+            'workspace_id' => $this->workspace->id,
+            'name' => '24h Window Listener',
+            'status' => 'active',
+            'trigger_type' => 'customer.replied',
+            'trigger_config' => [
+                'filters' => [
+                    ['type' => 'replied_to_workflow', 'value' => (string) $parentWf->id, 'lookback' => '24h'],
+                ],
+            ],
+            'nodes' => [
+                ['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => [
+                    'triggerType' => 'customer.replied',
+                    'triggerConfig' => [
+                        'filters' => [['type' => 'replied_to_workflow', 'value' => (string) $parentWf->id, 'lookback' => '24h']],
+                    ],
+                ]],
+            ],
+            'edges' => [],
+        ]);
+
+        // Run from 10 days ago (stale, outside 24h window)
+        $run = AutomationRun::create([
+            'automation_id' => $parentWf->id,
+            'contact_id' => $this->contact->id,
+            'status' => 'completed',
+            'context' => [],
+            'started_at' => now()->subDays(10),
+            'completed_at' => now()->subDays(10),
+        ]);
+        // Backdate updated_at
+        AutomationRun::where('id', $run->id)->update(['updated_at' => now()->subDays(10)]);
+
+        $conv = \App\Modules\Shared\Models\Conversation::create([
+            'workspace_id' => $this->workspace->id,
+            'contact_id' => $this->contact->id,
+            'channel' => 'whatsapp',
+            'channel_account_id' => $this->channelAccount->id,
+        ]);
+
+        $msg = Message::create([
+            'conversation_id' => $conv->id,
+            'channel' => 'whatsapp',
+            'direction' => 'in',
+            'type' => 'text',
+            'body' => 'Organic reply 10 days later',
+        ]);
+
+        $listener = app(\App\Listeners\AutomationTriggerListener::class);
+        $listener->handleMessageReceived(new \App\Events\MessageReceived($msg));
+
+        // Should NOT trigger because run is outside the 24-hour lookback window
+        $this->assertEquals(0, AutomationRun::where('automation_id', $listenerWf->id)->where('contact_id', $this->contact->id)->count());
     }
 
     protected function tearDown(): void

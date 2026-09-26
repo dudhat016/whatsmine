@@ -3,6 +3,7 @@ import { Button, Card, Tabs } from '@/Components/ui';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const TAB_LANGUAGES = 0;
 const TAB_TRANSLATIONS = 1;
@@ -175,6 +176,7 @@ export default function AdminLocalesIndex({
 
 function LocaleRow({ locale, locales }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const [open, setOpen] = useState(false);
     const { data, setData, put, processing } = useForm({
         name: locale.name,
@@ -188,8 +190,14 @@ function LocaleRow({ locale, locales }) {
     const handleSetDefault = () => {
         router.post(route('admin.locales.set-default', locale.code), {}, { preserveScroll: true });
     };
-    const handleDelete = () => {
-        if (confirm(t('locales.remove_language'))) {
+    const handleDelete = async () => {
+        const ok = await confirm({
+            title: 'Remove Language',
+            message: t('locales.remove_language') || `Are you sure you want to remove language ${locale.name}?`,
+            confirmText: 'Remove',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('admin.locales.destroy', locale.code), { preserveScroll: true });
         }
     };

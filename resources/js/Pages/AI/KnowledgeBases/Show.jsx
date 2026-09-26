@@ -4,6 +4,7 @@ import EmptyState from '@/Components/EmptyState';
 import { ArrowLeft, Plus, RefreshCw, Trash2, Globe, FileText, Type, X, Upload, CheckCircle2, Clock, Zap, AlertCircle, HelpCircle, Trash } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 const SOURCE_TYPES = {
     url:     { icon: Globe,    labelKey: 'ai.source_url' },
@@ -22,20 +23,20 @@ const STATUS_CONFIG = {
 
 export default function AiKnowledgeBaseShow({ kb }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const { props } = usePage();
     const flash = props.flash ?? {};
     const [showAdd, setShowAdd] = useState(false);
-    const [dragOver, setDragOver] = useState(false);
     const [faqPairs, setFaqPairs] = useState([{ question: '', answer: '' }]);
+    const [dragOver, setDragOver] = useState(false);
+    const [processing, setProcessing] = useState(false);
     const fileRef = useRef();
 
-    const { data, setData, reset } = useForm({
+    const { data, setData, reset, errors } = useForm({
         source_type: 'url',
         source_ref: '',
-        title: '',
         file: null,
     });
-    const [processing, setProcessing] = useState(false);
 
     const addFaqPair = () => setFaqPairs(p => [...p, { question: '', answer: '' }]);
     const removeFaqPair = (i) => setFaqPairs(p => p.filter((_, idx) => idx !== i));
@@ -46,7 +47,6 @@ export default function AiKnowledgeBaseShow({ kb }) {
         setProcessing(true);
         const formData = new FormData();
         formData.append('source_type', data.source_type);
-        formData.append('title', data.title);
         if (data.source_type === 'faq') {
             formData.append('source_ref', JSON.stringify(faqPairs.filter(p => p.question.trim())));
         } else {
@@ -60,8 +60,14 @@ export default function AiKnowledgeBaseShow({ kb }) {
         });
     };
 
-    const handleDelete = (docId) => {
-        if (confirm(t('ai.remove_document_confirm'))) {
+    const handleDelete = async (docId) => {
+        const ok = await confirm({
+            title: 'Remove Document',
+            message: t('ai.remove_document_confirm') || 'Are you sure you want to remove this document from the knowledge base?',
+            confirmText: 'Remove',
+            variant: 'danger',
+        });
+        if (ok) {
             router.delete(route('client.ai.documents.destroy', docId), { preserveScroll: true });
         }
     };

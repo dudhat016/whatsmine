@@ -73,16 +73,13 @@ class SecureHeaders
         return ' http://localhost:5173 http://127.0.0.1:5173';
     }
 
-    /** OneSignal (when configured), Meta JS SDK, and Cloudflare Web Analytics / beacon scripts. */
+    /** OneSignal, Meta Pixel & SDK, Google Tag Manager & Analytics, TikTok Pixel, and Cloudflare. */
     private function thirdPartyScriptSources(): string
     {
-        $extra = ' https://static.cloudflareinsights.com';
+        $extra = ' https://static.cloudflareinsights.com https://connect.facebook.net https://www.googletagmanager.com https://*.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.tiktok.com https://*.tiktok.com';
         if (filled(config('services.onesignal.app_id'))) {
             // SDK loads from cdn; runtime sync/scripts also come from api.* (see OneSignal v16 CSP docs).
             $extra .= ' https://cdn.onesignal.com https://*.onesignal.com';
-        }
-        if ($this->metaSdkEnabled()) {
-            $extra .= ' https://connect.facebook.net';
         }
 
         return $extra;
@@ -113,23 +110,26 @@ class SecureHeaders
             $sources[] = 'https://onesignal.com';
             $sources[] = 'https://*.onesignal.com';
         }
-        if ($this->metaSdkEnabled()) {
-            $sources[] = 'https://graph.facebook.com';
-            $sources[] = 'https://www.facebook.com';
-            $sources[] = 'https://web.facebook.com';
-        }
+        $sources[] = 'https://graph.facebook.com';
+        $sources[] = 'https://www.facebook.com';
+        $sources[] = 'https://web.facebook.com';
+        $sources[] = 'https://connect.facebook.net';
+        $sources[] = 'https://*.facebook.com';
+        $sources[] = 'https://www.google-analytics.com';
+        $sources[] = 'https://*.google-analytics.com';
+        $sources[] = 'https://*.analytics.google.com';
+        $sources[] = 'https://www.googletagmanager.com';
+        $sources[] = 'https://*.googletagmanager.com';
+        $sources[] = 'https://analytics.tiktok.com';
+        $sources[] = 'https://*.tiktok.com';
 
         return implode(' ', array_unique($sources));
     }
 
-    /** Allow Meta Login / Embedded Signup dialogs in iframes when the Meta App is configured. */
+    /** Allow Meta Login / Embedded Signup dialogs and embedded video players (YouTube, Vimeo) in iframes. */
     private function metaFrameSources(): string
     {
-        if (! $this->metaSdkEnabled()) {
-            return '';
-        }
-
-        return ' https://www.facebook.com https://web.facebook.com https://connect.facebook.net';
+        return ' https://www.facebook.com https://web.facebook.com https://connect.facebook.net https://www.youtube.com https://player.vimeo.com';
     }
 
     private function metaSdkEnabled(): bool

@@ -40,14 +40,39 @@ class AutomationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $wid = $this->workspaceId($request);
-        $validated = $request->validate(['name' => ['required', 'string', 'max:128']]);
+        $validated = $request->validate([
+            'name'           => ['required', 'string', 'max:128'],
+            'trigger_type'   => ['nullable', 'string', 'max:64'],
+            'trigger_config' => ['nullable', 'array'],
+        ]);
 
-        $auto = Automation::create(array_merge($validated, [
-            'workspace_id' => $wid,
-            'status' => 'draft',
-            'nodes' => [['id' => 'trigger-1', 'type' => 'trigger', 'position' => ['x' => 250, 'y' => 50], 'data' => ['label' => 'Trigger']]],
-            'edges' => [],
-        ]));
+        $triggerType = $validated['trigger_type'] ?? null;
+        $triggerConfig = $validated['trigger_config'] ?? [];
+
+        $triggerLabel = 'Trigger';
+        if ($triggerType) {
+            $triggerLabel = $triggerConfig['trigger_name'] ?? ucfirst(str_replace(['.', '_'], ' ', $triggerType));
+        }
+
+        $auto = Automation::create([
+            'name'           => $validated['name'],
+            'workspace_id'   => $wid,
+            'status'         => 'draft',
+            'trigger_type'   => $triggerType,
+            'trigger_config' => $triggerConfig,
+            'nodes'          => [[
+                'id'       => 'trigger-1',
+                'type'     => 'trigger',
+                'position' => ['x' => 250, 'y' => 50],
+                'data'     => [
+                    'label'         => $triggerLabel,
+                    'triggerType'   => $triggerType,
+                    'triggerName'   => $triggerLabel,
+                    'triggerConfig' => $triggerConfig,
+                ],
+            ]],
+            'edges'          => [],
+        ]);
 
         return redirect()->route('client.automations.edit', $auto->uuid)->with('success', 'Automation created.');
     }
@@ -90,15 +115,23 @@ class AutomationController extends Controller
                 ->where('enabled', true)->orderBy('name')->get(['id', 'name'])->values(),
             'subflows' => Automation::where('workspace_id', $workspaceId)
                 ->where('id', '!=', $currentAutomationId)
-                ->orderBy('name')->get(['uuid', 'name', 'status'])->values(),
+                ->orderBy('name')->get(['id', 'uuid', 'name', 'status'])->values(),
+            'workflows' => Automation::where('workspace_id', $workspaceId)
+                ->where('id', '!=', $currentAutomationId)
+                ->orderBy('name')->get(['id', 'uuid', 'name', 'status'])->values(),
             'agents' => User::where('workspace_id', $workspaceId)
-                ->orderBy('name')->get(['id', 'name'])->values(),
+                ->orderBy('name')->get(['id', 'name', 'email'])->values(),
             'stores' => EcommerceStore::where('workspace_id', $workspaceId)
                 ->get(['id', 'platform', 'name'])->values(),
             'subscription_forms' => \App\Modules\Funnels\Models\SubscriptionForm::where('workspace_id', $workspaceId)
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'slug', 'name', 'title'])
+                ->values(),
+            'funnels' => \App\Modules\Funnels\Models\Funnel::where('workspace_id', $workspaceId)
+                ->with(['steps' => fn ($q) => $q->orderBy('sort_order')->select(['id', 'funnel_id', 'name', 'type', 'slug', 'sort_order'])])
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug'])
                 ->values(),
             'tags' => \App\Modules\Shared\Models\ContactTag::where('workspace_id', $workspaceId)
                 ->orderBy('name')
@@ -108,6 +141,26 @@ class AutomationController extends Controller
                 ->with('stages:id,pipeline_id,name,color')
                 ->orderBy('name')
                 ->get(['id', 'name', 'is_default'])
+                ->values(),
+            'proposals' => \App\Modules\Agency\Models\AgencyProposal::where('workspace_id', $workspaceId)
+                ->orderBy('title')
+                ->get(['id', 'uuid', 'title', 'total', 'status'])
+                ->values(),
+            'calendars' => \App\Modules\Calendars\Models\BookingCalendar::where('workspace_id', $workspaceId)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'type'])
+                ->values(),
+            'custom_fields' => tap(null, function () use ($workspaceId) {
+                \App\Http\Controllers\Client\CustomFieldController::ensureWorkspaceFolders($workspaceId);
+            }) ? [] : \App\Modules\Shared\Models\CustomField::where('workspace_id', $workspaceId)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'key', 'type', 'options', 'field_group', 'object_target'])
+                ->values(),
+            'custom_field_folders' => \App\Modules\Shared\Models\CustomFieldFolder::where('workspace_id', $workspaceId)
+                ->orderBy('sort_order')
+                ->get(['id', 'key', 'name', 'object_target'])
                 ->values(),
             'integrations' => [
                 'google' => (bool) optional(IntegrationConfig::forProvider('google_workspace'))->enabled,
@@ -221,6 +274,54 @@ class AutomationController extends Controller
         }
 
         return response()->json(['ok' => true, 'graph' => $graph]);
+    }
+
+    public function sendTestEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'subject' => 'nullable|string',
+            'body' => 'nullable|string',
+            'from_name' => 'nullable|string',
+            'from_email' => 'nullable|email',
+            'preheader' => 'nullable|string',
+        ]);
+
+        $wid = $this->workspaceId($request);
+        $user = $request->user();
+
+        // Build sample contact and dummy context
+        $dummyContact = new \App\Modules\Shared\Models\Contact([
+            'workspace_id' => $wid,
+            'first_name' => $user?->name ? explode(' ', $user->name)[0] : 'Test',
+            'last_name' => 'Recipient',
+            'email' => $validated['email'],
+            'phone_e164' => '+15551234567',
+        ]);
+
+        $personalizer = app(\App\Modules\Broadcasting\Services\CampaignPersonalizer::class);
+
+        $subject = $personalizer->renderText($validated['subject'] ?: 'Test Email Preview', $dummyContact);
+        $body = $personalizer->renderText($validated['body'] ?: '<p>This is a test email preview from your workflow.</p>', $dummyContact);
+        $fromName = ! empty($validated['from_name']) ? $personalizer->renderText($validated['from_name'], $dummyContact) : null;
+        $fromEmail = ! empty($validated['from_email']) ? $validated['from_email'] : null;
+        $preheader = ! empty($validated['preheader']) ? $personalizer->renderText($validated['preheader'], $dummyContact) : null;
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($validated['email'])->send(
+                new \App\Mail\AutomationEmail(
+                    emailSubject: '[TEST] ' . $subject,
+                    emailBody: $body,
+                    fromName: $fromName,
+                    fromEmail: $fromEmail,
+                    preheader: $preheader,
+                )
+            );
+
+            return response()->json(['ok' => true, 'message' => 'Test email sent successfully to ' . $validated['email']]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'error' => 'Failed to send test email: ' . $e->getMessage()], 422);
+        }
     }
 
     private function authorise(Request $request, Automation $automation): void

@@ -6,6 +6,7 @@ import { Card, Button, Badge, Input } from '@/Components/ui';
 import { ShieldCheck, ShieldAlert, RefreshCw, Loader2, KeyRound, CheckCircle2, XCircle, Download, AlertTriangle } from 'lucide-react';
 import { licenseCopy } from '@/lib/licenseLabels';
 import LicenseTypeTabs from '@/Components/LicenseTypeTabs';
+import { useConfirm } from '@/context/ConfirmationContext';
 
 function Row({ label, value }) {
     return (
@@ -18,6 +19,7 @@ function Row({ label, value }) {
 
 export default function AdminLicenseIndex({ license = {} }) {
     const { t } = useTranslation();
+    const { confirm } = useConfirm();
     const flash = usePage().props.flash ?? {};
     const copy = licenseCopy(license.verify_type);
 
@@ -45,7 +47,13 @@ export default function AdminLicenseIndex({ license = {} }) {
     };
 
     const applyUpdate = async () => {
-        if (!window.confirm('Download and install this update now? The site will go into maintenance mode briefly. Make sure you have a backup.')) return;
+        const ok = await confirm({
+            title: 'Apply System Update',
+            message: 'Download and install this update now? The site will go into maintenance mode briefly. Make sure you have a backup.',
+            confirmText: 'Install Update',
+            variant: 'warning',
+        });
+        if (!ok) return;
         setApplying(true);
         setApplyResult(null);
         try {
@@ -58,8 +66,14 @@ export default function AdminLicenseIndex({ license = {} }) {
         }
     };
 
-    const deactivate = () => {
-        if (!window.confirm('Deactivate this license? The admin panel will be locked until you re-activate.')) return;
+    const deactivate = async () => {
+        const ok = await confirm({
+            title: 'Deactivate License',
+            message: 'Deactivate this license? The admin panel will be locked until you re-activate.',
+            confirmText: 'Deactivate License',
+            variant: 'danger',
+        });
+        if (!ok) return;
         router.post(route('admin.license.deactivate'), {}, {
             onStart: () => setDeactivating(true),
             onFinish: () => setDeactivating(false),

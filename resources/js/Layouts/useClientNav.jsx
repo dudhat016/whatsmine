@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Key, BookOpen, Image, Radio, Inbox, Bot, Database,
     Zap, Share2, MapPin, Tag, LifeBuoy, ExternalLink, Mail, MessageSquare,
-    ShoppingBag, Funnel, Users2, GitBranch, Calendar,
+    ShoppingBag, Funnel, Users2, GitBranch, Calendar, Sliders,
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -115,14 +115,17 @@ export default function useClientNav() {
     const ecommerceItems = [
         { label: t('nav.orders'),   href: safeRoute('client.ecommerce.orders.index'),   icon: <Package className={iconClass} />,     activePattern: 'client.ecommerce.orders.*' },
         { label: t('nav.products'), href: safeRoute('client.ecommerce.products.index'), icon: <Tag className={iconClass} />,         activePattern: 'client.ecommerce.products.*' },
+        { label: 'Proposals & Contracts', href: safeRoute('client.agency.proposals.index'), icon: <FileText className={iconClass} />, activePattern: 'client.agency.proposals.*' },
+        { label: 'B2B Invoices',    href: safeRoute('client.agency.invoices.index'),    icon: <CreditCard className={iconClass} />,  activePattern: 'client.agency.invoices.*' },
         { label: t('nav.stores'),   href: safeRoute('client.ecommerce.stores.index'),   icon: <ShoppingBag className={iconClass} />, activePattern: 'client.ecommerce.stores.*' },
     ];
 
     // ─── Funnels & Page Builder ───────────────────────────────────────────────
     const funnelItems = [
-        { label: t('nav.funnels'),            href: safeRoute('client.funnels.index'),    icon: <Funnel className={iconClass} />,   activePattern: 'client.funnels.*' },
-        { label: 'Subscription Forms',        href: safeRoute('client.forms.index'),      icon: <FileText className={iconClass} />, activePattern: 'client.forms.*' },
-        { label: t('nav.affiliates'),         href: safeRoute('client.affiliates.index'), icon: <Users2 className={iconClass} />,  activePattern: 'client.affiliates.*' },
+        { label: t('nav.funnels'),            href: safeRoute('client.funnels.index'),          icon: <Funnel className={iconClass} />,   activePattern: 'client.funnels.*' },
+        { label: 'Subscription Forms',        href: safeRoute('client.forms.index'),            icon: <FileText className={iconClass} />, activePattern: 'client.forms.*' },
+        { label: 'Custom Fields',             href: safeRoute('client.custom_fields.index'),    icon: <Sliders className={iconClass} />,  activePattern: 'client.custom_fields.*' },
+        { label: t('nav.affiliates'),         href: safeRoute('client.affiliates.index'),       icon: <Users2 className={iconClass} />,   activePattern: 'client.affiliates.*' },
     ];
 
 
