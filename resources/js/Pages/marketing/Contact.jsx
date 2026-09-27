@@ -3,6 +3,7 @@ import { Mail, Send, MessageSquare, Clock, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LandingLayout from '@/Layouts/LandingLayout';
 import SeoHead from '@/Components/SeoHead';
+import { Input } from '@/Components/ui';
 
 function Badge({ text }) {
     if (!text) return null;
@@ -13,9 +14,6 @@ function Badge({ text }) {
         </span>
     );
 }
-
-const inputClass =
-    'w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2.5 text-sm text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 transition-colors focus:border-[#5a8b38] focus:outline-none focus:ring-2 focus:ring-[#5a8b38]/30';
 
 export default function Contact({ landing = {} }) {
     const { t } = useTranslation();
@@ -134,42 +132,33 @@ export default function Contact({ landing = {} }) {
 
                                 <form onSubmit={submit} className="space-y-5">
                                     <div className="grid gap-5 sm:grid-cols-2">
-                                        <div>
-                                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">{t('common.name')}</label>
-                                            <input
-                                                type="text"
-                                                value={data.name}
-                                                onChange={(e) => setData('name', e.target.value)}
-                                                placeholder={t('contact_page.name_placeholder', { defaultValue: '' })}
-                                                className={inputClass}
-                                                required
-                                            />
-                                            {errors.name && <p className="text-coral-600 text-xs mt-1.5">{errors.name}</p>}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">{t('common.email')}</label>
-                                            <input
-                                                type="email"
-                                                value={data.email}
-                                                onChange={(e) => setData('email', e.target.value)}
-                                                placeholder={t('contact_page.email_placeholder', { defaultValue: '' })}
-                                                className={inputClass}
-                                                required
-                                            />
-                                            {errors.email && <p className="text-coral-600 text-xs mt-1.5">{errors.email}</p>}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">{t('contact_page.subject')}</label>
-                                        <input
+                                        <Input
+                                            label={t('common.name')}
                                             type="text"
-                                            value={data.subject}
-                                            onChange={(e) => setData('subject', e.target.value)}
-                                            placeholder={t('contact_page.subject_placeholder', { defaultValue: '' })}
-                                            className={inputClass}
+                                            value={data.name}
+                                            onChange={(e) => setData('name', e.target.value)}
+                                            placeholder={t('contact_page.name_placeholder', { defaultValue: '' })}
+                                            required
+                                            error={errors.name}
                                         />
-                                        {errors.subject && <p className="text-coral-600 text-xs mt-1.5">{errors.subject}</p>}
+                                        <Input
+                                            label={t('common.email')}
+                                            type="email"
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            placeholder={t('contact_page.email_placeholder', { defaultValue: '' })}
+                                            required
+                                            error={errors.email}
+                                        />
                                     </div>
+                                    <Input
+                                        label={t('contact_page.subject')}
+                                        type="text"
+                                        value={data.subject}
+                                        onChange={(e) => setData('subject', e.target.value)}
+                                        placeholder={t('contact_page.subject_placeholder', { defaultValue: '' })}
+                                        error={errors.subject}
+                                    />
                                     <div>
                                         <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">{t('contact_page.message')}</label>
                                         <textarea

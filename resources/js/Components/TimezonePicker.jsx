@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, Clock, ChevronDown, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Input } from '@/Components/ui';
 
 const ALL_TIMEZONES = Intl.supportedValuesOf
     ? Intl.supportedValuesOf('timeZone')
@@ -91,21 +92,22 @@ export default function TimezonePicker({ value, onChange, className = '' }) {
             {open && (
                 <div className="absolute z-50 mt-1 w-full min-w-[260px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl overflow-hidden">
                     {/* Search */}
-                    <div className="flex items-center gap-2 px-3 py-2.5 border-b border-neutral-100 dark:border-neutral-800">
-                        <Search className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                        <input
+                    <div className="p-2 border-b border-neutral-100 dark:border-neutral-800">
+                        <Input
                             ref={searchRef}
+                            size="sm"
                             type="text"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder={t('ui.timezone_search')}
-                            className="flex-1 bg-transparent text-sm text-neutral-800 dark:text-neutral-200 placeholder-neutral-400 focus:outline-none"
+                            leftIcon={Search}
+                            rightElement={search ? (
+                                <button type="button" onClick={() => setSearch('')} className="text-neutral-400 hover:text-neutral-600">
+                                    <X className="h-3.5 w-3.5" />
+                                </button>
+                            ) : null}
+                            wrapperClassName="w-full"
                         />
-                        {search && (
-                            <button type="button" onClick={() => setSearch('')} className="text-neutral-400 hover:text-neutral-600">
-                                <X className="h-3.5 w-3.5" />
-                            </button>
-                        )}
                     </div>
 
                     {/* List */}

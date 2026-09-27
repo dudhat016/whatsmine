@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card } from '@/Components/ui';
+import { Button, Card, Select, Input as UiInput } from '@/Components/ui';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Globe, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -77,11 +77,11 @@ function Field({ label, hint, children }) {
 }
 
 function Input({ value, onChange, placeholder, multiline = false, rows = 3 }) {
-    const cls = "w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20";
     if (multiline) {
+        const cls = "w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20";
         return <textarea value={value || ''} onChange={onChange} placeholder={placeholder} rows={rows} className={cls} />;
     }
-    return <input type="text" value={value || ''} onChange={onChange} placeholder={placeholder} className={cls} />;
+    return <UiInput value={value || ''} onChange={onChange} placeholder={placeholder} />;
 }
 
 // ─── Navbar Tab ───────────────────────────────────────────────────────────────
@@ -335,15 +335,14 @@ function FeaturesTab({ data, setData, t }) {
                             <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('landing_page_admin.feature_n', { n: i })}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <Field label={t('landing_page_admin.icon')}>
-                                    <select
+                                    <Select
                                         value={s(`feature_${i}_icon`)}
                                         onChange={(e) => set(`feature_${i}_icon`, e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                     >
                                         {ICON_OPTIONS.map((ic) => (
                                             <option key={ic} value={ic}>{ic}</option>
                                         ))}
-                                    </select>
+                                    </Select>
                                 </Field>
                                 <Field label={t('landing_page_admin.title')}>
                                     <Input value={s(`feature_${i}_title`)} onChange={(e) => set(`feature_${i}_title`, e.target.value)} placeholder="Feature title" />
@@ -438,15 +437,14 @@ function WhyTab({ data, setData, t }) {
                             <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('landing_page_admin.item_n', { n: i })}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <Field label={t('landing_page_admin.icon')}>
-                                    <select
+                                    <Select
                                         value={s(`why_${i}_icon`)}
                                         onChange={(e) => set(`why_${i}_icon`, e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                     >
                                         {ICON_OPTIONS.map((ic) => (
                                             <option key={ic} value={ic}>{ic}</option>
                                         ))}
-                                    </select>
+                                    </Select>
                                 </Field>
                                 <Field label={t('landing_page_admin.title')}>
                                     <Input value={s(`why_${i}_title`)} onChange={(e) => set(`why_${i}_title`, e.target.value)} placeholder="Benefit title" />
@@ -687,13 +685,12 @@ function ChannelsTab({ data, setData, t }) {
                             <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('landing_page_admin.channel_n', { n: i, defaultValue: `Channel ${i}` })}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <Field label={t('landing_page_admin.channel_type', { defaultValue: 'Channel (icon)' })}>
-                                    <select
+                                    <Select
                                         value={s(`channel_${i}_key`)}
                                         onChange={(e) => set(`channel_${i}_key`, e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                     >
                                         {CHANNEL_OPTIONS.map((c) => (<option key={c} value={c}>{c}</option>))}
-                                    </select>
+                                    </Select>
                                 </Field>
                                 <Field label={t('landing_page_admin.title')}>
                                     <Input value={s(`channel_${i}_title`)} onChange={(e) => set(`channel_${i}_title`, e.target.value)} placeholder="WhatsApp Business" />
@@ -771,13 +768,12 @@ function SecurityTab({ data, setData, t }) {
                             <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('landing_page_admin.item_n', { n: i })}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <Field label={t('landing_page_admin.icon')}>
-                                    <select
+                                    <Select
                                         value={s(`security_${i}_icon`)}
                                         onChange={(e) => set(`security_${i}_icon`, e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                     >
                                         {ICON_OPTIONS.map((ic) => (<option key={ic} value={ic}>{ic}</option>))}
-                                    </select>
+                                    </Select>
                                 </Field>
                                 <Field label={t('landing_page_admin.title')}>
                                     <Input value={s(`security_${i}_title`)} onChange={(e) => set(`security_${i}_title`, e.target.value)} placeholder="End-to-End Encryption" />
@@ -834,13 +830,12 @@ function AboutTab({ data, setData, t }) {
                         {[1, 2, 3, 4].map((i) => (
                             <div key={i} className="p-4 rounded-soft border border-neutral-200 dark:border-neutral-700 grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <Field label={t('landing_page_admin.icon')}>
-                                    <select
+                                    <Select
                                         value={s(`about_value_${i}_icon`)}
                                         onChange={(e) => set(`about_value_${i}_icon`, e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                     >
                                         {ICON_OPTIONS.map((ic) => (<option key={ic} value={ic}>{ic}</option>))}
-                                    </select>
+                                    </Select>
                                 </Field>
                                 <Field label={t('landing_page_admin.title')}>
                                     <Input value={s(`about_value_${i}_title`)} onChange={(e) => set(`about_value_${i}_title`, e.target.value)} placeholder="Move Fast" />

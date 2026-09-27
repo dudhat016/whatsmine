@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import Button from '@/Components/ui/Button';
-import Badge from '@/Components/ui/Badge';
+import { Button, Badge, Select } from '@/Components/ui';
 import CalendarModal from './Builder/CalendarModal';
 import EmbedModal from './Builder/EmbedModal';
 import ManualBookingModal from './Builder/ManualBookingModal';
@@ -262,17 +261,18 @@ export default function Index({ calendars = [], appointments = [], workspaceUser
                                                 {getStatusBadge(app.status)}
                                             </td>
                                             <td className="p-3 text-right">
-                                                <select
+                                                <Select
                                                     value={app.status === 'completed' ? 'showed' : app.status}
                                                     onChange={e => handleUpdateStatus(app.id, e.target.value)}
-                                                    className="text-xs p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-medium"
+                                                    size="sm"
+                                                    className="w-36 text-xs inline-block"
                                                 >
                                                     <option value="confirmed">Confirmed</option>
                                                     <option value="showed">Mark Showed</option>
                                                     <option value="no_show">Mark No-Show</option>
                                                     <option value="rescheduled">Rescheduled</option>
                                                     <option value="cancelled">Mark Cancelled</option>
-                                                </select>
+                                                </Select>
                                             </td>
                                         </tr>
                                     ))

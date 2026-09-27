@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, DatePicker, Modal, Pagination } from '@/Components/ui';
+import { Button, Card, DatePicker, Input, Modal, Pagination, Select } from '@/Components/ui';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Download, Plus, Search, X } from 'lucide-react';
@@ -91,13 +91,12 @@ function CreateSubscriptionModal({ show, onClose, plans }) {
                             </div>
                         ) : (
                             <div className="relative">
-                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                                <input
+                                <Input
                                     type="text"
                                     value={query}
                                     onChange={e => setQuery(e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-white pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                                     placeholder={t('admin.subscriptions_user_search_placeholder')}
+                                    leftIcon={<Search className="h-4 w-4" />}
                                 />
                                 {(results.length > 0 || searching) && (
                                     <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-soft-lg">
@@ -123,36 +122,33 @@ function CreateSubscriptionModal({ show, onClose, plans }) {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.plan')}</label>
-                            <select
+                            <Select
                                 value={data.plan_id}
                                 onChange={e => setData('plan_id', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                             >
                                 {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
+                            </Select>
                             {errors.plan_id && <p className="text-coral-600 text-xs mt-1">{errors.plan_id}</p>}
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.subscriptions_billing_cycle')}</label>
-                            <select
+                            <Select
                                 value={data.billing_cycle}
                                 onChange={e => setData('billing_cycle', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                             >
                                 <option value="month">{t('admin.subscriptions_cycle_monthly')}</option>
                                 <option value="year">{t('admin.subscriptions_cycle_yearly')}</option>
-                            </select>
+                            </Select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.status')}</label>
-                            <select
+                            <Select
                                 value={data.status}
                                 onChange={e => setData('status', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                             >
                                 <option value="active">{t('admin.status_success')}</option>
                                 <option value="trialing">{t('admin.status_trialing')}</option>
-                            </select>
+                            </Select>
                         </div>
                         {data.status === 'trialing' && (
                             <div>
@@ -233,10 +229,11 @@ export default function AdminSubscriptionsIndex({ subscriptions, filters = {}, p
                         router.get(route('admin.subscriptions.index'), { status: f.status?.value, gateway: f.gateway?.value }, { preserveState: true });
                     }}
                 >
-                    <select
+                    <Select
                         name="status"
-                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                        size="sm"
                         defaultValue={filters.status}
+                        className="w-44"
                     >
                         <option value="">{t('admin.all_statuses')}</option>
                         <option value="active">{t('admin.status_success')}</option>
@@ -244,18 +241,19 @@ export default function AdminSubscriptionsIndex({ subscriptions, filters = {}, p
                         <option value="canceled">{t('admin.status_canceled')}</option>
                         <option value="past_due">{t('admin.status_past_due')}</option>
                         <option value="ended">{t('admin.status_ended')}</option>
-                    </select>
-                    <select
+                    </Select>
+                    <Select
                         name="gateway"
-                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                        size="sm"
                         defaultValue={filters.gateway}
+                        className="w-44"
                     >
                         <option value="">{t('admin.all_gateways')}</option>
                         <option value="stripe">Stripe</option>
                         <option value="paypal">PayPal</option>
                         <option value="paddle">Paddle</option>
                         <option value="manual">{t('admin.subscriptions_gateway_manual')}</option>
-                    </select>
+                    </Select>
                     <Button type="submit" variant="outline" size="sm">{t('common.filter')}</Button>
                 </form>
                 <Card>

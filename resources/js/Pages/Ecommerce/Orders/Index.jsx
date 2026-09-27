@@ -1,9 +1,6 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import Pagination from '@/Components/ui/Pagination';
-import Card from '@/Components/ui/Card';
-import Badge from '@/Components/ui/Badge';
-import Button from '@/Components/ui/Button';
+import { Button, Card, Badge, Pagination, Input, Select } from '@/Components/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, ShoppingBag, DollarSign, PackageCheck, Clock, Truck } from 'lucide-react';
@@ -83,21 +80,32 @@ export default function OrdersIndex({ orders, filters = {}, stores = [], stats =
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    <form onSubmit={e => { e.preventDefault(); apply({ search }); }} className="relative flex-1 min-w-[200px]">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('ecommerce.search_orders') || 'Search order # or customer…'}
-                            className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 pl-9 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                    <form onSubmit={e => { e.preventDefault(); apply({ search }); }} className="flex-1 min-w-[200px]">
+                        <Input
+                            leftIcon={<Search className="h-4 w-4" />}
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder={t('ecommerce.search_orders') || 'Search order # or customer…'}
+                        />
                     </form>
-                    <select value={filters.store_id ?? ''} onChange={e => apply({ store_id: e.target.value || undefined })}
-                        className="rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <Select
+                        value={filters.store_id ?? ''}
+                        onChange={e => apply({ store_id: e.target.value || undefined })}
+                        size="sm"
+                        className="w-40"
+                    >
                         <option value="">{t('ecommerce.all_stores') || 'All stores'}</option>
                         {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                    <select value={filters.fulfillment ?? ''} onChange={e => apply({ fulfillment: e.target.value || undefined })}
-                        className="rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </Select>
+                    <Select
+                        value={filters.fulfillment ?? ''}
+                        onChange={e => apply({ fulfillment: e.target.value || undefined })}
+                        size="sm"
+                        className="w-40"
+                    >
                         <option value="">{t('ecommerce.all_fulfillment') || 'All fulfillment'}</option>
                         <option value="fulfilled">Fulfilled</option>
-                    </select>
+                    </Select>
                 </div>
 
                 <Card padding={false} className="overflow-hidden">

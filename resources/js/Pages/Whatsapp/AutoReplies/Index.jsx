@@ -1,6 +1,7 @@
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import { Input, Select } from '@/Components/ui';
 import { Plus, Trash2, ToggleLeft, ToggleRight, Zap, Pencil, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -51,54 +52,45 @@ function RuleForm({ data, setData, errors, onSubmit, onCancel, processing, submi
     return (
         <form onSubmit={onSubmit} className="space-y-3">
             {/* Trigger type */}
-            <div>
-                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('whatsapp.auto_replies_trigger_type')}</label>
-                <select
-                    value={data.trigger_type}
-                    onChange={e => setData('trigger_type', e.target.value)}
-                    className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
-                >
-                    {TRIGGER_TYPES.map(tt => <option key={tt} value={tt}>{t(TRIGGER_LABEL_KEYS[tt] ?? '')}</option>)}
-                </select>
-            </div>
+            <Select
+                label={t('whatsapp.auto_replies_trigger_type')}
+                value={data.trigger_type}
+                onChange={e => setData('trigger_type', e.target.value)}
+            >
+                {TRIGGER_TYPES.map(tt => <option key={tt} value={tt}>{t(TRIGGER_LABEL_KEYS[tt] ?? '')}</option>)}
+            </Select>
 
             {/* Keywords (only for keyword trigger) */}
             {data.trigger_type === 'keyword' && (
                 <div>
-                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                        {t('whatsapp.auto_replies_keywords')} <span className="text-neutral-400 font-normal">{t('whatsapp.auto_replies_keywords_hint')}</span>
-                    </label>
-                    <input
+                    <Input
+                        label={<>{t('whatsapp.auto_replies_keywords')} <span className="text-neutral-400 font-normal">{t('whatsapp.auto_replies_keywords_hint')}</span></>}
                         type="text"
                         value={(data.keywords ?? []).join(', ')}
                         onChange={e => setData('keywords', e.target.value.split(',').map(k => k.trim()).filter(Boolean))}
                         placeholder={t('whatsapp.auto_replies_keywords_placeholder')}
-                        className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
+                        error={errors.keywords}
                     />
-                    {errors.keywords && <p className="text-xs text-red-500 mt-1">{errors.keywords}</p>}
 
-                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mt-2 block">{t('whatsapp.auto_replies_match_mode')}</label>
-                    <select
+                    <Select
+                        label={t('whatsapp.auto_replies_match_mode')}
                         value={data.match_mode}
                         onChange={e => setData('match_mode', e.target.value)}
-                        className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
+                        className="mt-2"
                     >
                         {MATCH_MODES.map(m => <option key={m} value={m}>{t(MATCH_MODE_LABEL_KEYS[m] ?? '')}</option>)}
-                    </select>
+                    </Select>
                 </div>
             )}
 
             {/* Response kind */}
-            <div>
-                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('whatsapp.auto_replies_response_type')}</label>
-                <select
-                    value={data.response_kind}
-                    onChange={e => setData('response_kind', e.target.value)}
-                    className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
-                >
-                    {RESPONSE_KINDS.map(k => <option key={k} value={k}>{t(RESPONSE_KIND_LABEL_KEYS[k] ?? '')}</option>)}
-                </select>
-            </div>
+            <Select
+                label={t('whatsapp.auto_replies_response_type')}
+                value={data.response_kind}
+                onChange={e => setData('response_kind', e.target.value)}
+            >
+                {RESPONSE_KINDS.map(k => <option key={k} value={k}>{t(RESPONSE_KIND_LABEL_KEYS[k] ?? '')}</option>)}
+            </Select>
 
             {/* Response content */}
             {data.response_kind === 'text' && (
@@ -118,23 +110,21 @@ function RuleForm({ data, setData, errors, onSubmit, onCancel, processing, submi
             {data.response_kind === 'template' && (
                 <div className="space-y-2">
                     <div>
-                        <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('whatsapp.auto_replies_template_name')}</label>
-                        <input
+                        <Input
+                            label={t('whatsapp.auto_replies_template_name')}
                             type="text"
                             value={data.payload_json?.template_name ?? ''}
                             onChange={e => setData('payload_json', { ...data.payload_json, template_name: e.target.value })}
                             placeholder={t('whatsapp.auto_replies_template_name_placeholder')}
-                            className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('whatsapp.auto_replies_language_code')}</label>
-                        <input
+                        <Input
+                            label={t('whatsapp.auto_replies_language_code')}
                             type="text"
                             value={data.payload_json?.language ?? 'en'}
                             onChange={e => setData('payload_json', { ...data.payload_json, language: e.target.value })}
                             placeholder="en"
-                            className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
                         />
                     </div>
                 </div>
@@ -142,33 +132,28 @@ function RuleForm({ data, setData, errors, onSubmit, onCancel, processing, submi
 
             {data.response_kind === 'media' && (
                 <div className="space-y-2">
-                    <div>
-                        <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('whatsapp.auto_replies_media_type')}</label>
-                        <select
+                        <Select
+                            label={t('whatsapp.auto_replies_media_type')}
                             value={data.payload_json?.media_type ?? 'image'}
                             onChange={e => setData('payload_json', { ...data.payload_json, media_type: e.target.value })}
-                            className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
                         >
                             {MEDIA_TYPES.map(mt => <option key={mt} value={mt}>{t(MEDIA_TYPE_LABEL_KEYS[mt] ?? '')}</option>)}
-                        </select>
-                    </div>
+                        </Select>
                     <div>
-                        <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('whatsapp.auto_replies_media_id')}</label>
-                        <input
+                        <Input
+                            label={t('whatsapp.auto_replies_media_id')}
                             type="text"
                             value={data.payload_json?.media_id ?? ''}
                             onChange={e => setData('payload_json', { ...data.payload_json, media_id: e.target.value })}
                             placeholder={t('whatsapp.auto_replies_media_id_placeholder')}
-                            className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('whatsapp.auto_replies_caption')}</label>
-                        <input
+                        <Input
+                            label={t('whatsapp.auto_replies_caption')}
                             type="text"
                             value={data.payload_json?.caption ?? ''}
                             onChange={e => setData('payload_json', { ...data.payload_json, caption: e.target.value })}
-                            className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
                         />
                     </div>
                 </div>
@@ -176,13 +161,12 @@ function RuleForm({ data, setData, errors, onSubmit, onCancel, processing, submi
 
             {/* Priority */}
             <div>
-                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('whatsapp.auto_replies_priority')} <span className="font-normal">{t('whatsapp.auto_replies_priority_hint')}</span></label>
-                <input
+                <Input
+                    label={<>{t('whatsapp.auto_replies_priority')} <span className="font-normal">{t('whatsapp.auto_replies_priority_hint')}</span></>}
                     type="number"
                     min={0}
                     value={data.priority}
                     onChange={e => setData('priority', parseInt(e.target.value, 10) || 0)}
-                    className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
                 />
             </div>
 

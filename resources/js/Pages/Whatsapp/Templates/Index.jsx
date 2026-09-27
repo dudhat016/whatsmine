@@ -6,6 +6,7 @@ import { Plus, RefreshCw, CheckCircle, XCircle, Clock, PauseCircle, FileText, Se
 import { useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input, Select } from '@/Components/ui';
 
 const STATUS_CONFIG = {
     APPROVED: { color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: <CheckCircle className="h-3 w-3" />, labelKey: 'whatsapp.templates_status_approved' },
@@ -81,24 +82,21 @@ export default function WhatsappTemplatesIndex({ templates, phoneNumbers = [], f
 
                 {/* Search + Phone filter bar */}
                 <div className="flex flex-wrap gap-3">
-                    <div className="relative flex-1 min-w-48">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
-                        <input
+                    <div className="flex-1 min-w-48">
+                        <Input
                             type="text"
                             value={search}
                             onChange={handleSearch}
                             placeholder={t('whatsapp.templates_search_placeholder')}
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 pl-9 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            leftIcon={<Search className="h-4 w-4 text-neutral-400" />}
                         />
                     </div>
 
                     {phoneNumbers.length > 0 && (
-                        <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
-                            <select
+                        <div className="min-w-48">
+                            <Select
                                 value={filters.phone_number_id ?? ''}
                                 onChange={handlePhone}
-                                className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 pl-9 pr-8 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500 appearance-none min-w-48"
                             >
                                 <option value="">{t('whatsapp.templates_all_phone_numbers')}</option>
                                 {phoneNumbers.map(p => (
@@ -106,7 +104,7 @@ export default function WhatsappTemplatesIndex({ templates, phoneNumbers = [], f
                                         {p.display_phone}{p.verified_name ? ` · ${p.verified_name}` : ''}
                                     </option>
                                 ))}
-                            </select>
+                            </Select>
                         </div>
                     )}
                 </div>

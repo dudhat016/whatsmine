@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Input } from '@/Components/ui';
 
 import {
   ADMIN_BLOCK_TEMPLATES, STATUS_COLORS, checkStepReadiness
@@ -2401,11 +2402,10 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                         className="funnel-field-wrap w-full pointer-events-none select-none"
                     >
                         {eff.label && <label className="funnel-field-label">{eff.label}{eff.required ? ' *' : ''}</label>}
-                        <input
+                        <Input
                             type="email"
                             readOnly
                             placeholder={eff.placeholder || 'Enter your email address...'}
-                            className="funnel-input w-full"
                         />
                     </div>
                 )}
@@ -2416,11 +2416,10 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                         className="funnel-field-wrap w-full pointer-events-none select-none"
                     >
                         {eff.label && <label className="funnel-field-label">{eff.label}{eff.required ? ' *' : ''}</label>}
-                        <input
+                        <Input
                             type="text"
                             readOnly
                             placeholder={eff.placeholder || 'Enter your full name...'}
-                            className="funnel-input w-full"
                         />
                     </div>
                 )}
@@ -2435,7 +2434,7 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                             <div className="flex items-center gap-1 bg-neutral-100 px-3 border-r border-neutral-200 text-xs font-bold text-neutral-600">
                                 <span>🇺🇸</span> +1
                             </div>
-                            <input type="tel" readOnly placeholder={eff.placeholder || '(555) 000-0000'} className="w-full px-3 py-2 text-sm bg-transparent outline-none border-0" />
+                            <Input size="sm" type="tel" readOnly placeholder={eff.placeholder || '(555) 000-0000'} className="border-0 focus:ring-0" />
                         </div>
                     </div>
                 )}
@@ -2734,11 +2733,11 @@ export default function FunnelBuilder({ funnel: initialFunnel }) {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-[11px] font-semibold text-neutral-600 mb-1">Full Name</label>
-                                    <input type="text" readOnly placeholder="Full Name" className="two-step-name-input funnel-input w-full rounded-lg border border-neutral-300 px-3 py-2 text-xs bg-white" />
+                                    <Input size="sm" type="text" readOnly placeholder="Full Name" />
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-semibold text-neutral-600 mb-1">Email Address</label>
-                                    <input type="email" readOnly placeholder="Email Address" className="two-step-email-input funnel-input w-full rounded-lg border border-neutral-300 px-3 py-2 text-xs bg-white" />
+                                    <Input size="sm" type="email" readOnly placeholder="Email Address" />
                                 </div>
                             </div>
                             <div className="two-step-summary-box flex items-center justify-between border-t pt-3 p-3 rounded-xl bg-neutral-50 border border-neutral-200/60">

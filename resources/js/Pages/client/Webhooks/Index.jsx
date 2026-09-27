@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Input } from '@/Components/ui';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, router, useForm, usePage, Link } from '@inertiajs/react';
 import { Webhook, Plus, Pencil, Trash2, RefreshCw, Play, Eye, ChevronRight, Check, X } from 'lucide-react';
@@ -42,24 +43,22 @@ function EndpointForm({ endpoint = null, onClose }) {
     return (
         <form onSubmit={submit} className="space-y-4">
             <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('webhook.endpoint_url')}</label>
-                <input
+                <Input
                     type="url"
+                    label={t('webhook.endpoint_url')}
                     value={data.url}
                     onChange={e => setData('url', e.target.value)}
-                    className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
                     placeholder="https://your-app.com/webhooks"
+                    error={errors.url}
                     required
                 />
-                {errors.url && <p className="text-coral-600 text-xs mt-1">{errors.url}</p>}
             </div>
             <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('webhook.description')}</label>
-                <input
+                <Input
                     type="text"
+                    label={t('webhook.description')}
                     value={data.description}
                     onChange={e => setData('description', e.target.value)}
-                    className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
                     placeholder={t('webhook.description_placeholder')}
                 />
             </div>

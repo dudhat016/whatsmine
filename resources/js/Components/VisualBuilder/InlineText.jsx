@@ -10,6 +10,7 @@ import {
     Variable,
     X,
 } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 export const BUILDER_CSS = `
 [data-vb-text] { outline: none; min-height: 1em; word-break: break-word; }
@@ -277,8 +278,9 @@ export function SelectionToolbar({ canvasRef, tokens = [] }) {
         >
             {linkMode ? (
                 <div className="flex items-center gap-1 px-1">
-                    <input
+                    <Input
                         autoFocus
+                        size="sm"
                         type="text"
                         value={linkUrl}
                         onChange={(e) => setLinkUrl(e.target.value)}
@@ -291,7 +293,7 @@ export function SelectionToolbar({ canvasRef, tokens = [] }) {
                             }
                         }}
                         placeholder={t('common.link_placeholder', 'https://example.com')}
-                        className="w-52 rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-neutral-600 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                        wrapperClassName="w-52"
                     />
                     <button
                         type="button"

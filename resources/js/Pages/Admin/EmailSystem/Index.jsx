@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Modal, Tabs } from '@/Components/ui';
+import { Button, Card, Checkbox, Input, Select, Modal, Tabs } from '@/Components/ui';
 import { Head, router, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { Send, Settings, Pencil, Trash2, Mail, Server, Lock, User, CheckCircle2, XCircle, Zap } from 'lucide-react';
@@ -344,42 +344,73 @@ function AddOrEditSmtpModal({ show, edit, encryptionOptions, onClose, onSaved })
             <form onSubmit={submit}>
                 <Modal.Body className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField label={`${t('email_server.smtp_host')} *`}>
-                            <input type="text" value={data.host} onChange={(e) => setData('host', e.target.value)} required className={inputCls} placeholder={t('email_system.smtp_host_placeholder')} />
-                        </FormField>
-                        <FormField label={`${t('email_server.port')} *`}>
-                            <input type="number" value={data.port} onChange={(e) => setData('port', parseInt(e.target.value, 10) || 587)} required min={1} max={65535} className={inputCls} />
-                        </FormField>
+                        <Input
+                            label={`${t('email_server.smtp_host')} *`}
+                            type="text"
+                            value={data.host}
+                            onChange={(e) => setData('host', e.target.value)}
+                            required
+                            placeholder={t('email_system.smtp_host_placeholder')}
+                        />
+                        <Input
+                            label={`${t('email_server.port')} *`}
+                            type="number"
+                            value={data.port}
+                            onChange={(e) => setData('port', parseInt(e.target.value, 10) || 587)}
+                            required
+                            min={1}
+                            max={65535}
+                        />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField label={`${t('email_server.username')} *`}>
-                            <input type="text" value={data.username} onChange={(e) => setData('username', e.target.value)} required className={inputCls} placeholder={t('email_system.from_email_placeholder')} />
-                        </FormField>
-                        <FormField label={isEdit ? t('email_server.password') : `${t('email_server.password')} *`}>
-                            <input type="password" value={data.password} onChange={(e) => setData('password', e.target.value)} placeholder={isEdit ? t('email_system.password_unchanged') : ''} required={!isEdit} className={inputCls} />
-                        </FormField>
+                        <Input
+                            label={`${t('email_server.username')} *`}
+                            type="text"
+                            value={data.username}
+                            onChange={(e) => setData('username', e.target.value)}
+                            required
+                            placeholder={t('email_system.from_email_placeholder')}
+                        />
+                        <Input
+                            label={isEdit ? t('email_server.password') : `${t('email_server.password')} *`}
+                            type="password"
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
+                            placeholder={isEdit ? t('email_system.password_unchanged') : ''}
+                            required={!isEdit}
+                        />
                     </div>
-                    <FormField label={`${t('email_server.encryption')} *`}>
-                        <select value={data.encryption} onChange={(e) => setData('encryption', e.target.value)} required className={inputCls}>
-                            {encryptionOptions.map((o) => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                        </select>
-                    </FormField>
+                    <div>
+                        <Select
+                            label={`${t('email_server.encryption')} *`}
+                            value={data.encryption}
+                            onChange={(e) => setData('encryption', e.target.value)}
+                            options={encryptionOptions}
+                            required
+                        />
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField label={`${t('email_server.from_email')} *`}>
-                            <input type="email" value={data.from_email} onChange={(e) => setData('from_email', e.target.value)} required className={inputCls} placeholder={t('email_system.from_email_placeholder')} />
-                        </FormField>
-                        <FormField label={`${t('email_server.from_name')} *`}>
-                            <input type="text" value={data.from_name} onChange={(e) => setData('from_name', e.target.value)} required className={inputCls} placeholder={t('email_system.from_name_placeholder')} />
-                        </FormField>
+                        <Input
+                            label={`${t('email_server.from_email')} *`}
+                            type="email"
+                            value={data.from_email}
+                            onChange={(e) => setData('from_email', e.target.value)}
+                            required
+                            placeholder={t('email_system.from_email_placeholder')}
+                        />
+                        <Input
+                            label={`${t('email_server.from_name')} *`}
+                            type="text"
+                            value={data.from_name}
+                            onChange={(e) => setData('from_name', e.target.value)}
+                            required
+                            placeholder={t('email_system.from_name_placeholder')}
+                        />
                     </div>
                     <label className="flex items-center gap-2.5 p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                        <input
-                            type="checkbox"
+                        <Checkbox
                             checked={data.activate}
                             onChange={(e) => setData('activate', e.target.checked)}
-                            className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500"
                         />
                         <div>
                             <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('email_server.enable_smtp')}</p>
@@ -415,16 +446,14 @@ function TestEmailModal({ show, sending, error, success, onClose, onSend }) {
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">
                         {t('email_server.send_test_desc')}
                     </p>
-                    <FormField label={`${t('email_system.send_to_label')} *`}>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            placeholder={t('email_system.recipient_placeholder')}
-                            className={inputCls}
-                        />
-                    </FormField>
+                    <Input
+                        label={`${t('email_system.send_to_label')} *`}
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder={t('email_system.recipient_placeholder')}
+                    />
                     {error && (
                         <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 px-4 py-3 text-sm text-red-800 dark:text-red-200">
                             <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -520,43 +549,40 @@ function EditTemplateModal({ show, template, onClose, onSaved }) {
                             {template.description && (
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400">{template.description}</p>
                             )}
-                            <FormField label={t('email_system.template_key_label')}>
-                                <input
-                                    type="text"
-                                    value={data.slug}
-                                    readOnly
-                                    className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 px-3 py-2 text-sm font-mono cursor-not-allowed"
-                                />
-                            </FormField>
+                            <Input
+                                label={t('email_system.template_key_label')}
+                                type="text"
+                                value={data.slug}
+                                readOnly
+                                className="font-mono cursor-not-allowed opacity-75"
+                            />
                             {placeholders.length > 0 && (
-                                <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 p-3 space-y-2">
-                                    <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">{t('email_system.available_variables')}</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {placeholders.map((p) => (
-                                            <button
-                                                key={p}
-                                                type="button"
-                                                title={t('email_system.click_to_copy')}
-                                                onClick={() => navigator.clipboard?.writeText(`{{${p}}}`)}
-                                                className="rounded-md bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 px-2 py-0.5 font-mono text-xs text-neutral-700 dark:text-neutral-300 hover:bg-brand-50 hover:border-brand-300 dark:hover:bg-brand-900/40 transition-colors cursor-pointer"
-                                            >
-                                                {`{{${p}}}`}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('email_system.click_to_copy')}.</p>
-                                </div>
+                                 <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 p-3 space-y-2">
+                                     <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">{t('email_system.available_variables')}</p>
+                                     <div className="flex flex-wrap gap-1.5">
+                                         {placeholders.map((p) => (
+                                             <button
+                                                 key={p}
+                                                 type="button"
+                                                 title={t('email_system.click_to_copy')}
+                                                 onClick={() => navigator.clipboard?.writeText(`{{${p}}}`)}
+                                                 className="rounded-md bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 px-2 py-0.5 font-mono text-xs text-neutral-700 dark:text-neutral-300 hover:bg-brand-50 hover:border-brand-300 dark:hover:bg-brand-900/40 transition-colors cursor-pointer"
+                                             >
+                                                 {`{{${p}}}`}
+                                             </button>
+                                         ))}
+                                     </div>
+                                     <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('email_system.click_to_copy')}.</p>
+                                 </div>
                             )}
-                            <FormField label={`${t('email_system.col_subject')} *`}>
-                                <input
-                                    type="text"
-                                    value={data.subject}
-                                    onChange={(e) => setData('subject', e.target.value)}
-                                    required
-                                    placeholder={t('email_system.subject_placeholder')}
-                                    className={inputCls}
-                                />
-                            </FormField>
+                            <Input
+                                label={`${t('email_system.col_subject')} *`}
+                                type="text"
+                                value={data.subject}
+                                onChange={(e) => setData('subject', e.target.value)}
+                                required
+                                placeholder={t('email_system.subject_placeholder')}
+                            />
                             <FormField label={`${t('email_system.html_body_label')} *`}>
                                 <textarea
                                     value={data.content}
@@ -568,11 +594,9 @@ function EditTemplateModal({ show, template, onClose, onSaved }) {
                                 />
                             </FormField>
                             <label className="flex items-center gap-2.5 p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                                <input
-                                    type="checkbox"
+                                <Checkbox
                                     checked={data.enabled}
                                     onChange={(e) => setData('enabled', e.target.checked)}
-                                    className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500"
                                 />
                                 <div>
                                     <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.active')}</p>
@@ -616,12 +640,13 @@ function EditTemplateModal({ show, template, onClose, onSaved }) {
                             </Button>
                         ) : (
                             <>
-                                <input
+                                <Input
                                     type="email"
                                     value={testEmail}
                                     onChange={(e) => setTestEmail(e.target.value)}
                                     placeholder={t('email_system.recipient_placeholder')}
-                                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 w-52"
+                                    size="sm"
+                                    wrapperClassName="w-52"
                                 />
                                 <Button
                                     type="button"

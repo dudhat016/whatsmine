@@ -1,5 +1,7 @@
-﻿import { Head, router, usePage, Link } from '@inertiajs/react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import Input from '@/Components/ui/Input';
+import Select from '@/Components/ui/Select';
 import {
     Check, Copy, Link2, AlertTriangle,
     Phone, Inbox, Webhook, FileText,
@@ -147,19 +149,18 @@ function ChatbotSelector({ channelAccountId, currentChatbotId, chatbots }) {
     return (
         <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-neutral-100 dark:border-neutral-700/50">
             <Bot className="h-3.5 w-3.5 text-brand-500 shrink-0" />
-            <div className="relative flex-1">
-                <select
+            <div className="flex-1">
+                <Select
+                    size="sm"
                     value={value}
                     onChange={handleChange}
                     disabled={saving}
-                    className="w-full appearance-none rounded-lg border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-800 pl-2.5 pr-7 py-1.5 text-xs disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 transition"
                 >
                     <option value="">{t('inbox.no_chatbot')}</option>
                     {chatbots.map(bot => (
                         <option key={bot.id} value={String(bot.id)}>{bot.name}</option>
                     ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" />
+                </Select>
             </div>
             {saving && <span className="text-xs text-neutral-400 shrink-0">{t('inbox.saving')}</span>}
         </div>
@@ -344,10 +345,16 @@ function PhoneStatusCard({ num, wabaId, onRefreshed }) {
                     <p className="text-[10px] text-neutral-400 leading-relaxed">
                         {t('inbox.change_display_name_help')}
                     </p>
-                    <div className="flex gap-2">
-                        <input type="text" value={newName} onChange={e => setNewName(e.target.value)}
-                            placeholder={verifiedName ?? t('inbox.business_name_placeholder')} maxLength={100}
-                            className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400" />
+                    <div className="flex gap-2 items-center">
+                        <Input
+                            size="sm"
+                            type="text"
+                            value={newName}
+                            onChange={e => setNewName(e.target.value)}
+                            placeholder={verifiedName ?? t('inbox.business_name_placeholder')}
+                            maxLength={100}
+                            className="flex-1"
+                        />
                         <button type="button" onClick={submitNameChange} disabled={submitting || !newName.trim()}
                             className="rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-medium px-3 py-1.5 transition whitespace-nowrap">
                             {submitting ? t('inbox.submitting') : t('inbox.submit')}

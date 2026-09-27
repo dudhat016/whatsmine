@@ -3,6 +3,7 @@ import InboxLayout from '@/Layouts/InboxLayout';
 import EmptyState from '@/Components/EmptyState';
 import NewConversationModal from '@/Components/Inbox/NewConversationModal';
 import { Skeleton } from '@/Components/ui';
+import Input from '@/Components/ui/Input';
 import {
     MessageSquare, Inbox, CheckCircle, Clock, User, RefreshCw,
     Search, Plus,
@@ -335,16 +336,13 @@ export default function InboxIndex({ conversations: initialConversations, filter
                             </div>
                         </div>
                         {/* Search */}
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 pointer-events-none" />
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                placeholder={t('inbox.search_conversations')}
-                                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-neutral-100 dark:bg-neutral-800 border-0 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-neutral-400"
-                            />
-                        </div>
+                        <Input
+                            size="sm"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder={t('inbox.search_conversations')}
+                            leftIcon={<Search className="h-3.5 w-3.5 text-neutral-400" />}
+                        />
                     </div>
 
                     {/* List body */}

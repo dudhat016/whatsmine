@@ -5,6 +5,7 @@ import {
     Clock, DollarSign, ChevronRight, PenTool, User, Mail, Download, MessageSquare, X
 } from 'lucide-react';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input } from '@/Components/ui';
 
 export default function ProposalPublicView({ proposal = {} }) {
     const { alert } = useConfirm();
@@ -320,7 +321,7 @@ export default function ProposalPublicView({ proposal = {} }) {
                         <form onSubmit={handleSubmitSign} className="space-y-4 text-xs">
                             <div>
                                 <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">Your Legal Name *</label>
-                                <input
+                                <Input
                                     type="text"
                                     required
                                     value={data.signer_name}
@@ -329,19 +330,19 @@ export default function ProposalPublicView({ proposal = {} }) {
                                         setTypedName(e.target.value);
                                     }}
                                     placeholder="Full Name"
-                                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white"
+                                    className="bg-slate-950 border-slate-800 text-white text-xs"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">Your Email Address *</label>
-                                <input
+                                <Input
                                     type="email"
                                     required
                                     value={data.signer_email}
                                     onChange={(e) => setData('signer_email', e.target.value)}
                                     placeholder="email@company.com"
-                                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white"
+                                    className="bg-slate-950 border-slate-800 text-white text-xs"
                                 />
                             </div>
 

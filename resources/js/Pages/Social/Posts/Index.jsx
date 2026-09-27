@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import Select from '@/Components/ui/Select';
 import { SocialBrandIcon } from '@/Components/BrandIcons';
 import {
     Plus, Trash2, ExternalLink, Share2, Clock, CheckCircle2, XCircle,
@@ -361,33 +362,22 @@ export default function SocialPostsIndex({ posts, accounts, filters }) {
                 {/* Filters */}
                 <div className="flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-3">
                     <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider shrink-0">{t('social.filter_by')}</span>
-                    <div className="flex flex-wrap gap-2 flex-1">
-                        <div className="relative">
-                            <select
-                                value={filters.status ?? ''}
-                                onChange={(e) => handleFilter('status', e.target.value)}
-                                className="appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 pl-3 pr-8 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
-                            >
-                                <option value="">{t('social.status_all')}</option>
-                                {Object.entries(STATUS_META).map(([k, v]) => <option key={k} value={k}>{t(v.labelKey)}</option>)}
-                            </select>
-                            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400">
-                                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                            </span>
-                        </div>
-                        <div className="relative">
-                            <select
-                                value={filters.network ?? ''}
-                                onChange={(e) => handleFilter('network', e.target.value)}
-                                className="appearance-none rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 pl-3 pr-8 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
-                            >
-                                <option value="">{t('social.all_platforms')}</option>
-                                {NETWORKS.map((n) => <option key={n} value={n}>{NETWORK_LABELS[n]}</option>)}
-                            </select>
-                            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400">
-                                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>
-                            </span>
-                        </div>
+                        <Select
+                            size="sm"
+                            value={filters.status ?? ''}
+                            onChange={(e) => handleFilter('status', e.target.value)}
+                        >
+                            <option value="">{t('social.status_all')}</option>
+                            {Object.entries(STATUS_META).map(([k, v]) => <option key={k} value={k}>{t(v.labelKey)}</option>)}
+                        </Select>
+                        <Select
+                            size="sm"
+                            value={filters.network ?? ''}
+                            onChange={(e) => handleFilter('network', e.target.value)}
+                        >
+                            <option value="">{t('social.all_platforms')}</option>
+                            {NETWORKS.map((n) => <option key={n} value={n}>{NETWORK_LABELS[n]}</option>)}
+                        </Select>
                         {(filters.status || filters.network) && (
                             <button
                                 onClick={() => router.get(route('client.social.posts.index'), {}, { replace: true })}
@@ -396,7 +386,6 @@ export default function SocialPostsIndex({ posts, accounts, filters }) {
                                 <X className="h-3.5 w-3.5" /> {t('social.clear')}
                             </button>
                         )}
-                    </div>
                     <span className="text-xs text-neutral-400 shrink-0">{t('social.post_count', { count: posts.total })}</span>
                 </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RotateCcw, Database, Pipette, X, Link, Unlink, Check } from 'lucide-react';
+import { Input, Select } from '@/Components/ui';
 
 // ── Helper to slugify string for CSS var ───────────────────────────────
 
@@ -527,22 +528,26 @@ export function ColorPickerPopover({ initialValue = '#ffffff', onChange, onClose
                     {/* Format Switcher & Text input Row */}
                     <div className="flex items-center gap-1.5 pt-2 border-t border-neutral-100">
                         {/* Format Select Dropdown */}
-                        <select
-                            value={format}
-                            onChange={(e) => handleFormatChange(e.target.value)}
-                            className="rounded-lg border border-neutral-300 bg-neutral-50 px-1.5 py-1 text-[10px] font-bold text-neutral-700 focus:outline-none focus:border-brand-500 cursor-pointer shadow-2xs"
-                        >
-                            <option value="HEX">HEX</option>
-                            <option value="RGBA">RGB</option>
-                            <option value="HSLA">HSL</option>
-                        </select>
+                        <div className="w-20">
+                            <Select
+                                size="sm"
+                                value={format}
+                                onChange={(e) => handleFormatChange(e.target.value)}
+                            >
+                                <option value="HEX">HEX</option>
+                                <option value="RGBA">RGB</option>
+                                <option value="HSLA">HSL</option>
+                            </Select>
+                        </div>
 
                         {/* Hex/Value Input */}
-                        <input
+                        <Input
+                            size="sm"
                             type="text"
                             value={inputText}
                             onChange={handleTextInput}
-                            className="flex-1 rounded-lg border border-neutral-300 bg-white px-2 py-1 font-mono text-[11px] font-semibold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
+                            className="font-mono"
+                            wrapperClassName="flex-1"
                         />
 
                         {/* Opacity % */}
@@ -625,12 +630,13 @@ export default function ColorPickerInput({ value = '#ffffff', onChange, styleGui
 
             {/* Editable Text Input */}
             <div className="relative flex-1 min-w-0">
-                <input
+                <Input
+                    size="sm"
                     type="text"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    className={`w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs text-neutral-800 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-2xs ${
-                        isVariable ? 'border-brand-400 bg-brand-50/50 text-brand-900 font-bold' : 'border-neutral-300 bg-white'
+                    className={`font-mono ${
+                        isVariable ? 'border-brand-400 bg-brand-50/50 text-brand-900 font-bold' : ''
                     }`}
                     placeholder="#ffffff or var(--color-primary)"
                 />

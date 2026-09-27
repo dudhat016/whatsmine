@@ -4,6 +4,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import Card from '@/Components/ui/Card';
 import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
+import Input from '@/Components/ui/Input';
 import Pagination from '@/Components/ui/Pagination';
 import { 
     FileText, Plus, Search, ExternalLink, CheckCircle, Clock, Send, 
@@ -54,18 +55,17 @@ export default function ProposalsIndex({ proposals = { data: [] }, filters = {} 
                 {/* Proposals Table */}
                 <Card padding={false} className="overflow-hidden">
                     <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-                        <div className="relative w-64">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
-                            <input
-                                type="text"
+                        <div className="w-64">
+                            <Input
+                                size="sm"
                                 placeholder="Search proposals..."
                                 defaultValue={filters.search || ''}
+                                leftIcon={<Search className="h-4 w-4 text-neutral-400" />}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         router.get(route('client.agency.proposals.index'), { search: e.target.value }, { preserveState: true });
                                     }
                                 }}
-                                className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 pl-9 pr-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:ring-2 focus:ring-brand-500"
                             />
                         </div>
                     </div>

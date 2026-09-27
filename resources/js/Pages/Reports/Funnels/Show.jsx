@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import Input from '@/Components/ui/Input';
 import { useTranslation } from 'react-i18next';
 import {
     Eye, MousePointerClick, DollarSign, TrendingUp, Users,
@@ -101,14 +102,14 @@ export function FunnelReportIndex({
                     </div>
 
                     {/* Search Form */}
-                    <form onSubmit={handleSearchSubmit} className="relative min-w-[240px]">
-                        <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-neutral-400" />
-                        <input
+                    <form onSubmit={handleSearchSubmit} className="min-w-[240px]">
+                        <Input
+                            size="sm"
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Filter funnels..."
-                            className="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            leftIcon={<Search className="w-3.5 h-3.5 text-neutral-400" />}
                         />
                     </form>
                 </div>

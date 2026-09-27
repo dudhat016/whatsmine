@@ -15,6 +15,7 @@ import {
     GitBranch,
     MessageCircle,
 } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 const STANDARD_SCOPES = [
     {
@@ -342,18 +343,15 @@ export default function DynamicTokenPicker({
                     style={{ maxHeight: '460px', display: 'flex', flexDirection: 'column' }}
                 >
                     {/* Search Header */}
-                    <div className="p-2.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-800/50">
-                        <div className="relative">
-                            <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                            <input
-                                type="text"
-                                autoFocus
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search variables (name or tag)..."
-                                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            />
-                        </div>
+                    <div className="p-2 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-800/50">
+                        <Input
+                            size="sm"
+                            autoFocus
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search variables (name or tag)..."
+                            leftIcon={Search}
+                        />
                     </div>
 
                     {/* Content: Search Mode vs Flyout Mode */}
@@ -452,17 +450,18 @@ export default function DynamicTokenPicker({
                     </div>
 
                     {/* Inline Fallback Assistant (Rule 5 & Section 7.6) */}
-                    <div className="p-2.5 bg-neutral-50/90 dark:bg-neutral-800/60 border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2">
+                    <div className="p-2 bg-neutral-50/90 dark:bg-neutral-800/60 border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-2">
                         <div className="flex items-center gap-1 text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 shrink-0">
                             <ShieldAlert className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                             <span>Fallback:</span>
                         </div>
-                        <input
-                            type="text"
+                        <Input
+                            size="sm"
                             value={fallbackDefault}
                             onChange={(e) => setFallbackDefault(e.target.value)}
                             placeholder="Default if blank (e.g. there, our team)"
-                            className="flex-1 min-w-0 px-2 py-1 text-[11px] rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="text-[11px]"
+                            wrapperClassName="flex-1 min-w-0"
                         />
                     </div>
 

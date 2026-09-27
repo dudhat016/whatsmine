@@ -15,7 +15,7 @@ import {
     DollarSign,
     Sliders
 } from 'lucide-react';
-import { PanelSelect, FieldLabel } from '../BuilderUI';
+import { PanelSelect, PanelNumber, FieldLabel } from '../BuilderUI';
 import ColorPickerInput from '../ColorPicker';
 import {
     TabSwitcher,
@@ -302,23 +302,19 @@ export default function StylePanel({
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="space-y-0.5">
                                             <FieldLabel>Opacity</FieldLabel>
-                                            <input
-                                                type="number"
+                                            <PanelNumber
                                                 min="0.1"
                                                 max="1.0"
                                                 step="0.05"
                                                 value={val('subtextOpacity', 0.9)}
                                                 onChange={e => update('subtextOpacity', parseFloat(e.target.value) || 0.9)}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                             />
                                         </div>
                                         <div className="space-y-0.5">
                                             <FieldLabel>Top Spacing (px)</FieldLabel>
-                                            <input
-                                                type="number"
+                                            <PanelNumber
                                                 value={val('subtextGap', 3)}
                                                 onChange={e => update('subtextGap', Number(e.target.value))}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                             />
                                         </div>
                                     </div>
@@ -371,14 +367,12 @@ export default function StylePanel({
 
                                     <div className="space-y-0.5">
                                         <FieldLabel>Hover Opacity</FieldLabel>
-                                        <input
-                                            type="number"
+                                        <PanelNumber
                                             min="0.1"
                                             max="1.0"
                                             step="0.05"
                                             value={val('subtextHoverOpacity', 1.0)}
                                             onChange={e => update('subtextHoverOpacity', parseFloat(e.target.value) || 1.0)}
-                                            className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                         />
                                     </div>
 
@@ -437,20 +431,16 @@ export default function StylePanel({
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="space-y-0.5">
                                             <FieldLabel>Size (px)</FieldLabel>
-                                            <input
-                                                type="number"
+                                            <PanelNumber
                                                 value={val('btnIconSize', 16)}
                                                 onChange={e => update('btnIconSize', Number(e.target.value))}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                             />
                                         </div>
                                         <div className="space-y-0.5">
                                             <FieldLabel>Spacing (px)</FieldLabel>
-                                            <input
-                                                type="number"
+                                            <PanelNumber
                                                 value={val('btnIconGap', 8)}
                                                 onChange={e => update('btnIconGap', Number(e.target.value))}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                             />
                                         </div>
                                     </div>
@@ -465,11 +455,9 @@ export default function StylePanel({
                                         </div>
                                         <div className="space-y-0.5">
                                             <FieldLabel>Padding (px)</FieldLabel>
-                                            <input
-                                                type="number"
+                                            <PanelNumber
                                                 value={val('btnIconPadding', 0)}
                                                 onChange={e => update('btnIconPadding', Number(e.target.value))}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                             />
                                         </div>
                                     </div>
@@ -747,7 +735,7 @@ export default function StylePanel({
                                         </div>
                                         <div className="space-y-0.5">
                                             <FieldLabel>Toggle Icon Size (px)</FieldLabel>
-                                            <input type="number" value={val('iconSize', 14)} onChange={e => update('iconSize', Number(e.target.value))} className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium" />
+                                            <PanelNumber value={val('iconSize', 14)} onChange={e => update('iconSize', Number(e.target.value))} />
                                         </div>
                                     </div>
 
@@ -1063,11 +1051,11 @@ export default function StylePanel({
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-0.5">
                                     <FieldLabel>Size (px)</FieldLabel>
-                                    <input type="number" value={val('iconSize', 24)} onChange={e => update('iconSize', Number(e.target.value))} className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium" />
+                                    <PanelNumber value={val('iconSize', 24)} onChange={e => update('iconSize', Number(e.target.value))} />
                                 </div>
                                 <div className="space-y-0.5">
                                     <FieldLabel>Padding (px)</FieldLabel>
-                                    <input type="number" value={val('iconPadding', 10)} onChange={e => update('iconPadding', Number(e.target.value))} className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium" />
+                                    <PanelNumber value={val('iconPadding', 10)} onChange={e => update('iconPadding', Number(e.target.value))} />
                                 </div>
                             </div>
 
@@ -1491,11 +1479,9 @@ export default function StylePanel({
 
                                     <div className="space-y-0.5">
                                         <FieldLabel>Space Between Items (px)</FieldLabel>
-                                        <input
-                                            type="number"
+                                        <PanelNumber
                                             value={val('itemSpacing', 12)}
                                             onChange={e => update('itemSpacing', Number(e.target.value))}
-                                            className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                         />
                                     </div>
                                 </>
@@ -1529,20 +1515,16 @@ export default function StylePanel({
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="space-y-0.5">
                                             <FieldLabel>Icon Size (px)</FieldLabel>
-                                            <input
-                                                type="number"
+                                            <PanelNumber
                                                 value={val('bulletIconSize', 18)}
                                                 onChange={e => update('bulletIconSize', Number(e.target.value))}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                             />
                                         </div>
                                         <div className="space-y-0.5">
                                             <FieldLabel>Icon Spacing (px)</FieldLabel>
-                                            <input
-                                                type="number"
+                                            <PanelNumber
                                                 value={val('bulletIconGap', 10)}
                                                 onChange={e => update('bulletIconGap', Number(e.target.value))}
-                                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium"
                                             />
                                         </div>
                                     </div>
@@ -1887,7 +1869,7 @@ export default function StylePanel({
                             </div>
                             <div className="space-y-0.5">
                                 <FieldLabel>Bar Height (px)</FieldLabel>
-                                <input type="number" min="4" max="50" value={val('barHeight', 12)} onChange={e => update('barHeight', Number(e.target.value))} className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium" />
+                                <PanelNumber min="4" max="50" value={val('barHeight', 12)} onChange={e => update('barHeight', Number(e.target.value))} />
                             </div>
                             <CornerRadiusControl label="Bar Corner Radius" prefix="bar" val={val} updateBatch={updateBatch} defaultRadius={9999} />
                         </div>

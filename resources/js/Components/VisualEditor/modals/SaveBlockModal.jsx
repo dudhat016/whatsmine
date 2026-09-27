@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bookmark } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 export default function SaveBlockModal({
     saveBlockModal,
@@ -28,12 +29,12 @@ export default function SaveBlockModal({
                         <label className="block text-xs font-bold text-neutral-700 mb-1">
                             Block Name
                         </label>
-                        <input
+                        <Input
+                            size="sm"
                             type="text"
                             value={savedBlockName}
                             onChange={(e) => setSavedBlockName(e.target.value)}
                             placeholder="e.g. Hero Section, Pricing Grid..."
-                            className="w-full text-xs px-3 py-2 rounded-lg border border-neutral-300 focus:outline-hidden focus:border-brand-500"
                             autoFocus
                         />
                     </div>

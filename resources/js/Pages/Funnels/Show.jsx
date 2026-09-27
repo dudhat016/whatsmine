@@ -3,6 +3,8 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import Card from '@/Components/ui/Card';
 import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
+import Input from '@/Components/ui/Input';
+import Select from '@/Components/ui/Select';
 import DatePicker from '@/Components/ui/DatePicker';
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -785,40 +787,36 @@ export default function FunnelShow({
                                         {/* Form inputs grid: Step Name & URL Slug */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                             {/* Step Name */}
-                                            <div>
-                                                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                                                    Step Name *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={stepName}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        setStepName(val);
-                                                        if (!currentStep.slug) {
-                                                            setStepSlug(val.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''));
-                                                        }
-                                                    }}
-                                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs text-neutral-900 dark:text-neutral-100 font-medium focus:ring-2 focus:ring-brand-500"
-                                                    placeholder="e.g. Masterclass Checkout"
-                                                    required
-                                                />
-                                            </div>
+                                            <Input
+                                                label="Step Name *"
+                                                value={stepName}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setStepName(val);
+                                                    if (!currentStep.slug) {
+                                                        setStepSlug(val.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''));
+                                                    }
+                                                }}
+                                                placeholder="e.g. Masterclass Checkout"
+                                                required
+                                            />
 
                                             {/* Step URL Slug */}
                                             <div>
                                                 <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
                                                     Live URL Path Slug
                                                 </label>
-                                                <div className="flex items-center rounded-lg border border-neutral-300 dark:border-neutral-700 overflow-hidden text-xs bg-white dark:bg-neutral-800 focus-within:ring-2 focus-within:ring-brand-500">
-                                                    <span className="bg-neutral-100 dark:bg-neutral-800/80 px-2.5 py-2 text-neutral-500 border-r border-neutral-200 dark:border-neutral-700 text-[11px] font-mono shrink-0 select-none">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="bg-neutral-100 dark:bg-neutral-800/80 px-2.5 py-1.5 text-neutral-500 border border-neutral-200 dark:border-neutral-700 rounded-md text-[11px] font-mono shrink-0 select-none">
                                                         /f/{funnel.slug}/
                                                     </span>
-                                                    <input
+                                                    <Input
+                                                        size="sm"
+                                                        wrapperClassName="flex-1"
                                                         type="text"
                                                         value={stepSlug}
                                                         onChange={(e) => setStepSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                                                        className="flex-1 px-2.5 py-2 bg-transparent text-neutral-900 dark:text-neutral-100 font-mono text-xs focus:outline-none"
+                                                        className="font-mono"
                                                         placeholder="order-checkout"
                                                     />
                                                 </div>
@@ -1659,49 +1657,40 @@ export default function FunnelShow({
                         </div>
 
                         <form onSubmit={handleSaveSettings} className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Funnel Name *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={settingsForm.data.name}
-                                    onChange={(e) => settingsForm.setData('name', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                    required
-                                />
-                            </div>
+                            <Input
+                                label="Funnel Name *"
+                                type="text"
+                                value={settingsForm.data.name}
+                                onChange={(e) => settingsForm.setData('name', e.target.value)}
+                                required
+                            />
 
                             <div>
                                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
                                     Funnel Slug Path *
                                 </label>
-                                <div className="flex items-center rounded-lg border border-neutral-300 dark:border-neutral-700 overflow-hidden text-xs">
-                                    <span className="bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-neutral-500 border-r border-neutral-300 dark:border-neutral-700">
+                                <div className="flex items-center gap-2">
+                                    <span className="bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-neutral-500 border border-neutral-300 dark:border-neutral-700 rounded-md text-xs">
                                         /f/
                                     </span>
-                                    <input
+                                    <Input
+                                        size="sm"
+                                        wrapperClassName="flex-1"
                                         type="text"
                                         value={settingsForm.data.slug}
                                         onChange={(e) => settingsForm.setData('slug', e.target.value)}
-                                        className="flex-1 px-3 py-2 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none"
                                         required
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    SEO Meta Title
-                                </label>
-                                <input
-                                    type="text"
-                                    value={settingsForm.data.meta_title}
-                                    onChange={(e) => settingsForm.setData('meta_title', e.target.value)}
-                                    placeholder="e.g. Special Black Friday Offer"
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                />
-                            </div>
+                            <Input
+                                label="SEO Meta Title"
+                                type="text"
+                                value={settingsForm.data.meta_title}
+                                onChange={(e) => settingsForm.setData('meta_title', e.target.value)}
+                                placeholder="e.g. Special Black Friday Offer"
+                            />
 
                             <div>
                                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
@@ -1747,59 +1736,49 @@ export default function FunnelShow({
                             </button>
                         </div>
                         <form onSubmit={handleCreateStep} className="p-5 space-y-4 text-xs">
-                            <div>
-                                <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">
-                                    Step Name *
-                                </label>
-                                <input
-                                    type="text"
-                                    value={addStepForm.data.name}
-                                    onChange={(e) => addStepForm.setData('name', e.target.value)}
-                                    placeholder="e.g. Core Checkout, VIP Upsell, Booking"
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 font-medium"
-                                    required
-                                    autoFocus
-                                />
-                            </div>
+                            <Input
+                                label="Step Name *"
+                                type="text"
+                                value={addStepForm.data.name}
+                                onChange={(e) => addStepForm.setData('name', e.target.value)}
+                                placeholder="e.g. Core Checkout, VIP Upsell, Booking"
+                                required
+                                autoFocus
+                            />
 
-                            <div>
-                                <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">
-                                    Step Type Pipeline Role *
-                                </label>
-                                <select
-                                    value={addStepForm.data.type}
-                                    onChange={(e) => addStepForm.setData('type', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500 font-medium"
-                                >
-                                    <optgroup label="Sales & Commerce">
-                                        <option value="sales">Sales Page</option>
-                                        <option value="checkout" disabled={hasFunnelCheckout}>
-                                            Order Form / Checkout {hasFunnelCheckout ? '(Already in funnel — 1 Max)' : ''}
-                                        </option>
-                                        <option value="upsell">Upsell (One-Time-Offer / OTO)</option>
-                                        <option value="downsell">Downsell Discount</option>
-                                        <option value="thank_you" disabled={hasFunnelThankYou}>
-                                            Thank You / Confirmation {hasFunnelThankYou ? '(Already in funnel — 1 Max)' : ''}
-                                        </option>
-                                    </optgroup>
-                                    <optgroup label="Lead Generation">
-                                        <option value="optin">Opt-in / Lead Capture</option>
-                                        <option value="optin_thank_you">Opt-in Thank You</option>
-                                        <option value="contact_us">Contact Us Form (Inquiry)</option>
-                                        <option value="booking">Booking / Calendar Meeting</option>
-                                    </optgroup>
-                                    <optgroup label="Webinar Funnels">
-                                        <option value="webinar_registration">Webinar Registration</option>
-                                        <option value="webinar_broadcast">Webinar Broadcast / Room</option>
-                                        <option value="webinar_thank_you">Webinar Replay / Pass</option>
-                                    </optgroup>
-                                    <optgroup label="Legal & Information">
-                                        <option value="info_page">Info / Policy Page</option>
-                                        <option value="legal_terms">Terms & Conditions</option>
-                                        <option value="legal_privacy">Privacy Policy</option>
-                                    </optgroup>
-                                </select>
-                            </div>
+                            <Select
+                                label="Step Type Pipeline Role *"
+                                value={addStepForm.data.type}
+                                onChange={(e) => addStepForm.setData('type', e.target.value)}
+                            >
+                                <optgroup label="Sales & Commerce">
+                                    <option value="sales">Sales Page</option>
+                                    <option value="checkout" disabled={hasFunnelCheckout}>
+                                        Order Form / Checkout {hasFunnelCheckout ? '(Already in funnel — 1 Max)' : ''}
+                                    </option>
+                                    <option value="upsell">Upsell (One-Time-Offer / OTO)</option>
+                                    <option value="downsell">Downsell Discount</option>
+                                    <option value="thank_you" disabled={hasFunnelThankYou}>
+                                        Thank You / Confirmation {hasFunnelThankYou ? '(Already in funnel — 1 Max)' : ''}
+                                    </option>
+                                </optgroup>
+                                <optgroup label="Lead Generation">
+                                    <option value="optin">Opt-in / Lead Capture</option>
+                                    <option value="optin_thank_you">Opt-in Thank You</option>
+                                    <option value="contact_us">Contact Us Form (Inquiry)</option>
+                                    <option value="booking">Booking / Calendar Meeting</option>
+                                </optgroup>
+                                <optgroup label="Webinar Funnels">
+                                    <option value="webinar_registration">Webinar Registration</option>
+                                    <option value="webinar_broadcast">Webinar Broadcast / Room</option>
+                                    <option value="webinar_thank_you">Webinar Replay / Pass</option>
+                                </optgroup>
+                                <optgroup label="Legal & Information">
+                                    <option value="info_page">Info / Policy Page</option>
+                                    <option value="legal_terms">Terms & Conditions</option>
+                                    <option value="legal_privacy">Privacy Policy</option>
+                                </optgroup>
+                            </Select>
                             <div className="pt-2 flex justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
                                 <Button variant="secondary" size="sm" type="button" onClick={() => setShowAddStepModal(false)}>
                                     Cancel
@@ -1891,14 +1870,11 @@ export default function FunnelShow({
 
                             {/* Product Selection Dropdown (from Ecommerce Product Catalog) */}
                             <div>
-                                <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">
-                                    Select Product from Store Catalog *
-                                </label>
                                 {eligibleProducts.length > 0 ? (
-                                    <select
+                                    <Select
+                                        label="Select Product from Store Catalog *"
                                         value={productForm.data.product_id}
                                         onChange={(e) => handleSelectCatalogProduct(e.target.value)}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 font-medium"
                                         required
                                     >
                                         <option value="" disabled>-- Choose a product from catalog --</option>
@@ -1907,7 +1883,7 @@ export default function FunnelShow({
                                                 {prod.name} — {fmtCurrency(prod.price || prod.prices?.[0]?.price)} ({prod.product_type || 'Digital'})
                                             </option>
                                         ))}
-                                    </select>
+                                    </Select>
                                 ) : availableProducts.length > 0 ? (
                                     <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200 text-xs">
                                         <strong>All products already attached:</strong> All {availableProducts.length} product(s) from your store catalog have already been attached to this step.
@@ -1964,49 +1940,38 @@ export default function FunnelShow({
 
                             {/* Pricing Tier Dropdown (if multiple prices exist) */}
                             {selectedCatalogProduct?.prices && selectedCatalogProduct.prices.length > 1 && (
-                                <div>
-                                    <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">
-                                        Pricing Option / Tier *
-                                    </label>
-                                    <select
-                                        value={productForm.data.product_price_id}
-                                        onChange={(e) => handleSelectPriceTier(e.target.value)}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 font-medium"
-                                    >
-                                        {selectedCatalogProduct.prices.map((tier) => (
-                                            <option key={tier.id} value={tier.id}>
-                                                {tier.name || 'Standard'} — {fmtCurrency(tier.price)} {tier.billing_interval ? `/${tier.billing_interval}` : ''}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <Select
+                                    label="Pricing Option / Tier *"
+                                    value={productForm.data.product_price_id}
+                                    onChange={(e) => handleSelectPriceTier(e.target.value)}
+                                >
+                                    {selectedCatalogProduct.prices.map((tier) => (
+                                        <option key={tier.id} value={tier.id}>
+                                            {tier.name || 'Standard'} — {fmtCurrency(tier.price)} {tier.billing_interval ? `/${tier.billing_interval}` : ''}
+                                        </option>
+                                    ))}
+                                </Select>
                             )}
 
                             {/* Fallback Manual Inputs if no catalog products exist */}
                             {availableProducts.length === 0 && (
                                 <div className="space-y-3 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                                    <div>
-                                        <label className="block font-semibold mb-1">Product Title *</label>
-                                        <input
-                                            type="text"
-                                            value={productForm.data.name}
-                                            onChange={(e) => productForm.setData('name', e.target.value)}
-                                            placeholder="e.g. Masterclass VIP Pass"
-                                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block font-semibold mb-1">Price ($) *</label>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={productForm.data.price}
-                                            onChange={(e) => productForm.setData('price', e.target.value)}
-                                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500"
-                                            required
-                                        />
-                                    </div>
+                                    <Input
+                                        label="Product Title *"
+                                        type="text"
+                                        value={productForm.data.name}
+                                        onChange={(e) => productForm.setData('name', e.target.value)}
+                                        placeholder="e.g. Masterclass VIP Pass"
+                                        required
+                                    />
+                                    <Input
+                                        label="Price ($) *"
+                                        type="number"
+                                        step="0.01"
+                                        value={productForm.data.price}
+                                        onChange={(e) => productForm.setData('price', e.target.value)}
+                                        required
+                                    />
                                 </div>
                             )}
 
@@ -2017,19 +1982,14 @@ export default function FunnelShow({
                                         <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                                         Order Bump Checkout Configuration
                                     </div>
-                                    <div>
-                                        <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">
-                                            Bump Headline *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={productForm.data.bump_headline}
-                                            onChange={(e) => productForm.setData('bump_headline', e.target.value)}
-                                            placeholder="e.g. YES! Add the Audio Workbook for only $19"
-                                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500"
-                                            required
-                                        />
-                                    </div>
+                                    <Input
+                                        label="Bump Headline *"
+                                        type="text"
+                                        value={productForm.data.bump_headline}
+                                        onChange={(e) => productForm.setData('bump_headline', e.target.value)}
+                                        placeholder="e.g. YES! Add the Audio Workbook for only $19"
+                                        required
+                                    />
                                     <div>
                                         <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">
                                             Bump Description

@@ -174,22 +174,25 @@ export default function PipelineSettingsModal({
                                             className="h-8 w-8 rounded border-none cursor-pointer"
                                             title="Stage Accent Color"
                                         />
-                                        <input
-                                            type="text"
-                                            value={stage.name}
-                                            onChange={(e) => handleStageChange(idx, 'name', e.target.value)}
-                                            placeholder="Stage Name"
-                                            className="flex-1 rounded-soft border border-neutral-300 dark:border-neutral-600 text-sm dark:bg-neutral-800 px-3 py-1.5 focus:border-brand-500 focus:outline-none"
-                                            required
-                                        />
-                                        <div className="flex items-center gap-1 text-xs text-neutral-500">
-                                            <input
+                                        <div className="flex-1">
+                                            <Input
+                                                size="sm"
+                                                type="text"
+                                                value={stage.name}
+                                                onChange={(e) => handleStageChange(idx, 'name', e.target.value)}
+                                                placeholder="Stage Name"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-1 text-xs text-neutral-500 w-20">
+                                            <Input
+                                                size="sm"
                                                 type="number"
                                                 min="0"
                                                 max="100"
                                                 value={stage.probability}
                                                 onChange={(e) => handleStageChange(idx, 'probability', parseInt(e.target.value, 10) || 0)}
-                                                className="w-14 rounded-soft border border-neutral-300 dark:border-neutral-600 text-sm dark:bg-neutral-800 text-center px-1 py-1.5"
+                                                className="text-center"
                                             />
                                             <span>%</span>
                                         </div>

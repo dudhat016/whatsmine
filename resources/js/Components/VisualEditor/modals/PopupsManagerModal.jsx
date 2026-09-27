@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Layers, Sparkles, Sliders, Eye, Save, MousePointer, ShieldCheck } from 'lucide-react';
+import { Input, Select } from '@/Components/ui';
 
 export default function PopupsManagerModal({ isOpen, onClose, funnel, onSavePopups }) {
     const [activeTab, setActiveTab] = useState('exit_intent');
@@ -123,11 +124,11 @@ export default function PopupsManagerModal({ isOpen, onClose, funnel, onSavePopu
                             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
                                 Popup Headline
                             </label>
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={current.title || ''}
                                 onChange={(e) => updateCurrent('title', e.target.value)}
-                                className="w-full px-3 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl dark:bg-neutral-800 dark:text-white"
                             />
                         </div>
 
@@ -148,29 +149,24 @@ export default function PopupsManagerModal({ isOpen, onClose, funnel, onSavePopu
                                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
                                     CTA Button Text
                                 </label>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={current.buttonText || ''}
                                     onChange={(e) => updateCurrent('buttonText', e.target.value)}
-                                    className="w-full px-3 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl dark:bg-neutral-800 dark:text-white"
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Frequency Cap
-                                </label>
-                                <select
+                                <Select
+                                    label="Frequency Cap"
                                     value={current.frequencyCap || '1 time per session'}
                                     onChange={(e) => updateCurrent('frequencyCap', e.target.value)}
-                                    className="w-full px-3 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl dark:bg-neutral-800 dark:text-white"
                                 >
                                     <option value="1 time per session">1 time per session</option>
                                     <option value="Every 24 hours">Every 24 hours</option>
                                     <option value="Every 7 days">Every 7 days</option>
                                     <option value="Always show">Always show</option>
-                                </select>
-                            </div>
+                                </Select>
                         </div>
                     </div>
                 </div>

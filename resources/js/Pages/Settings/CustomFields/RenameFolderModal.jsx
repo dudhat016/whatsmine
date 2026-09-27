@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Folder, Edit2, User, Target, Building2 } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 export default function RenameFolderModal({ isOpen, folder, onClose, onRename }) {
     const [name, setName] = useState('');
@@ -51,20 +52,15 @@ export default function RenameFolderModal({ isOpen, folder, onClose, onRename })
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                            Folder Name *
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Folder Name"
-                            className="w-full px-3.5 py-2.5 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-neutral-400"
-                            autoFocus
-                        />
-                    </div>
+                    <Input
+                        label="Folder Name *"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Folder Name"
+                        autoFocus
+                    />
 
                     {!folder.is_system && (
                         <div>

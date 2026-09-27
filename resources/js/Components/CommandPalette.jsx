@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { router } from '@inertiajs/react';
 import { Search, Loader2, FileText, Users, Building2, Package, CreditCard, LayoutDashboard, User, Settings, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Input } from '@/Components/ui';
 
 const ICON_MAP = {
     LayoutDashboard, Users, Building2, Package, CreditCard, FileText, User, Settings,
@@ -78,19 +79,22 @@ export default function CommandPalette({ searchRoute }) {
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpen(false)} />
             <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 shadow-2xl overflow-hidden">
                 {/* Input */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
-                    <Search className="h-4 w-4 text-neutral-400 flex-shrink-0" />
-                    <input
+                <div className="p-3 border-b border-neutral-100 dark:border-neutral-800">
+                    <Input
                         ref={inputRef}
                         type="text"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={t('ui.search_placeholder')}
-                        className="flex-1 bg-transparent text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 outline-none"
+                        leftIcon={Search}
+                        rightElement={loading ? (
+                            <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />
+                        ) : (
+                            <kbd className="hidden sm:inline-flex text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-0.5">Esc</kbd>
+                        )}
+                        className="border-none shadow-none focus:ring-0 text-base"
                     />
-                    {loading && <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" />}
-                    {!loading && <kbd className="hidden sm:inline-flex text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-0.5">Esc</kbd>}
                 </div>
 
                 {/* Results */}

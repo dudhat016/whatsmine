@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
 import ColorPickerInput from '../ColorPicker';
+import { Input } from '@/Components/ui';
 
 /**
  * GradientEditor — extracted from the 120-line inline IIFE in SettingsTab.
@@ -77,10 +78,11 @@ export default function GradientEditor({ val, elementId, handleUpdateElementSett
                         <ColorPickerInput value={stop.color} onChange={v => updateStop(idx, 'color', v)} styleGuide={styleGuide} className="flex-1" />
                         <div className="flex items-center gap-1 shrink-0">
                             <span className="text-[10px] text-neutral-400 font-semibold">Pos:</span>
-                            <input
+                            <Input
+                                size="sm"
                                 type="number" min="0" max="100" value={stop.pos}
                                 onChange={e => updateStop(idx, 'pos', Math.max(0, Math.min(100, Number(e.target.value))))}
-                                className="w-12 rounded border border-neutral-300 p-1 text-center font-bold text-xs bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                                className="w-12 text-center font-bold text-xs"
                             />
                             <span className="text-[10px] font-bold text-neutral-500">%</span>
                         </div>
@@ -104,9 +106,12 @@ export default function GradientEditor({ val, elementId, handleUpdateElementSett
                         <input type="range" min="0" max="360" value={angle}
                             onChange={e => update('gradientAngle', Number(e.target.value))}
                             className="flex-1 accent-brand-600 cursor-pointer h-1.5" />
-                        <input type="number" value={angle}
+                        <Input
+                            size="sm"
+                            type="number" value={angle}
                             onChange={e => update('gradientAngle', Number(e.target.value))}
-                            className="w-14 rounded border p-1 text-center font-bold text-xs" />
+                            className="w-14 text-center font-bold text-xs"
+                        />
                     </div>
                     {/* Quick angle presets */}
                     <div className="flex gap-1 flex-wrap mt-1">

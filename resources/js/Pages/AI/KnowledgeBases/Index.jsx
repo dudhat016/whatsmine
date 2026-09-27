@@ -1,6 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import { Input } from '@/Components/ui';
 import { Plus, BookOpen, FileText, Database, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -121,17 +122,16 @@ export default function AiKnowledgeBasesIndex({ knowledgeBases }) {
                         </div>
                         <form onSubmit={handleCreate} className="px-6 py-4 space-y-4">
                             <div>
-                                <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('common.name')}</label>
-                                <input
+                                <Input
+                                    label={t('common.name')}
                                     type="text"
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
                                     required
                                     autoFocus
                                     placeholder={t('ai.kb_name_placeholder')}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+                                    error={errors.name}
                                 />
-                                {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
                             </div>
                             <div className="flex gap-2 pt-1 pb-2">
                                 <button

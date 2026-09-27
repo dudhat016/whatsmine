@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { SocialBrandIcon } from '@/Components/BrandIcons';
 import { browserTz, tzLocalToUtcIso } from '@/Utils/datetime';
 import TimezonePicker from '@/Components/TimezonePicker';
-import { DatePicker } from '@/Components/ui';
+import { DatePicker, Input, Select } from '@/Components/ui';
 
 const TONES = [
     { value: 'professional',  labelKey: 'social.tone_professional' },
@@ -77,38 +77,30 @@ function BriefStep({ brief, setBrief, accounts, onGenerate, loading, error }) {
                 <p className="text-xs text-neutral-400 mt-0.5 text-right">{brief.topic.length}/500</p>
             </div>
 
-            <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('social.campaign_goal')} <span className="text-neutral-400 font-normal">({t('common.optional')})</span></label>
-                <input
-                    type="text"
-                    value={brief.campaign_goal}
-                    onChange={e => setBrief(p => ({ ...p, campaign_goal: e.target.value }))}
-                    maxLength={200}
-                    placeholder={t('social.campaign_goal_placeholder')}
-                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-            </div>
+            <Input
+                label={<>{t('social.campaign_goal')} <span className="text-neutral-400 font-normal">({t('common.optional')})</span></>}
+                value={brief.campaign_goal}
+                onChange={e => setBrief(p => ({ ...p, campaign_goal: e.target.value }))}
+                maxLength={200}
+                placeholder={t('social.campaign_goal_placeholder')}
+            />
 
             <div className="grid grid-cols-2 gap-4">
+                <Select
+                    label={t('social.tone')}
+                    value={brief.tone}
+                    onChange={e => setBrief(p => ({ ...p, tone: e.target.value }))}
+                >
+                    {TONES.map(tone => <option key={tone.value} value={tone.value}>{t(tone.labelKey)}</option>)}
+                </Select>
                 <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('social.tone')}</label>
-                    <select
-                        value={brief.tone}
-                        onChange={e => setBrief(p => ({ ...p, tone: e.target.value }))}
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    >
-                        {TONES.map(tone => <option key={tone.value} value={tone.value}>{t(tone.labelKey)}</option>)}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('social.number_of_posts')}</label>
-                    <input
+                    <Input
                         type="number"
+                        label={t('social.number_of_posts')}
                         min={3}
                         max={14}
                         value={brief.post_count}
                         onChange={e => setBrief(p => ({ ...p, post_count: Math.max(3, Math.min(14, parseInt(e.target.value) || 7)) }))}
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                 </div>
             </div>
@@ -247,13 +239,11 @@ function ReviewStep({ editedPosts, setEditedPosts, approved, setApproved, select
                                 {isApproved ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-neutral-400" />}
                             </button>
                             <div className="flex-1 space-y-3">
-                                <input
-                                    type="text"
+                                <Input
                                     value={post.title}
                                     onChange={e => updatePost(i, 'title', e.target.value)}
                                     placeholder={t('social.post_title_optional')}
                                     maxLength={100}
-                                    className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                                 />
                                 <div>
                                     <textarea

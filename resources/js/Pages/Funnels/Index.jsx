@@ -3,6 +3,8 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import Card from '@/Components/ui/Card';
 import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
+import Input from '@/Components/ui/Input';
+import Select from '@/Components/ui/Select';
 import EmptyState from '@/Components/EmptyState';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -286,14 +288,13 @@ export default function FunnelIndex({
                     {/* Right: Search + View Switcher */}
                     <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
                         {/* Search */}
-                        <form onSubmit={handleSearchSubmit} className="relative min-w-[200px]">
-                            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-neutral-400" />
-                            <input
-                                type="text"
+                        <form onSubmit={handleSearchSubmit} className="min-w-[200px]">
+                            <Input
+                                size="sm"
+                                leftIcon={<Search className="w-3.5 h-3.5" />}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search funnels..."
-                                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                             />
                         </form>
 
@@ -913,45 +914,30 @@ export default function FunnelIndex({
                             {t('funnel.create_funnel') || 'Create Funnel'}
                         </h2>
                         <form onSubmit={handleCreate} className="space-y-3" noValidate>
-                            <div>
-                                <label htmlFor="funnel-name" className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-                                    {t('funnel.funnel_name') || 'Funnel Name'}
-                                </label>
-                                <input
-                                    id="funnel-name"
-                                    type="text"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    required
-                                    autoFocus
-                                    placeholder={t('funnel.funnel_name_placeholder') || 'e.g. Black Friday Special'}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-neutral-900 dark:text-neutral-100"
-                                />
-                                {errors.name && (
-                                    <p className="mt-1 text-xs text-red-600" role="alert">
-                                        {errors.name}
-                                    </p>
-                                )}
-                            </div>
+                            <Input
+                                id="funnel-name"
+                                label={t('funnel.funnel_name') || 'Funnel Name'}
+                                value={data.name}
+                                onChange={(e) => setData('name', e.target.value)}
+                                required
+                                autoFocus
+                                placeholder={t('funnel.funnel_name_placeholder') || 'e.g. Black Friday Special'}
+                                error={errors.name}
+                            />
 
                             {/* Folder Assignment indicator */}
-                            <div>
-                                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-                                    Folder
-                                </label>
-                                <select
-                                    value={data.folder_id || ''}
-                                    onChange={(e) => setData('folder_id', e.target.value ? Number(e.target.value) : null)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-neutral-900 dark:text-neutral-100"
-                                >
-                                    <option value="">Home (No Folder / Root)</option>
-                                    {folders.map((f) => (
-                                        <option key={f.id} value={f.id}>
-                                            {f.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                label="Folder"
+                                value={data.folder_id || ''}
+                                onChange={(e) => setData('folder_id', e.target.value ? Number(e.target.value) : null)}
+                            >
+                                <option value="">Home (No Folder / Root)</option>
+                                {folders.map((f) => (
+                                    <option key={f.id} value={f.id}>
+                                        {f.name}
+                                    </option>
+                                ))}
+                            </Select>
 
                             <div className="flex gap-2 pt-2">
                                 <button

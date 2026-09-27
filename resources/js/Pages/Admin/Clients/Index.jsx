@@ -1,9 +1,9 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Badge, Button, Card, Modal, Pagination, Tooltip } from '@/Components/ui';
+import { Badge, Button, Card, Input, Select, Modal, Pagination, Tooltip } from '@/Components/ui';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
 import {
     Pencil,
     Users,
@@ -266,13 +266,15 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                     </div>
                 </div>
 
-                <form onSubmit={submitSearch} className="flex flex-wrap gap-2">
-                    <input
+                <form onSubmit={submitSearch} className="flex flex-wrap items-center gap-2">
+                    <Input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder={t('admin.search_clients')}
-                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                        leftIcon={<Search className="h-4 w-4" />}
+                        size="sm"
+                        wrapperClassName="w-64"
                     />
                     <Button type="submit" variant="outline" size="sm">{t('common.search')}</Button>
                 </form>
@@ -341,37 +343,35 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                     <Modal.Body className="space-y-4">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.client_name')} <span className="text-red-500">*</span></label>
-                                <input
+                                <Input
+                                    label={<>{t('admin.client_name')} <span className="text-red-500">*</span></>}
                                     type="text"
                                     value={addClientForm.data.name}
                                     onChange={(e) => addClientForm.setData('name', e.target.value)}
                                     placeholder={t('admin.enter_client_name')}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
+                                    error={addClientForm.errors.name}
+                                    required
                                 />
-                                {addClientForm.errors.name && <p className="mt-0.5 text-xs text-red-500">{addClientForm.errors.name}</p>}
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.col_email')}</label>
-                                <input
+                                <Input
+                                    label={t('admin.col_email')}
                                     type="email"
                                     value={addClientForm.data.email}
                                     onChange={(e) => addClientForm.setData('email', e.target.value)}
                                     placeholder={t('admin.enter_email')}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
+                                    error={addClientForm.errors.email}
                                 />
-                                {addClientForm.errors.email && <p className="mt-0.5 text-xs text-red-500">{addClientForm.errors.email}</p>}
                             </div>
                         </div>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.phone')}</label>
-                                <input
+                                <Input
+                                    label={t('admin.phone')}
                                     type="text"
                                     value={addClientForm.data.phone}
                                     onChange={(e) => addClientForm.setData('phone', e.target.value)}
                                     placeholder={t('admin.enter_phone')}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                 />
                             </div>
                         </div>
@@ -387,35 +387,33 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                         </div>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.base_currency')}</label>
-                                <input
+                                <Input
+                                    label={t('admin.base_currency')}
                                     type="text"
                                     value={addClientForm.data.base_currency}
                                     onChange={(e) => addClientForm.setData('base_currency', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
+                                    hint={t('admin.iso_currency_hint')}
                                 />
-                                <p className="mt-0.5 text-xs text-neutral-500">{t('admin.iso_currency_hint')}</p>
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.currency_symbol')}</label>
-                                <input
+                                <Input
+                                    label={t('admin.currency_symbol')}
                                     type="text"
                                     value={addClientForm.data.currency_symbol}
                                     onChange={(e) => addClientForm.setData('currency_symbol', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
+                                    hint={t('admin.symbol_hint')}
                                 />
-                                <p className="mt-0.5 text-xs text-neutral-500">{t('admin.symbol_hint')}</p>
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.currency_position')}</label>
-                                <select
+                                <Select
+                                    label={t('admin.currency_position')}
                                     value={addClientForm.data.currency_position}
                                     onChange={(e) => addClientForm.setData('currency_position', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                >
-                                    <option value="before">{t('admin.currency_position_before')}</option>
-                                    <option value="after">{t('admin.currency_position_after')}</option>
-                                </select>
+                                    options={[
+                                        { value: 'before', label: t('admin.currency_position_before') },
+                                        { value: 'after', label: t('admin.currency_position_after') },
+                                    ]}
+                                />
                             </div>
                         </div>
                     </Modal.Body>
@@ -434,32 +432,30 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                         <Modal.Body className="space-y-4">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.client_name')} <span className="text-red-500">*</span></label>
-                                    <input
+                                    <Input
+                                        label={<>{t('admin.client_name')} <span className="text-red-500">*</span></>}
                                         type="text"
                                         value={editClientForm.data.name}
                                         onChange={(e) => editClientForm.setData('name', e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
+                                        error={editClientForm.errors.name}
+                                        required
                                     />
-                                    {editClientForm.errors.name && <p className="mt-0.5 text-xs text-red-500">{editClientForm.errors.name}</p>}
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.col_email')}</label>
-                                    <input
+                                    <Input
+                                        label={t('admin.col_email')}
                                         type="email"
                                         value={editClientForm.data.email}
                                         onChange={(e) => editClientForm.setData('email', e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.phone')}</label>
-                                <input
+                                <Input
+                                    label={t('admin.phone')}
                                     type="text"
                                     value={editClientForm.data.phone}
                                     onChange={(e) => editClientForm.setData('phone', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                 />
                             </div>
                             <div>
@@ -472,45 +468,43 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                                 />
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.col_status')}</label>
-                                <select
+                                <Select
+                                    label={t('admin.col_status')}
                                     value={editClientForm.data.status}
                                     onChange={(e) => editClientForm.setData('status', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                >
-                                    <option value="active">{t('common.active')}</option>
-                                    <option value="inactive">{t('common.inactive')}</option>
-                                </select>
+                                    options={[
+                                        { value: 'active', label: t('common.active') },
+                                        { value: 'inactive', label: t('common.inactive') },
+                                    ]}
+                                />
                             </div>
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.base_currency')}</label>
-                                    <input
+                                    <Input
+                                        label={t('admin.base_currency')}
                                         type="text"
                                         value={editClientForm.data.base_currency}
                                         onChange={(e) => editClientForm.setData('base_currency', e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.currency_symbol')}</label>
-                                    <input
+                                    <Input
+                                        label={t('admin.currency_symbol')}
                                         type="text"
                                         value={editClientForm.data.currency_symbol}
                                         onChange={(e) => editClientForm.setData('currency_symbol', e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.currency_position')}</label>
-                                    <select
+                                    <Select
+                                        label={t('admin.currency_position')}
                                         value={editClientForm.data.currency_position}
                                         onChange={(e) => editClientForm.setData('currency_position', e.target.value)}
-                                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                    >
-                                        <option value="before">{t('admin.currency_position_before')}</option>
-                                        <option value="after">{t('admin.currency_position_after')}</option>
-                                    </select>
+                                        options={[
+                                            { value: 'before', label: t('admin.currency_position_before') },
+                                            { value: 'after', label: t('admin.currency_position_after') },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </Modal.Body>
@@ -580,38 +574,58 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                 <form onSubmit={submitAddUser}>
                     <Modal.Body className="space-y-4">
                         <input type="hidden" name="client_id" value={manageUsersClient?.id} />
+                        <Input
+                            label={<>{t('common.name')} <span className="text-red-500">*</span></>}
+                            type="text"
+                            value={addUserForm.data.name}
+                            onChange={(e) => addUserForm.setData('name', e.target.value)}
+                            error={addUserForm.errors.name}
+                            required
+                        />
+                        <Input
+                            label={<>{t('admin.col_email')} <span className="text-red-500">*</span></>}
+                            type="email"
+                            value={addUserForm.data.email}
+                            onChange={(e) => addUserForm.setData('email', e.target.value)}
+                            error={addUserForm.errors.email}
+                            required
+                        />
+                        <Input
+                            label={<>{t('auth.password')} <span className="text-red-500">*</span></>}
+                            type="password"
+                            value={addUserForm.data.password}
+                            onChange={(e) => addUserForm.setData('password', e.target.value)}
+                            error={addUserForm.errors.password}
+                            required
+                        />
+                        <Input
+                            label={<>{t('admin.confirm_password_label')} <span className="text-red-500">*</span></>}
+                            type="password"
+                            value={addUserForm.data.password_confirmation}
+                            onChange={(e) => addUserForm.setData('password_confirmation', e.target.value)}
+                            required
+                        />
                         <div>
-                            <label className="mb-1 block text-sm font-medium">{t('common.name')} <span className="text-red-500">*</span></label>
-                            <input type="text" value={addUserForm.data.name} onChange={(e) => addUserForm.setData('name', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                            {addUserForm.errors.name && <p className="text-xs text-red-500">{addUserForm.errors.name}</p>}
+                            <Select
+                                label={t('admin.role_label')}
+                                value={addUserForm.data.client_role}
+                                onChange={(e) => addUserForm.setData('client_role', e.target.value)}
+                                options={[
+                                    { value: 'administrator', label: t('admin.client_administrator') },
+                                    { value: 'staff', label: t('admin.client_staff') },
+                                ]}
+                            />
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm font-medium">{t('admin.col_email')} <span className="text-red-500">*</span></label>
-                            <input type="email" value={addUserForm.data.email} onChange={(e) => addUserForm.setData('email', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                            {addUserForm.errors.email && <p className="text-xs text-red-500">{addUserForm.errors.email}</p>}
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">{t('auth.password')} <span className="text-red-500">*</span></label>
-                            <input type="password" value={addUserForm.data.password} onChange={(e) => addUserForm.setData('password', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                            {addUserForm.errors.password && <p className="text-xs text-red-500">{addUserForm.errors.password}</p>}
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">{t('admin.confirm_password_label')} <span className="text-red-500">*</span></label>
-                            <input type="password" value={addUserForm.data.password_confirmation} onChange={(e) => addUserForm.setData('password_confirmation', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">{t('admin.role_label')}</label>
-                            <select value={addUserForm.data.client_role} onChange={(e) => addUserForm.setData('client_role', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
-                                <option value="administrator">{t('admin.client_administrator')}</option>
-                                <option value="staff">{t('admin.client_staff')}</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">{t('admin.col_status')}</label>
-                            <select value={addUserForm.data.status} onChange={(e) => addUserForm.setData('status', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
-                                <option value="active">{t('common.active')}</option>
-                                <option value="inactive">{t('common.inactive')}</option>
-                            </select>
+                            <Select
+                                label={t('admin.col_status')}
+                                value={addUserForm.data.status}
+                                onChange={(e) => addUserForm.setData('status', e.target.value)}
+                                options={[
+                                    { value: 'active', label: t('common.active') },
+                                    { value: 'inactive', label: t('common.inactive') },
+                                ]}
+                            />
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
@@ -627,38 +641,56 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                 {editUser && (
                     <form onSubmit={submitEditUser}>
                         <Modal.Body className="space-y-4">
+                            <Input
+                                label={<>{t('common.name')} <span className="text-red-500">*</span></>}
+                                type="text"
+                                value={editUserForm.data.name}
+                                onChange={(e) => editUserForm.setData('name', e.target.value)}
+                                error={editUserForm.errors.name}
+                                required
+                            />
+                            <Input
+                                label={<>{t('admin.col_email')} <span className="text-red-500">*</span></>}
+                                type="email"
+                                value={editUserForm.data.email}
+                                onChange={(e) => editUserForm.setData('email', e.target.value)}
+                                error={editUserForm.errors.email}
+                                required
+                            />
+                            <Input
+                                label={t('admin.new_password_leave_blank')}
+                                type="password"
+                                value={editUserForm.data.password}
+                                onChange={(e) => editUserForm.setData('password', e.target.value)}
+                                error={editUserForm.errors.password}
+                            />
+                            <Input
+                                label={t('admin.confirm_password_label')}
+                                type="password"
+                                value={editUserForm.data.password_confirmation}
+                                onChange={(e) => editUserForm.setData('password_confirmation', e.target.value)}
+                            />
                             <div>
-                                <label className="mb-1 block text-sm font-medium">{t('common.name')} <span className="text-red-500">*</span></label>
-                                <input type="text" value={editUserForm.data.name} onChange={(e) => editUserForm.setData('name', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                {editUserForm.errors.name && <p className="text-xs text-red-500">{editUserForm.errors.name}</p>}
+                                <Select
+                                    label={t('admin.role_label')}
+                                    value={editUserForm.data.client_role}
+                                    onChange={(e) => editUserForm.setData('client_role', e.target.value)}
+                                    options={[
+                                        { value: 'administrator', label: t('admin.client_administrator') },
+                                        { value: 'staff', label: t('admin.client_staff') },
+                                    ]}
+                                />
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium">{t('admin.col_email')} <span className="text-red-500">*</span></label>
-                                <input type="email" value={editUserForm.data.email} onChange={(e) => editUserForm.setData('email', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                {editUserForm.errors.email && <p className="text-xs text-red-500">{editUserForm.errors.email}</p>}
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium">{t('admin.new_password_leave_blank')}</label>
-                                <input type="password" value={editUserForm.data.password} onChange={(e) => editUserForm.setData('password', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
-                                {editUserForm.errors.password && <p className="text-xs text-red-500">{editUserForm.errors.password}</p>}
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium">{t('admin.confirm_password_label')}</label>
-                                <input type="password" value={editUserForm.data.password_confirmation} onChange={(e) => editUserForm.setData('password_confirmation', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium">{t('admin.role_label')}</label>
-                                <select value={editUserForm.data.client_role} onChange={(e) => editUserForm.setData('client_role', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
-                                    <option value="administrator">{t('admin.client_administrator')}</option>
-                                    <option value="staff">{t('admin.client_staff')}</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-sm font-medium">{t('admin.col_status')}</label>
-                                <select value={editUserForm.data.status} onChange={(e) => editUserForm.setData('status', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
-                                    <option value="active">{t('common.active')}</option>
-                                    <option value="inactive">{t('common.inactive')}</option>
-                                </select>
+                                <Select
+                                    label={t('admin.col_status')}
+                                    value={editUserForm.data.status}
+                                    onChange={(e) => editUserForm.setData('status', e.target.value)}
+                                    options={[
+                                        { value: 'active', label: t('common.active') },
+                                        { value: 'inactive', label: t('common.inactive') },
+                                    ]}
+                                />
                             </div>
                         </Modal.Body>
                         <Modal.Footer>
@@ -730,11 +762,15 @@ export default function AdminClientsIndex({ clients, plans = [], filters = {} })
                                 )}
                             </div>
                             <div>
-                                <label className="mb-1 block text-sm font-medium">{t('admin.billing_cycle')}</label>
-                                <select value={assignBillingCycle} onChange={(e) => setAssignBillingCycle(e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
-                                    <option value="monthly">{t('admin.monthly')}</option>
-                                    <option value="yearly">{t('admin.yearly')}</option>
-                                </select>
+                                <Select
+                                    label={t('admin.billing_cycle')}
+                                    value={assignBillingCycle}
+                                    onChange={(e) => setAssignBillingCycle(e.target.value)}
+                                    options={[
+                                        { value: 'monthly', label: t('admin.monthly') },
+                                        { value: 'yearly', label: t('admin.yearly') },
+                                    ]}
+                                />
                             </div>
                         </Modal.Body>
                         <Modal.Footer>

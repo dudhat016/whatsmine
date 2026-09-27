@@ -1,5 +1,5 @@
 import ClientLayout from '@/Layouts/ClientLayout';
-import { Button, Modal } from '@/Components/ui';
+import { Button, Modal, Input, Select } from '@/Components/ui';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -251,27 +251,25 @@ export default function TeamIndex({ users = [], client = {}, invitations = [] })
                     <Modal.Body>
                         <form id="inviteForm" onSubmit={submitInvite} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('team.email_address')}</label>
-                                <input
+                                <Input
                                     type="email"
+                                    label={t('team.email_address')}
                                     value={inviteForm.data.email}
                                     onChange={e => inviteForm.setData('email', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
+                                    error={inviteForm.errors.email}
                                     required
                                     autoFocus
                                 />
-                                {inviteForm.errors.email && <p className="text-coral-600 text-xs mt-1">{inviteForm.errors.email}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.role') || 'Role'}</label>
-                                <select
+                                <Select
                                     value={inviteForm.data.client_role}
                                     onChange={e => inviteForm.setData('client_role', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                 >
                                     <option value={CLIENT_ROLE_STAFF}>{t('admin.staff') || 'Staff'}</option>
                                     <option value={CLIENT_ROLE_ADMIN}>{t('admin.administrator') || 'Administrator'}</option>
-                                </select>
+                                </Select>
                             </div>
                         </form>
                     </Modal.Body>
@@ -290,30 +288,49 @@ export default function TeamIndex({ users = [], client = {}, invitations = [] })
                     <Modal.Body>
                         <form id="addMemberForm" onSubmit={submitAdd} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.name') || 'Name'}</label>
-                                    <input type="text" value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                    {addForm.errors.name && <p className="text-coral-600 text-xs mt-1">{addForm.errors.name}</p>}
+                                    <Input
+                                        type="text"
+                                        label={t('client.name') || 'Name'}
+                                        value={addForm.data.name}
+                                        onChange={e => addForm.setData('name', e.target.value)}
+                                        error={addForm.errors.name}
+                                        required
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.email') || 'Email'}</label>
-                                    <input type="email" value={addForm.data.email} onChange={e => addForm.setData('email', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                    {addForm.errors.email && <p className="text-coral-600 text-xs mt-1">{addForm.errors.email}</p>}
+                                    <Input
+                                        type="email"
+                                        label={t('client.email') || 'Email'}
+                                        value={addForm.data.email}
+                                        onChange={e => addForm.setData('email', e.target.value)}
+                                        error={addForm.errors.email}
+                                        required
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.password') || 'Password'}</label>
-                                    <input type="password" value={addForm.data.password} onChange={e => addForm.setData('password', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                    {addForm.errors.password && <p className="text-coral-600 text-xs mt-1">{addForm.errors.password}</p>}
+                                    <Input
+                                        type="password"
+                                        label={t('client.password') || 'Password'}
+                                        value={addForm.data.password}
+                                        onChange={e => addForm.setData('password', e.target.value)}
+                                        error={addForm.errors.password}
+                                        required
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.password_confirmation') || 'Confirm password'}</label>
-                                    <input type="password" value={addForm.data.password_confirmation} onChange={e => addForm.setData('password_confirmation', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
+                                    <Input
+                                        type="password"
+                                        label={t('client.password_confirmation') || 'Confirm password'}
+                                        value={addForm.data.password_confirmation}
+                                        onChange={e => addForm.setData('password_confirmation', e.target.value)}
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.role') || 'Role'}</label>
-                                    <select value={addForm.data.client_role} onChange={e => addForm.setData('client_role', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
+                                    <Select value={addForm.data.client_role} onChange={e => addForm.setData('client_role', e.target.value)}>
                                         <option value={CLIENT_ROLE_STAFF}>{t('admin.staff') || 'Staff'}</option>
                                         <option value={CLIENT_ROLE_ADMIN}>{t('admin.administrator') || 'Administrator'}</option>
-                                    </select>
+                                    </Select>
                                 </div>
                         </form>
                     </Modal.Body>
@@ -329,33 +346,47 @@ export default function TeamIndex({ users = [], client = {}, invitations = [] })
                     <Modal.Body>
                         <form id="editMemberForm" onSubmit={submitEdit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.name') || 'Name'}</label>
-                                    <input type="text" value={editForm.data.name} onChange={e => editForm.setData('name', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                    {editForm.errors.name && <p className="text-coral-600 text-xs mt-1">{editForm.errors.name}</p>}
+                                    <Input
+                                        type="text"
+                                        label={t('client.name') || 'Name'}
+                                        value={editForm.data.name}
+                                        onChange={e => editForm.setData('name', e.target.value)}
+                                        error={editForm.errors.name}
+                                        required
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.email') || 'Email'}</label>
-                                    <input type="email" value={editForm.data.email} onChange={e => editForm.setData('email', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                    {editForm.errors.email && <p className="text-coral-600 text-xs mt-1">{editForm.errors.email}</p>}
+                                    <Input
+                                        type="email"
+                                        label={t('client.email') || 'Email'}
+                                        value={editForm.data.email}
+                                        onChange={e => editForm.setData('email', e.target.value)}
+                                        error={editForm.errors.email}
+                                        required
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('team.password_leave_blank')}</label>
-                                    <input type="password" value={editForm.data.password} onChange={e => editForm.setData('password', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
-                                    {editForm.errors.password && <p className="text-coral-600 text-xs mt-1">{editForm.errors.password}</p>}
+                                    <Input
+                                        type="password"
+                                        label={t('team.password_leave_blank')}
+                                        value={editForm.data.password}
+                                        onChange={e => editForm.setData('password', e.target.value)}
+                                        error={editForm.errors.password}
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.role') || 'Role'}</label>
-                                    <select value={editForm.data.client_role} onChange={e => editForm.setData('client_role', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
+                                    <Select value={editForm.data.client_role} onChange={e => editForm.setData('client_role', e.target.value)}>
                                         <option value={CLIENT_ROLE_STAFF}>{t('admin.staff') || 'Staff'}</option>
                                         <option value={CLIENT_ROLE_ADMIN}>{t('admin.administrator') || 'Administrator'}</option>
-                                    </select>
+                                    </Select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.status') || 'Status'}</label>
-                                    <select value={editForm.data.status} onChange={e => editForm.setData('status', e.target.value)} className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
+                                    <Select value={editForm.data.status} onChange={e => editForm.setData('status', e.target.value)}>
                                         <option value="active">{t('client.active') || 'Active'}</option>
                                         <option value="inactive">{t('client.inactive') || 'Inactive'}</option>
-                                    </select>
+                                    </Select>
                                 </div>
                         </form>
                     </Modal.Body>

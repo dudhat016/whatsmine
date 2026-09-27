@@ -3,6 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import Card from '@/Components/ui/Card';
 import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
+import Input from '@/Components/ui/Input';
 import EmptyState from '@/Components/EmptyState';
 import {
     Folder,
@@ -162,14 +163,13 @@ export default function FormsListTab({
                 {/* Right: Search, View Switcher, Create Folder & Add Form */}
                 <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
                     {/* Search */}
-                    <form onSubmit={handleSearchSubmit} className="relative min-w-[180px]">
-                        <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-neutral-400" />
-                        <input
-                            type="text"
+                    <form onSubmit={handleSearchSubmit} className="min-w-[180px]">
+                        <Input
+                            size="sm"
+                            leftIcon={<Search className="w-3.5 h-3.5" />}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search forms..."
-                            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-soft border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                         />
                     </form>
 

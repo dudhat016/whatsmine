@@ -1,9 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import Pagination from '@/Components/ui/Pagination';
-import Card from '@/Components/ui/Card';
-import Badge from '@/Components/ui/Badge';
-import Button from '@/Components/ui/Button';
+import { Button, Card, Badge, Pagination, Input, Select } from '@/Components/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Package, ShoppingBag, AlertTriangle, XOctagon, XCircle, Plus, Edit, Edit3, Trash2, Tag, RefreshCw, CreditCard, Gift, ExternalLink, Eye, Copy } from 'lucide-react';
@@ -149,24 +146,35 @@ export default function ProductsIndex({ products, allProducts = [], filters = {}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    <form onSubmit={e => { e.preventDefault(); apply({ search }); }} className="relative flex-1 min-w-[200px]">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('ecommerce.search_products') || 'Search name or SKU…'}
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 pl-9 pr-3 py-2 text-sm" />
+                    <form onSubmit={e => { e.preventDefault(); apply({ search }); }} className="flex-1 min-w-[200px]">
+                        <Input
+                            leftIcon={<Search className="h-4 w-4" />}
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder={t('ecommerce.search_products') || 'Search name or SKU…'}
+                        />
                     </form>
-                    <select value={filters.store_id ?? ''} onChange={e => apply({ store_id: e.target.value || undefined })}
-                        className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
+                    <Select
+                        value={filters.store_id ?? ''}
+                        onChange={e => apply({ store_id: e.target.value || undefined })}
+                        size="sm"
+                        className="w-40"
+                    >
                         <option value="">{t('ecommerce.all_stores') || 'All stores'}</option>
                         {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                    <select value={filters.pricing_type ?? ''} onChange={e => apply({ pricing_type: e.target.value || undefined })}
-                        className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
+                    </Select>
+                    <Select
+                        value={filters.pricing_type ?? ''}
+                        onChange={e => apply({ pricing_type: e.target.value || undefined })}
+                        size="sm"
+                        className="w-48"
+                    >
                         <option value="">Pricing Options (All)</option>
                         <option value="one_time">Fixed One-Time</option>
                         <option value="recurring">Recurring Subscription</option>
                         <option value="installments">Installment Plan</option>
                         <option value="free">🎁 FREE ($0)</option>
-                    </select>
+                    </Select>
                     <label className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300 cursor-pointer">
                         <input type="checkbox" checked={!!filters.low_stock} onChange={e => apply({ low_stock: e.target.checked ? 1 : undefined })}
                             className="rounded border-neutral-300 text-brand-600" />

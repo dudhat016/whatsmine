@@ -3,6 +3,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, RefreshCw, PackageCheck, MessageCircle, User } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 export default function OrderShow({ order }) {
     const { t } = useTranslation();
@@ -59,10 +60,8 @@ export default function OrderShow({ order }) {
                         <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">{t('ecommerce.fulfill_order') || 'Fulfill order'}</p>
                         <p className="text-xs text-neutral-500">{t('ecommerce.fulfill_hint') || 'Pushes a fulfillment/shipped status to the store. The store webhook will confirm and may trigger your shipping automation.'}</p>
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <input value={tracking.number} onChange={e => setTracking(s => ({ ...s, number: e.target.value }))} placeholder={t('ecommerce.tracking_number') || 'Tracking number (optional)'}
-                                className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
-                            <input value={tracking.url} onChange={e => setTracking(s => ({ ...s, url: e.target.value }))} placeholder={t('ecommerce.tracking_url') || 'Tracking URL (optional)'}
-                                className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
+                            <Input value={tracking.number} onChange={e => setTracking(s => ({ ...s, number: e.target.value }))} placeholder={t('ecommerce.tracking_number') || 'Tracking number (optional)'} />
+                            <Input value={tracking.url} onChange={e => setTracking(s => ({ ...s, url: e.target.value }))} placeholder={t('ecommerce.tracking_url') || 'Tracking URL (optional)'} />
                         </div>
                         <button type="submit" disabled={busy === 'fulfill'} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60">
                             {busy === 'fulfill' ? (t('ecommerce.fulfilling') || 'Fulfilling…') : (t('ecommerce.confirm_fulfill') || 'Confirm fulfillment')}

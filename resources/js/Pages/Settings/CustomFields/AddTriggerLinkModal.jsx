@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Link2, Sparkles, ExternalLink } from 'lucide-react';
 import { router } from '@inertiajs/react';
+import { Input } from '@/Components/ui';
 
 export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null }) {
     const [name, setName] = useState('');
@@ -103,36 +104,24 @@ export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                            Link Name *
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            value={name}
-                            onChange={handleNameChange}
-                            placeholder="e.g. Google Review Link, Schedule Demo, Promo Landing Page"
-                            className="w-full px-3.5 py-2.5 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-neutral-400"
-                        />
-                    </div>
+                    <Input
+                        label="Link Name *"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={handleNameChange}
+                        placeholder="e.g. Google Review Link, Schedule Demo, Promo Landing Page"
+                    />
 
-                    <div>
-                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                            Target Redirect URL *
-                        </label>
-                        <input
-                            type="url"
-                            required
-                            value={targetUrl}
-                            onChange={(e) => setTargetUrl(e.target.value)}
-                            placeholder="https://g.page/r/your-business/review or https://example.com/demo"
-                            className="w-full px-3.5 py-2.5 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-neutral-400"
-                        />
-                        <p className="text-[11px] text-neutral-400 mt-1">
-                            Where the recipient is redirected after their click is logged and tracked.
-                        </p>
-                    </div>
+                    <Input
+                        label="Target Redirect URL *"
+                        type="url"
+                        required
+                        value={targetUrl}
+                        onChange={(e) => setTargetUrl(e.target.value)}
+                        placeholder="https://g.page/r/your-business/review or https://example.com/demo"
+                        hint="Where the recipient is redirected after their click is logged and tracked."
+                    />
 
                     <div>
                         <div className="flex items-center justify-between mb-1.5">
@@ -143,13 +132,13 @@ export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null
                                 /l/{slug || '...'}
                             </span>
                         </div>
-                        <input
+                        <Input
                             type="text"
                             required
                             value={slug}
                             onChange={handleSlugChange}
                             placeholder="e.g. google_review"
-                            className="w-full px-3.5 py-2.5 text-xs font-mono border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-neutral-400"
+                            className="font-mono"
                         />
                         
                         {/* Live Previews */}

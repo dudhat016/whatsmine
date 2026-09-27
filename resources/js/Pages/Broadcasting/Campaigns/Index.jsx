@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import { Select } from '@/Components/ui';
 import {
     Plus,
     Play,
@@ -99,10 +100,11 @@ export default function CampaignsIndex({ campaigns, filters }) {
 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-2">
-                    <select
+                    <Select
                         value={filters.channel ?? ''}
                         onChange={(e) => handleFilter('channel', e.target.value || null)}
-                        className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
+                        size="sm"
+                        className="w-40"
                     >
                         <option value="">{t('campaign.all_channels')}</option>
                         {['whatsapp', 'sms', 'email'].map((c) => (
@@ -110,11 +112,12 @@ export default function CampaignsIndex({ campaigns, filters }) {
                                 {CHANNEL_LABELS[c] ?? c}
                             </option>
                         ))}
-                    </select>
-                    <select
+                    </Select>
+                    <Select
                         value={filters.status ?? ''}
                         onChange={(e) => handleFilter('status', e.target.value || null)}
-                        className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
+                        size="sm"
+                        className="w-40"
                     >
                         <option value="">{t('campaign.all_statuses')}</option>
                         {['draft', 'queued', 'sending', 'paused', 'completed', 'failed'].map((s) => (
@@ -122,7 +125,7 @@ export default function CampaignsIndex({ campaigns, filters }) {
                                 {t(STATUS_LABEL_KEYS[s])}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">

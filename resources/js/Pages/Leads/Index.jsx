@@ -1,6 +1,7 @@
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import { Input } from '@/Components/ui';
 import { Search, MapPin, UserPlus, Trash2, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -164,16 +165,34 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
                         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('leads.search_businesses')}</h3>
                         <form onSubmit={handleScrape} className="space-y-3">
                             <div>
-                                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('leads.business_type_keyword')}</label>
-                                <input type="text" value={data.keyword} onChange={e => setData('keyword', e.target.value)} required placeholder={t('leads.keyword_placeholder')} className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
+                                <Input
+                                    type="text"
+                                    label={t('leads.business_type_keyword')}
+                                    value={data.keyword}
+                                    onChange={e => setData('keyword', e.target.value)}
+                                    required
+                                    placeholder={t('leads.keyword_placeholder')}
+                                />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('leads.city_location')}</label>
-                                <input type="text" value={data.location} onChange={e => setData('location', e.target.value)} required placeholder={t('leads.location_placeholder')} className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
+                                <Input
+                                    type="text"
+                                    label={t('leads.city_location')}
+                                    value={data.location}
+                                    onChange={e => setData('location', e.target.value)}
+                                    required
+                                    placeholder={t('leads.location_placeholder')}
+                                />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('leads.radius_meters')}</label>
-                                <input type="number" min={100} max={50000} value={data.radius_meters} onChange={e => setData('radius_meters', Number(e.target.value))} className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
+                                <Input
+                                    type="number"
+                                    label={t('leads.radius_meters')}
+                                    min={100}
+                                    max={50000}
+                                    value={data.radius_meters}
+                                    onChange={e => setData('radius_meters', Number(e.target.value))}
+                                />
                             </div>
                             <div className="flex gap-2 pt-2">
                                 <button type="submit" disabled={processing} className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition">

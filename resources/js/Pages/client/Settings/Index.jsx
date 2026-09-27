@@ -1,5 +1,5 @@
 import ClientLayout from '@/Layouts/ClientLayout';
-import { Button } from '@/Components/ui';
+import { Button, Input, Select } from '@/Components/ui';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Settings as SettingsIcon, Bell, Download } from 'lucide-react';
@@ -62,44 +62,41 @@ export default function ClientSettingsIndex({
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                                     {t('client.language') || 'Language'}
                                 </label>
-                                <select
+                                <Select
                                     value={form.data.locale}
                                     onChange={e => form.setData('locale', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                 >
                                     {supportedLocales.map((l) => (
                                         <option key={l.code} value={l.code}>{l.name}</option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                                     {t('client.display_currency') || 'Display currency'}
                                 </label>
-                                <select
+                                <Select
                                     value={form.data.display_currency}
                                     onChange={e => form.setData('display_currency', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                 >
                                     {supportedCurrencies.map((c) => (
                                         <option key={c.code} value={c.code}>
                                             {c.code} {c.symbol ? `(${c.symbol})` : ''}
                                         </option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                                     {t('client.theme') || 'Theme'}
                                 </label>
-                                <select
+                                <Select
                                     value={form.data.theme}
                                     onChange={e => form.setData('theme', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                 >
                                     <option value="light">{t('client.theme_light') || 'Light'}</option>
                                     <option value="dark">{t('client.theme_dark') || 'Dark'}</option>
-                                </select>
+                                </Select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
@@ -122,36 +119,27 @@ export default function ClientSettingsIndex({
                             </h2>
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="sm:col-span-2">
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                        {t('client.organization_name') || 'Organization name'}
-                                    </label>
-                                    <input
+                                    <Input
+                                        label={t('client.organization_name') || 'Organization name'}
                                         type="text"
                                         value={form.data.client_name}
                                         onChange={e => form.setData('client_name', e.target.value)}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                        {t('client.organization_email') || 'Email'}
-                                    </label>
-                                    <input
+                                    <Input
+                                        label={t('client.organization_email') || 'Email'}
                                         type="email"
                                         value={form.data.client_email}
                                         onChange={e => form.setData('client_email', e.target.value)}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                        {t('client.phone') || 'Phone'}
-                                    </label>
-                                    <input
+                                    <Input
+                                        label={t('client.phone') || 'Phone'}
                                         type="text"
                                         value={form.data.client_phone}
                                         onChange={e => form.setData('client_phone', e.target.value)}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                     />
                                 </div>
                                 <div className="sm:col-span-2">

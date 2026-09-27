@@ -5,6 +5,7 @@ import {
     ShoppingBag, Code, Eye, EyeOff, Trash2, Copy, Search, ChevronDown,
     ChevronRight, X, Layers, Target, Minus
 } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 const getElementIcon = (type) => {
     if (type === 'section') return Box;
@@ -280,16 +281,15 @@ export default function LayersTab({
 
             {/* Search Filter */}
             <div className="p-2 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search layer tree..."
-                        className="w-full pl-8 pr-3 py-1 text-xs rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                    />
-                </div>
+                <Input
+                    size="sm"
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search layer tree..."
+                    leftIcon={Search}
+                    wrapperClassName="w-full"
+                />
             </div>
 
             {/* Tree list */}

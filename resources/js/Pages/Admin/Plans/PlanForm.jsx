@@ -1,4 +1,4 @@
-import { Button, Input, Toggle } from '@/Components/ui';
+import { Button, Input, Select, Toggle } from '@/Components/ui';
 import PlanLimits from './PlanLimits';
 import PlanFeatures from './PlanFeatures';
 import { useTranslation } from 'react-i18next';
@@ -62,11 +62,10 @@ export default function PlanForm({
                         <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
                             {t('admin.currency_label')}
                         </label>
-                        <select
+                        <Select
                             value={data.currency_code ?? ''}
                             onChange={(e) => setData('currency_code', e.target.value)}
                             required
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-neutral-900 dark:text-neutral-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                         >
                             {currencies.length === 0 && (
                                 <option value={data.currency_code ?? ''}>{data.currency_code ?? '—'}</option>
@@ -80,7 +79,7 @@ export default function PlanForm({
                                     {c.symbol ? `${c.code} — ${c.symbol}` : c.code}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                         {errors.currency_code && (
                             <p className="mt-1.5 text-sm text-red-500 dark:text-red-400">{errors.currency_code}</p>
                         )}

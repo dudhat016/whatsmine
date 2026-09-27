@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useLocale } from '@/hooks/useLocale';
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import { Select } from '@/Components/ui';
 import { Sun, Moon, ShieldCheck, Zap, Users, Bot, TrendingUp, Clock, Star } from 'lucide-react';
 
 /**
@@ -176,19 +177,18 @@ function LocaleToggle() {
     if (locales.length <= 1) return null;
 
     return (
-        <div className="relative">
-            <select
-                value={locale}
-                onChange={(e) => setLocale(e.target.value)}
-                className="h-8 rounded-soft border border-neutral-200 dark:border-neutral-700 bg-transparent px-2 text-xs text-neutral-500 dark:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            >
-                {locales.map((l) => (
-                    <option key={l.code} value={l.code}>
-                        {l.native_name || l.name || l.code.toUpperCase()}
-                    </option>
-                ))}
-            </select>
-        </div>
+        <Select
+            value={locale}
+            onChange={(e) => setLocale(e.target.value)}
+            size="sm"
+            className="h-8 text-xs w-28"
+        >
+            {locales.map((l) => (
+                <option key={l.code} value={l.code}>
+                    {l.native_name || l.name || l.code.toUpperCase()}
+                </option>
+            ))}
+        </Select>
     );
 }
 

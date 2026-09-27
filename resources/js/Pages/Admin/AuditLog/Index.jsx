@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Card, Pagination } from '@/Components/ui';
+import { Button, Card, Input, Pagination } from '@/Components/ui';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { formatInTz } from '@/Utils/datetime';
@@ -12,10 +12,10 @@ export default function AdminAuditLogIndex({ logs, filters = {} }) {
             <Head title={`${t('admin.audit_log')} · ${t('head.admin')}`} />
             <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{t('admin.audit_log')}</h2>
-                <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); const f = e.target; router.get(route('admin.audit-log.index'), { user_id: f.user_id?.value, action: f.action?.value }, { preserveState: true }); }}>
-                    <input type="text" name="user_id" placeholder={t('admin.user_id')} className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-brand-500/20" defaultValue={filters.user_id} />
-                    <input type="text" name="action" placeholder={t('admin.action')} className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-brand-500/20" defaultValue={filters.action} />
-                    <button type="submit" className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20">{t('common.filter')}</button>
+                <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); const f = e.target; router.get(route('admin.audit-log.index'), { user_id: f.user_id?.value, action: f.action?.value }, { preserveState: true }); }}>
+                    <Input type="text" name="user_id" placeholder={t('admin.user_id')} size="sm" wrapperClassName="w-28" defaultValue={filters.user_id} />
+                    <Input type="text" name="action" placeholder={t('admin.action')} size="sm" wrapperClassName="w-36" defaultValue={filters.action} />
+                    <Button type="submit" variant="outline" size="sm">{t('common.filter')}</Button>
                 </form>
                 <Card>
                     <div className="overflow-x-auto">

@@ -1,5 +1,6 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import Input from '@/Components/ui/Input';
 import { useState } from 'react';
 import { UserPlus, Trash2, ArrowLeft, Search, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -108,14 +109,13 @@ export default function SegmentContacts({ segment, segmentContacts, availableCon
                                     </button>
                                 )}
                             </div>
-                            <form onSubmit={handleSearch} className="relative">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
-                                <input
-                                    type="text"
+                            <form onSubmit={handleSearch}>
+                                <Input
+                                    size="sm"
                                     value={search}
                                     onChange={e => setSearch(e.target.value)}
                                     placeholder={t('contacts_page.seg_search_placeholder')}
-                                    className="w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 pl-8 pr-3 py-1.5 text-sm"
+                                    leftIcon={<Search className="h-4 w-4 text-neutral-400" />}
                                 />
                             </form>
                         </div>

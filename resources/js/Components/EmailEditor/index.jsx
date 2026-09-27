@@ -18,6 +18,7 @@ import { blocksToHtml, htmlToBlocks } from './blocks';
 import { EMAIL_TEMPLATES } from './templates';
 import VisualCanvas from './VisualCanvas';
 import useHistoryState from '@/hooks/useHistoryState';
+import { Input, Select } from '@/Components/ui';
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 
@@ -124,11 +125,9 @@ export default function EmailEditor({
                             <TokenPickerInline tokens={contactTokens} onPick={(token) => onSubjectChange(subject + token)} />
                         </div>
                     </div>
-                    <input
-                        type="text"
+                    <Input
                         value={subject}
                         onChange={(e) => onSubjectChange(e.target.value)}
-                        className={inputClass}
                         placeholder="Welcome, {{contact.first_name}}"
                     />
                 </div>
@@ -378,15 +377,16 @@ function AiGeneratePanel({ campaignName, onGenerated }) {
                 />
             </div>
 
-            <div>
-                <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('email_editor.tone')}</label>
-                <select value={tone} onChange={(e) => setTone(e.target.value)} className={inputClass}>
-                    <option value="professional">{t('email_editor.tone_professional')}</option>
-                    <option value="friendly">{t('email_editor.tone_friendly')}</option>
-                    <option value="urgent">{t('email_editor.tone_urgent')}</option>
-                    <option value="informative">{t('email_editor.tone_informative')}</option>
-                </select>
-            </div>
+            <Select
+                label={t('email_editor.tone')}
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+            >
+                <option value="professional">{t('email_editor.tone_professional')}</option>
+                <option value="friendly">{t('email_editor.tone_friendly')}</option>
+                <option value="urgent">{t('email_editor.tone_urgent')}</option>
+                <option value="informative">{t('email_editor.tone_informative')}</option>
+            </Select>
 
             {error && (
                 <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300">

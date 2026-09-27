@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Percent, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input } from '@/Components/ui';
 
 function TaxRateForm({ taxRate = null, onClose }) {
     const { t } = useTranslation();
@@ -28,55 +29,44 @@ function TaxRateForm({ taxRate = null, onClose }) {
     return (
         <form onSubmit={submit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('common.name')}</label>
-                    <input
-                        type="text"
-                        value={data.name}
-                        onChange={e => setData('name', e.target.value)}
-                        className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
-                        placeholder="VAT 20%"
-                        required
-                    />
-                    {errors.name && <p className="text-coral-600 text-xs mt-1">{errors.name}</p>}
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.tax_country_code')}</label>
-                    <input
-                        type="text"
-                        value={data.country}
-                        onChange={e => setData('country', e.target.value.toUpperCase())}
-                        className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white font-mono"
-                        placeholder="US"
-                        maxLength={2}
-                        required
-                    />
-                    {errors.country && <p className="text-coral-600 text-xs mt-1">{errors.country}</p>}
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.tax_region')}</label>
-                    <input
-                        type="text"
-                        value={data.region}
-                        onChange={e => setData('region', e.target.value)}
-                        className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
-                        placeholder="CA"
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.tax_percentage')}</label>
-                    <input
-                        type="number"
-                        value={data.percentage}
-                        onChange={e => setData('percentage', e.target.value)}
-                        className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        required
-                    />
-                    {errors.percentage && <p className="text-coral-600 text-xs mt-1">{errors.percentage}</p>}
-                </div>
+                <Input
+                    label={t('common.name')}
+                    type="text"
+                    value={data.name}
+                    onChange={e => setData('name', e.target.value)}
+                    placeholder="VAT 20%"
+                    required
+                    error={errors.name}
+                />
+                <Input
+                    label={t('admin.tax_country_code')}
+                    type="text"
+                    value={data.country}
+                    onChange={e => setData('country', e.target.value.toUpperCase())}
+                    className="font-mono"
+                    placeholder="US"
+                    maxLength={2}
+                    required
+                    error={errors.country}
+                />
+                <Input
+                    label={t('admin.tax_region')}
+                    type="text"
+                    value={data.region}
+                    onChange={e => setData('region', e.target.value)}
+                    placeholder="CA"
+                />
+                <Input
+                    label={t('admin.tax_percentage')}
+                    type="number"
+                    value={data.percentage}
+                    onChange={e => setData('percentage', e.target.value)}
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    required
+                    error={errors.percentage}
+                />
                 <div className="flex items-center gap-4 pt-2">
                     <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
                         <input type="checkbox" checked={data.inclusive} onChange={e => setData('inclusive', e.target.checked)} className="rounded" />

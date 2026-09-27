@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, usePage } from '@inertiajs/react';
 import { Key, Plus, Trash2, Copy, Check } from 'lucide-react';
-import { DatePicker } from '@/Components/ui';
+import { DatePicker, Input } from '@/Components/ui';
 import { formatDateTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
 import { useConfirm } from '@/context/ConfirmationContext';
@@ -82,11 +82,13 @@ function CreateTokenModal({ onClose, onCreated }) {
                     <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">{t('api.create_token')}</h2>
                     <form onSubmit={submit} className="space-y-5">
                         <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('api.token_name_label')}</label>
-                            <input
-                                type="text" value={name} onChange={e => setName(e.target.value)}
-                                className="w-full border border-neutral-300 dark:border-neutral-600 rounded-soft px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-                                placeholder={t('api.token_name_placeholder')} required
+                            <Input
+                                type="text"
+                                label={t('api.token_name_label')}
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                                placeholder={t('api.token_name_placeholder')}
+                                required
                             />
                         </div>
 

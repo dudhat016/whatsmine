@@ -1,6 +1,7 @@
 import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import { Input } from '@/Components/ui';
 import { ArrowLeft, Plus, RefreshCw, Trash2, Globe, FileText, Type, X, Upload, CheckCircle2, Clock, Zap, AlertCircle, HelpCircle, Trash } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
@@ -282,12 +283,12 @@ export default function AiKnowledgeBaseShow({ kb }) {
                                             <div key={i} className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 p-3 space-y-2">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-xs font-semibold text-neutral-400 w-4 shrink-0">Q{i + 1}</span>
-                                                    <input
+                                                    <Input
                                                         type="text"
                                                         value={pair.question}
                                                         onChange={e => updateFaqPair(i, 'question', e.target.value)}
                                                         placeholder={t('ai.faq_question_placeholder')}
-                                                        className="flex-1 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-xs text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+                                                        className="flex-1"
                                                     />
                                                     {faqPairs.length > 1 && (
                                                         <button type="button" onClick={() => removeFaqPair(i)} className="text-neutral-300 hover:text-red-400 transition">
@@ -318,31 +319,25 @@ export default function AiKnowledgeBaseShow({ kb }) {
                                 </div>
                             ) : (
                                 <div>
-                                    <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                        {data.source_type === 'sitemap' ? t('ai.sitemap_url') : t('ai.source_url')}
-                                    </label>
-                                    <input
+                                    <Input
                                         type="url"
+                                        label={data.source_type === 'sitemap' ? t('ai.sitemap_url') : t('ai.source_url')}
                                         value={data.source_ref}
                                         onChange={e => setData('source_ref', e.target.value)}
                                         placeholder={data.source_type === 'sitemap' ? 'https://example.com/sitemap.xml' : 'https://example.com'}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+                                        hint={data.source_type === 'sitemap' ? t('ai.sitemap_hint') : undefined}
                                     />
-                                    {data.source_type === 'sitemap' && (
-                                        <p className="mt-1 text-xs text-neutral-400">{t('ai.sitemap_hint')}</p>
-                                    )}
                                 </div>
                             )}
 
                             {data.source_type !== 'faq' && (
                                 <div>
-                                    <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('ai.title_label')} <span className="text-neutral-400 font-normal">({t('common.optional')})</span></label>
-                                    <input
+                                    <Input
                                         type="text"
+                                        label={<>{t('ai.title_label')} <span className="text-neutral-400 font-normal">({t('common.optional')})</span></>}
                                         value={data.title}
                                         onChange={e => setData('title', e.target.value)}
                                         placeholder={t('ai.title_placeholder')}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
                                     />
                                 </div>
                             )}

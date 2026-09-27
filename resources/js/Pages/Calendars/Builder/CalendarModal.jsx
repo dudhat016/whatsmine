@@ -529,18 +529,20 @@ export default function CalendarModal({ isOpen, onClose, calendar = null, worksp
 
                                         {day.is_active ? (
                                             <div className="flex items-center gap-2">
-                                                <input
+                                                <Input
                                                     type="time"
                                                     value={day.start_time}
                                                     onChange={e => handleAvailabilityChange(idx, 'start_time', e.target.value)}
-                                                    className="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs"
+                                                    className="w-24 text-xs"
+                                                    size="sm"
                                                 />
                                                 <span className="text-slate-400">to</span>
-                                                <input
+                                                <Input
                                                     type="time"
                                                     value={day.end_time}
                                                     onChange={e => handleAvailabilityChange(idx, 'end_time', e.target.value)}
-                                                    className="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs"
+                                                    className="w-24 text-xs"
+                                                    size="sm"
                                                 />
                                             </div>
                                         ) : (

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Bold, Italic, Underline, Link2, RemoveFormatting, Code, X, Check, Eye } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 export default function MiniRichEditor({
     value = '',
@@ -187,7 +188,9 @@ export default function MiniRichEditor({
             {/* ── Link Input Bar ── */}
             {showLinkInput && !isCodeMode && (
                 <div className="flex items-center gap-1.5 px-2 py-1.5 bg-emerald-50/60 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-800">
-                    <input
+                    <Input
+                        size="sm"
+                        wrapperClassName="flex-1"
                         type="text"
                         value={linkUrl}
                         onChange={(e) => setLinkUrl(e.target.value)}
@@ -200,7 +203,6 @@ export default function MiniRichEditor({
                             }
                         }}
                         placeholder="https://example.com"
-                        className="flex-1 px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 outline-none focus:ring-1 focus:ring-emerald-500"
                         autoFocus
                     />
                     <button

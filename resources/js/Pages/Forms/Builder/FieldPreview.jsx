@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import InlineText from '@/Components/VisualBuilder/InlineText';
 import DatePicker from '@/Components/ui/DatePicker';
+import { Input, Select } from '@/Components/ui';
 
 const inputCls = 'w-full px-3.5 py-2.5 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs transition duration-150';
 
@@ -116,11 +117,11 @@ export default function FieldPreview({
                                             <span className="px-1 py-0.5 bg-[#006fcf] text-white rounded">AMEX</span>
                                         </div>
                                     </div>
-                                    <input type="text" placeholder="Cardholder Name" className="w-full text-xs px-2.5 py-1.5 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800" readOnly />
-                                    <input type="text" placeholder="4000 1234 5678 9010" className="w-full text-xs px-2.5 py-1.5 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800" readOnly />
+                                    <Input size="sm" type="text" placeholder="Cardholder Name" readOnly />
+                                    <Input size="sm" type="text" placeholder="4000 1234 5678 9010" readOnly />
                                     <div className="grid grid-cols-2 gap-2">
-                                        <input type="text" placeholder="MM / YY" className="w-full text-xs px-2.5 py-1.5 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800" readOnly />
-                                        <input type="password" placeholder="CVC" className="w-full text-xs px-2.5 py-1.5 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800" readOnly />
+                                        <Input size="sm" type="text" placeholder="MM / YY" readOnly />
+                                        <Input size="sm" type="password" placeholder="CVC" readOnly />
                                     </div>
                                 </div>
                             </div>
@@ -254,10 +255,11 @@ export default function FieldPreview({
             case 'coupon_code':
                 return (
                     <div className="w-full flex gap-2">
-                        <input
+                        <Input
+                            wrapperClassName="flex-1"
                             type="text"
                             placeholder={field.placeholder || 'Enter coupon or promo code'}
-                            className="flex-1 px-3 py-2 text-xs border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 uppercase font-mono placeholder:normal-case"
+                            className="uppercase font-mono placeholder:normal-case"
                             readOnly
                         />
                         <button
@@ -270,15 +272,15 @@ export default function FieldPreview({
                 );
 
             case 'email':
-                return <input id={`builder_input_${field.id}`} type="email" placeholder={field.placeholder || 'your@email.com'} className={fieldInputCls} style={{ color: customTextColor }} readOnly />;
+                return <Input id={`builder_input_${field.id}`} type="email" placeholder={field.placeholder || 'your@email.com'} style={{ color: customTextColor }} readOnly />;
             case 'first_name':
             case 'last_name':
             case 'text':
             case 'tel':
             case 'number':
-                return <input id={`builder_input_${field.id}`} type="text" placeholder={field.placeholder || plainLabel} className={fieldInputCls} style={{ color: customTextColor }} readOnly />;
+                return <Input id={`builder_input_${field.id}`} type="text" placeholder={field.placeholder || plainLabel} style={{ color: customTextColor }} readOnly />;
             case 'phone_e164':
-                return <input id={`builder_input_${field.id}`} type="tel" placeholder={field.placeholder || '+1 234 567 8900'} className={fieldInputCls} style={{ color: customTextColor }} readOnly />;
+                return <Input id={`builder_input_${field.id}`} type="tel" placeholder={field.placeholder || '+1 234 567 8900'} style={{ color: customTextColor }} readOnly />;
             case 'textarea':
                 return <textarea id={`builder_input_${field.id}`} rows={3} placeholder={field.placeholder || plainLabel} className={`${fieldInputCls} resize-none`} style={{ color: customTextColor }} readOnly />;
             case 'date':
@@ -293,13 +295,10 @@ export default function FieldPreview({
                 );
             case 'select':
                 return (
-                    <div className="relative w-full">
-                        <select id={`builder_input_${field.id}`} className={`${fieldInputCls} appearance-none pr-9 cursor-pointer`} style={{ color: customTextColor }}>
-                            <option>{field.placeholder || `Select ${plainLabel}`}</option>
-                            {(field.options || []).map((o, i) => <option key={i}>{o}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-500 pointer-events-none" />
-                    </div>
+                    <Select id={`builder_input_${field.id}`} style={{ color: customTextColor }}>
+                        <option>{field.placeholder || `Select ${plainLabel}`}</option>
+                        {(field.options || []).map((o, i) => <option key={i}>{o}</option>)}
+                    </Select>
                 );
             case 'radio':
                 return (
@@ -565,7 +564,7 @@ export default function FieldPreview({
                     </div>
                 );
             default:
-                return <input type="text" placeholder={field.placeholder || plainLabel} className={fieldInputCls} style={{ color: customTextColor }} readOnly />;
+                return <Input type="text" placeholder={field.placeholder || plainLabel} style={{ color: customTextColor }} readOnly />;
         }
     };
 

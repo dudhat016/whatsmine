@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Tag } from 'lucide-react';
 import DynamicTokenPicker from '@/Components/DynamicTokenPicker';
+import { Input } from '@/Components/ui';
 
 export default function InlineTokenInput({
     label,
@@ -87,20 +88,19 @@ export default function InlineTokenInput({
                 className="relative flex items-center"
                 style={{ zIndex: isPickerOpen ? 100 : 1 }}
             >
-                <input
+                <Input
                     ref={inputRef}
                     id={id}
                     name={name}
                     type={type}
+                    size="sm"
                     disabled={disabled}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
-                    className={
-                        inputClassName ||
-                        "w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 pr-9 text-xs text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition shadow-2xs disabled:opacity-60"
-                    }
+                    className={`pr-9 text-xs ${inputClassName}`}
+                    wrapperClassName="w-full"
                 />
 
                 {/* Inline Tag Picker Button */}

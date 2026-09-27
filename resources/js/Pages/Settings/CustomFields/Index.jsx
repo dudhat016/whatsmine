@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Head, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import { Input, Select } from '@/Components/ui';
 import {
     Plus,
     Search,
@@ -512,12 +513,13 @@ export default function CustomFieldsIndex({ folders = [], customFields = [], del
                 {/* Search & Object Target & Folder Filter Row */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-2">
                     {/* Search Input */}
-                    <div className="relative w-full md:w-80">
-                        <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
+                    <div className="w-full md:w-80">
+                        <Input
+                            size="sm"
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            leftIcon={<Search className="w-4 h-4 text-neutral-400" />}
                             placeholder={
                                 activeTab === 'custom_values'
                                     ? "Search custom values by name, key, or value..."
@@ -525,7 +527,6 @@ export default function CustomFieldsIndex({ folders = [], customFields = [], del
                                     ? "Search trigger links by name, slug, or target URL..."
                                     : "Search..."
                             }
-                            className="w-full pl-9 pr-3.5 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs"
                         />
                     </div>
 
@@ -535,10 +536,10 @@ export default function CustomFieldsIndex({ folders = [], customFields = [], del
                             {/* Group By Folder Selector (GHL Feature) */}
                             <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
                                 <span className="shrink-0 font-medium">Group By</span>
-                                <select
+                                <Select
+                                    size="sm"
                                     value={filterFolder}
                                     onChange={(e) => setFilterFolder(e.target.value)}
-                                    className="px-3 py-2 text-xs font-semibold text-brand-600 dark:text-brand-400 border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs cursor-pointer"
                                 >
                                     <option value="all">All Folders</option>
                                     {folders.map(folder => (
@@ -546,21 +547,22 @@ export default function CustomFieldsIndex({ folders = [], customFields = [], del
                                             {folder.name}
                                         </option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
 
                             {/* Object Target Filter Dropdown (Contact, Opportunity, Company, All) */}
                             <div className="w-full sm:w-40">
-                                <select
+                                <Select
+                                    size="sm"
                                     value={filterObject}
                                     onChange={(e) => setFilterObject(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs font-medium border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-2xs cursor-pointer capitalize"
+                                    className="capitalize"
                                 >
                                     <option value="all">All Objects</option>
                                     <option value="contact">Contact</option>
                                     <option value="opportunity">Opportunity</option>
                                     <option value="company">Company</option>
-                                </select>
+                                </Select>
                             </div>
                         </div>
                     )}
@@ -711,11 +713,11 @@ export default function CustomFieldsIndex({ folders = [], customFields = [], del
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-1.5">
                                     <span>Page Size</span>
-                                    <select className="px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 dark:text-white">
+                                    <Select size="sm" defaultValue="10">
                                         <option value="10">10</option>
                                         <option value="25">25</option>
                                         <option value="50">50</option>
-                                    </select>
+                                    </Select>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button className="p-1 text-neutral-400 hover:text-neutral-600 rounded border border-neutral-200 dark:border-neutral-700">
@@ -925,11 +927,11 @@ export default function CustomFieldsIndex({ folders = [], customFields = [], del
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-1.5">
                                     <span>Page Size</span>
-                                    <select className="px-2 py-1 text-xs border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 dark:text-white">
+                                    <Select size="sm" defaultValue="10">
                                         <option value="10">10</option>
                                         <option value="25">25</option>
                                         <option value="50">50</option>
-                                    </select>
+                                    </Select>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button className="p-1 text-neutral-400 hover:text-neutral-600 rounded border border-neutral-200 dark:border-neutral-700">

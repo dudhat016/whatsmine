@@ -4,6 +4,7 @@ import EmailEditor from '@/Components/EmailEditor';
 import InlineTokenInput from '@/Components/InlineTokenInput';
 import InlineTokenTextarea from '@/Components/InlineTokenTextarea';
 import MediaUpload from '@/Components/MediaUpload';
+import { Input, Select } from '@/Components/ui';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
@@ -1718,7 +1719,7 @@ function ConfigPanel({ node, onClose, onSave, onDelete }) {
             <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 80 }} className="space-y-4">
                 {/* Action Name for all nodes */}
                 <Field label="Action Name">
-                    <input className={inputCls} value={draft.label ?? ''} onChange={e => set('label', e.target.value)} placeholder={defLabel} />
+                    <Input size="sm" value={draft.label ?? ''} onChange={e => set('label', e.target.value)} placeholder={defLabel} />
                 </Field>
 
                 {/* Per-type fields */}
@@ -2189,8 +2190,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                     <label style={{ fontSize: 10, fontWeight: 700, color: '#475569', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
                         CHOOSE A WORKFLOW TRIGGER
                     </label>
-                    <select
-                        className={selectCls}
+                    <Select size="sm"
                         value={triggerType}
                         onChange={e => {
                             const newType = e.target.value;
@@ -2211,7 +2211,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                         {TRIGGER_TYPES.map(tr => (
                             <option key={tr.value} value={tr.value}>{t(tr.labelKey)}</option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
 
                 {/* 2. Workflow Trigger Name */}
@@ -2219,8 +2219,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                     <label style={{ fontSize: 10, fontWeight: 700, color: '#475569', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
                         WORKFLOW TRIGGER NAME
                     </label>
-                    <input
-                        className={inputCls}
+                    <Input size="sm"
                         value={triggerName}
                         onChange={e => setTriggerName(e.target.value)}
                         placeholder="e.g. Lead Capture Form Submitted"
@@ -2270,8 +2269,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                             <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                 Select Funnel
                             </label>
-                            <select
-                                className={selectCls}
+                            <Select size="sm"
                                 value={funnelId}
                                 onChange={e => {
                                     setFunnelId(e.target.value);
@@ -2283,7 +2281,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                 {(resources.funnels ?? []).map(fn => (
                                     <option key={fn.id} value={fn.id}>{fn.name}</option>
                                 ))}
-                            </select>
+                            </Select>
                         </div>
 
                         {/* Cascading Step Selector */}
@@ -2291,8 +2289,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                             <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                 Select Funnel Step
                             </label>
-                            <select
-                                className={selectCls}
+                            <Select size="sm"
                                 value={funnelStepId}
                                 onChange={e => setFunnelStepId(e.target.value)}
                                 style={{ fontSize: 11, padding: '7px 10px', borderRadius: 8 }}
@@ -2307,7 +2304,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                         </option>
                                     ));
                                 })()}
-                            </select>
+                            </Select>
                         </div>
 
                         {/* Split Test Variant */}
@@ -2316,8 +2313,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                 <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                     A/B Variant
                                 </label>
-                                <select
-                                    className={selectCls}
+                                <Select size="sm"
                                     value={variant}
                                     onChange={e => setVariant(e.target.value)}
                                     style={{ fontSize: 11, padding: '7px 10px', borderRadius: 8 }}
@@ -2325,7 +2321,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                     <option value="all">All Variants</option>
                                     <option value="A">Variant A only</option>
                                     <option value="B">Variant B only</option>
-                                </select>
+                                </Select>
                             </div>
 
                             {/* Order bump condition if checkout or bump trigger */}
@@ -2334,8 +2330,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                     <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                         Order Bump
                                     </label>
-                                    <select
-                                        className={selectCls}
+                                    <Select size="sm"
                                         value={orderBump}
                                         onChange={e => setOrderBump(e.target.value)}
                                         style={{ fontSize: 11, padding: '7px 10px', borderRadius: 8 }}
@@ -2343,7 +2338,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                         <option value="all">Any</option>
                                         <option value="yes">Bump Purchased</option>
                                         <option value="no">No Bump</option>
-                                    </select>
+                                    </Select>
                                 </div>
                             )}
                         </div>
@@ -2361,8 +2356,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                             <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                 Target Link
                             </label>
-                            <select
-                                className={selectCls}
+                            <Select size="sm"
                                 value={triggerLinkId}
                                 onChange={e => setTriggerLinkId(e.target.value)}
                                 style={{ fontSize: 11, padding: '7px 10px', borderRadius: 8 }}
@@ -2371,7 +2365,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                 {triggerLinks.map(tl => (
                                     <option key={tl.id} value={tl.id}>{tl.name} ({tl.slug})</option>
                                 ))}
-                            </select>
+                            </Select>
                             <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
                                 Choose whether any trigger link click fires this workflow, or only a specific tracked link.
                             </div>
@@ -2439,8 +2433,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                         <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                             Contact Re-entry Policy
                         </label>
-                        <select
-                            className={selectCls}
+                        <Select size="sm"
                             value={reEntryPolicy}
                             onChange={e => setReEntryPolicy(e.target.value)}
                             style={{ fontSize: 11, padding: '7px 10px', borderRadius: 8 }}
@@ -2448,7 +2441,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                             <option value="always">Allow re-entry multiple times</option>
                             <option value="once">Allow only once per contact (No re-entry)</option>
                             <option value="cooldown">Allow re-entry after cooldown period</option>
-                        </select>
+                        </Select>
                     </div>
                     {reEntryPolicy === 'cooldown' && (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -2456,10 +2449,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                 <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                     Cooldown Time
                                 </label>
-                                <input
+                                <Input size="sm"
                                     type="number"
                                     min="1"
-                                    className={inputCls}
                                     value={cooldownAmount}
                                     onChange={e => setCooldownAmount(parseInt(e.target.value, 10) || 1)}
                                     style={{ fontSize: 11, padding: '6px 9px', borderRadius: 8 }}
@@ -2469,8 +2461,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                 <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                     Unit
                                 </label>
-                                <select
-                                    className={selectCls}
+                                <Select size="sm"
                                     value={cooldownUnit}
                                     onChange={e => setCooldownUnit(e.target.value)}
                                     style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
@@ -2478,7 +2469,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                     <option value="hours">Hours</option>
                                     <option value="days">Days</option>
                                     <option value="minutes">Minutes</option>
-                                </select>
+                                </Select>
                             </div>
                         </div>
                     )}
@@ -2508,8 +2499,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                             const availableOptions = ALL_FILTER_OPTIONS.filter(opt => allowedForTrigger.includes(opt.value));
                             return (
                                 <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                                    <select
-                                        className={selectCls}
+                                    <Select size="sm"
                                         style={{ flex: '0 0 155px', fontSize: 11, padding: '7px 9px', borderRadius: 8, marginTop: 1 }}
                                         value={flt.type}
                                         onChange={e => changeFilter(idx, 'type', e.target.value)}
@@ -2517,14 +2507,13 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                         {availableOptions.map(opt => (
                                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                                         ))}
-                                    </select>
+                                    </Select>
 
                                     {/* Dynamic Value Selector based on filter type */}
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         {flt.type === 'replied_to_workflow' ? (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8, borderColor: '#93c5fd' }}
                                                     value={flt.value}
                                                     onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2535,11 +2524,10 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                             {wfIdx + 1}. {wf.name}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </Select>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, color: '#64748b' }}>
                                                     <span style={{ fontWeight: 600 }}>Attribution Window:</span>
-                                                    <select
-                                                        className={selectCls}
+                                                    <Select size="sm"
                                                         style={{ fontSize: 10.5, padding: '3px 6px', borderRadius: 6, width: 'auto' }}
                                                         value={flt.lookback || 'any'}
                                                         onChange={e => changeFilter(idx, 'lookback', e.target.value)}
@@ -2549,12 +2537,11 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                         <option value="48h">Within last 48 hours</option>
                                                         <option value="7d">Within last 7 days</option>
                                                         <option value="30d">Within last 30 days</option>
-                                                    </select>
+                                                    </Select>
                                                 </div>
                                             </div>
                                         ) : flt.type === 'funnel_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2563,10 +2550,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 {(resources.funnels ?? []).map(fn => (
                                                     <option key={fn.id} value={fn.id}>{fn.name}</option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'funnel_step_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2575,30 +2561,27 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 {((resources.funnels ?? []).flatMap(fn => (fn.steps || []).map(st => ({ ...st, funnelName: fn.name })))).map(st => (
                                                     <option key={st.id} value={st.id}>{st.funnelName} ➔ {st.name}</option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'variant_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
                                             >
                                                 <option value="A">Variant A</option>
                                                 <option value="B">Variant B</option>
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'order_bump_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
                                             >
                                                 <option value="yes">Bump Purchased</option>
                                                 <option value="no">Bump Not Purchased</option>
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'calendar_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8, borderColor: '#93c5fd' }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2607,10 +2590,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 {(resources.calendars ?? []).map(cal => (
                                                     <option key={cal.id} value={cal.id}>{cal.name}</option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'appointment_status_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2621,10 +2603,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 <option value="no_show">No-Show</option>
                                                 <option value="rescheduled">Rescheduled</option>
                                                 <option value="cancelled">Cancelled</option>
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'event_type_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2634,10 +2615,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 <option value="team">Team / Collective</option>
                                                 <option value="round_robin">Round Robin</option>
                                                 <option value="class">Class / Group Booking</option>
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'assigned_user_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2646,10 +2626,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 {(resources.agents ?? []).map(u => (
                                                     <option key={u.id} value={u.id}>{u.name}</option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'form_is' || flt.type === 'form_is_not' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8, borderColor: '#93c5fd' }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2658,10 +2637,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 {(resources.subscription_forms ?? []).map(f => (
                                                     <option key={f.id} value={f.slug}>{f.name}</option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'tag_is' || flt.type === 'tag_is_not' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2670,10 +2648,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 {(resources.tags ?? []).map(t => (
                                                     <option key={t.id} value={t.name}>{t.name}</option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'pipeline_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2682,10 +2659,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 {(resources.pipelines ?? []).map(p => (
                                                     <option key={p.id} value={p.id}>{p.name}</option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'stage_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2703,10 +2679,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                         </option>
                                                     ));
                                                 })()}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'from_stage_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2724,10 +2699,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                         </option>
                                                     ));
                                                 })()}
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'change_source_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value || 'any'}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2735,10 +2709,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 <option value="any">All Sources (Manual & Automation)</option>
                                                 <option value="manual">Manual Move Only (Kanban / User Action)</option>
                                                 <option value="automation">Automation Only (Workflow Action / API)</option>
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'status_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2748,18 +2721,16 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 <option value="won">Won (Deal Closed / Won)</option>
                                                 <option value="lost">Lost</option>
                                                 <option value="abandoned">Abandoned / Dropped</option>
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'keywords_contain' ? (
-                                            <input
-                                                className={inputCls}
+                                            <Input size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
                                                 placeholder="e.g. price, demo, quote (comma-separated)"
                                             />
                                         ) : flt.type === 'source_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2770,10 +2741,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 <option value="api">API</option>
                                                 <option value="import">CSV Import</option>
                                                 <option value="manual">Manual</option>
-                                            </select>
+                                            </Select>
                                         ) : flt.type === 'channel_is' ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2784,10 +2754,9 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                                                 <option value="email">Email</option>
                                                 <option value="messenger">Messenger</option>
                                                 <option value="instagram">Instagram</option>
-                                            </select>
+                                            </Select>
                                         ) : (
-                                            <input
-                                                className={inputCls}
+                                            <Input size="sm"
                                                 style={{ fontSize: 11, padding: '7px 9px', borderRadius: 8 }}
                                                 value={flt.value}
                                                 onChange={e => changeFilter(idx, 'value', e.target.value)}
@@ -2841,7 +2810,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                     <Field label={t('automation.webhook_url')}>
                         {webhookUrl ? (
                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                                <input readOnly className={inputCls} value={webhookUrl} style={{ fontFamily: 'monospace', fontSize: 10 }} />
+                                <Input size="sm" readOnly value={webhookUrl} style={{ fontFamily: 'monospace', fontSize: 10 }} />
                                 <button onClick={onCopy} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', padding: 4 }}>
                                     {copied ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
                                 </button>
@@ -2906,12 +2875,12 @@ function ChannelSelect({ d, set, imageOnlyHint = false }) {
     return (
         <>
             <Field label={t('automation.field_channel')}>
-                <select className={selectCls} value={ch} onChange={e => set('channel', e.target.value)}>
+                <Select size="sm" value={ch} onChange={e => set('channel', e.target.value)}>
                     <option value="whatsapp">WhatsApp</option>
                     <option value="messenger">Messenger</option>
                     <option value="instagram">Instagram</option>
                     <option value="sms">SMS</option>
-                </select>
+                </Select>
             </Field>
             {(ch === 'messenger' || ch === 'instagram') && (
                 <div style={{ display: 'flex', gap: 6, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '8px 10px', fontSize: 10, color: '#1e40af' }}>
@@ -3154,7 +3123,7 @@ function EmailFields({ d, set }) {
                     Test Emails <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-2">
-                    <input
+                    <Input size="sm"
                         type="email"
                         value={testEmail}
                         onChange={(e) => setTestEmail(e.target.value)}
@@ -3271,22 +3240,22 @@ function TemplateFields({ d, set }) {
         <>
             <Field label={t('automation.field_template_required')}>
                 {templates.length ? (
-                    <select className={selectCls} value={tpl ? `${tpl.name}||${tpl.language}` : ''} onChange={e => onPick(e.target.value)}>
+                    <Select size="sm" value={tpl ? `${tpl.name}||${tpl.language}` : ''} onChange={e => onPick(e.target.value)}>
                         <option value="">{t('automation.select_template')}</option>
                         {templates.map(x => (
                             <option key={`${x.name}-${x.language}`} value={`${x.name}||${x.language}`}>
                                 {x.name} ({x.language}){x.status && x.status !== 'APPROVED' ? ` · ${x.status}` : ''}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 ) : (
-                    <input className={inputCls} value={d.template_name ?? ''} onChange={e => set('template_name', e.target.value)} placeholder="my_template_name" />
+                    <Input size="sm" value={d.template_name ?? ''} onChange={e => set('template_name', e.target.value)} placeholder="my_template_name" />
                 )}
             </Field>
 
             {!templates.length && (
                 <Field label={t('automation.field_language')}>
-                    <input className={inputCls} value={d.language ?? 'en'} onChange={e => set('language', e.target.value)} placeholder="en" />
+                    <Input size="sm" value={d.language ?? 'en'} onChange={e => set('language', e.target.value)} placeholder="en" />
                 </Field>
             )}
 
@@ -3308,7 +3277,7 @@ function TemplateFields({ d, set }) {
 
             {varCount > 0 && Array.from({ length: varCount }).map((_, i) => (
                 <Field key={i} label={t('automation.template_var_n', { n: i + 1 })}>
-                    <input className={inputCls} value={vars[i] ?? ''} onChange={e => setVar(i, e.target.value)} placeholder={t('automation.template_var_placeholder', { n: i + 1 })} />
+                    <Input size="sm" value={vars[i] ?? ''} onChange={e => setVar(i, e.target.value)} placeholder={t('automation.template_var_placeholder', { n: i + 1 })} />
                 </Field>
             ))}
 
@@ -3333,12 +3302,12 @@ function MediaFields({ d, set }) {
     return (
         <>
             <Field label={t('automation.field_media_type')}>
-                <select className={selectCls} value={d.media_type ?? 'image'} onChange={e => set('media_type', e.target.value)}>
+                <Select size="sm" value={d.media_type ?? 'image'} onChange={e => set('media_type', e.target.value)}>
                     <option value="image">{t('automation.media_image')}</option>
                     <option value="video">{t('automation.media_video')}</option>
                     <option value="document">{t('automation.media_document')}</option>
                     <option value="audio">{t('automation.media_audio')}</option>
-                </select>
+                </Select>
             </Field>
             <MediaUpload
                 label={t('automation.field_media_required')}
@@ -3355,7 +3324,7 @@ function MediaFields({ d, set }) {
             )}
             {d.media_type === 'document' && (
                 <Field label={t('automation.field_filename_optional')}>
-                    <input className={inputCls} value={d.filename ?? ''} onChange={e => set('filename', e.target.value)} placeholder="invoice.pdf" />
+                    <Input size="sm" value={d.filename ?? ''} onChange={e => set('filename', e.target.value)} placeholder="invoice.pdf" />
                 </Field>
             )}
             <ChannelSelect d={d} set={set} imageOnlyHint />
@@ -3378,21 +3347,21 @@ function SequenceFields({ d, set }) {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>{t('automation.step_n', { n: i + 1 })}</span>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <select className="rounded border border-gray-200 text-[10px] px-1 py-0.5" value={s.kind ?? 'text'} onChange={e => update(i, { kind: e.target.value })}>
+                            <Select size="sm" value={s.kind ?? 'text'} onChange={e => update(i, { kind: e.target.value })}>
                                 <option value="text">{t('automation.step_text')}</option>
                                 <option value="media">{t('automation.step_media')}</option>
-                            </select>
+                            </Select>
                             <button onClick={() => remove(i)} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><Trash2 size={13} /></button>
                         </div>
                     </div>
                     {s.kind === 'media' ? (
                         <>
-                            <select className={selectCls} value={s.media_type ?? 'image'} onChange={e => update(i, { media_type: e.target.value })}>
+                            <Select size="sm" value={s.media_type ?? 'image'} onChange={e => update(i, { media_type: e.target.value })}>
                                 <option value="image">{t('automation.media_image')}</option>
                                 <option value="video">{t('automation.media_video')}</option>
                                 <option value="document">{t('automation.media_document')}</option>
                                 <option value="audio">{t('automation.media_audio')}</option>
-                            </select>
+                            </Select>
                             <MediaUpload
                                 value={s.link ?? ''}
                                 onChange={url => update(i, { link: url })}
@@ -3400,7 +3369,7 @@ function SequenceFields({ d, set }) {
                                 collection="automation"
                                 placeholder="https://example.com/file.jpg"
                             />
-                            <input className={inputCls} value={s.caption ?? ''} onChange={e => update(i, { caption: e.target.value })} placeholder={t('automation.field_caption_optional')} />
+                            <Input size="sm" value={s.caption ?? ''} onChange={e => update(i, { caption: e.target.value })} placeholder={t('automation.field_caption_optional')} />
                         </>
                     ) : (
                         <textarea className={textareaCls} rows={2} value={s.body ?? ''} onChange={e => update(i, { body: e.target.value })} placeholder={t('automation.placeholder_whatsapp_body', { token: '{{contact.name}}' })} />
@@ -3442,7 +3411,7 @@ function QuickRepliesFields({ d, set, triggerType }) {
             />
             {[0, 1, 2].map(i => (
                 <Field key={i} label={t('automation.field_button_n', { n: i + 1 })}>
-                    <input className={inputCls} maxLength={20} value={buttons[i] ?? ''} onChange={e => setBtn(i, e.target.value)} placeholder={i === 0 ? t('automation.placeholder_button_required') : t('automation.placeholder_button_optional')} />
+                    <Input size="sm" maxLength={20} value={buttons[i] ?? ''} onChange={e => setBtn(i, e.target.value)} placeholder={i === 0 ? t('automation.placeholder_button_required') : t('automation.placeholder_button_optional')} />
                 </Field>
             ))}
         </>
@@ -3463,10 +3432,10 @@ function ListMessageFields({ d, set, triggerType }) {
                 triggerType={triggerType}
             />
             <Field label={t('automation.field_list_button')}>
-                <input className={inputCls} maxLength={20} value={d.button_label ?? ''} onChange={e => set('button_label', e.target.value)} placeholder={t('automation.placeholder_list_button')} />
+                <Input size="sm" maxLength={20} value={d.button_label ?? ''} onChange={e => set('button_label', e.target.value)} placeholder={t('automation.placeholder_list_button')} />
             </Field>
             <Field label={t('automation.field_section_title_optional')}>
-                <input className={inputCls} maxLength={24} value={d.section_title ?? ''} onChange={e => set('section_title', e.target.value)} placeholder={t('automation.placeholder_section_title')} />
+                <Input size="sm" maxLength={24} value={d.section_title ?? ''} onChange={e => set('section_title', e.target.value)} placeholder={t('automation.placeholder_section_title')} />
             </Field>
             <Field label={t('automation.field_list_rows_required')}>
                 <textarea className={textareaCls} rows={4} value={d.rows ?? ''} onChange={e => set('rows', e.target.value)} placeholder={t('automation.placeholder_list_rows')} />
@@ -3489,7 +3458,7 @@ function AskQuestionFields({ d, set, triggerType }) {
                 triggerType={triggerType}
             />
             <Field label={t('automation.field_save_to_var_required')}>
-                <input className={inputCls} value={d.variable ?? 'answer'} onChange={e => set('variable', e.target.value)} placeholder="answer" />
+                <Input size="sm" value={d.variable ?? 'answer'} onChange={e => set('variable', e.target.value)} placeholder="answer" />
             </Field>
             <ChannelSelect d={d} set={set} />
             <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 8, padding: '8px 10px', fontSize: 10, color: '#9a3412' }}>
@@ -3664,7 +3633,7 @@ function WaitFields({ d, set }) {
                             <div style={{ padding: '8px 10px', borderBottom: '1px solid #f1f5f9', position: 'sticky', top: 0, background: '#fff', zIndex: 2 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5px 8px' }}>
                                     <Search size={13} style={{ color: '#94a3b8' }} />
-                                    <input
+                                    <Input size="sm"
                                         value={searchQ}
                                         onChange={e => setSearchQ(e.target.value)}
                                         placeholder="Search wait options..."
@@ -3816,32 +3785,29 @@ function WaitFields({ d, set }) {
                             <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                                 <div>
                                     <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>Days</label>
-                                    <input
+                                    <Input size="sm"
                                         type="number"
                                         min={0}
-                                        className={inputCls}
                                         value={d.offset_days ?? 1}
                                         onChange={e => set('offset_days', parseInt(e.target.value, 10) || 0)}
                                     />
                                 </div>
                                 <div>
                                     <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>Hours</label>
-                                    <input
+                                    <Input size="sm"
                                         type="number"
                                         min={0}
                                         max={23}
-                                        className={inputCls}
                                         value={d.offset_hours ?? 0}
                                         onChange={e => set('offset_hours', parseInt(e.target.value, 10) || 0)}
                                     />
                                 </div>
                                 <div>
                                     <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>Minutes</label>
-                                    <input
+                                    <Input size="sm"
                                         type="number"
                                         min={0}
                                         max={59}
-                                        className={inputCls}
                                         value={d.offset_minutes ?? 0}
                                         onChange={e => set('offset_minutes', parseInt(e.target.value, 10) || 0)}
                                     />
@@ -3878,8 +3844,7 @@ function WaitFields({ d, set }) {
 
                         {d.past_action === 'go_to_step' && (
                             <div style={{ marginTop: 8 }}>
-                                <select
-                                    className={selectCls}
+                                <Select size="sm"
                                     value={d.past_target_step_id || ''}
                                     onChange={e => set('past_target_step_id', e.target.value)}
                                 >
@@ -3889,7 +3854,7 @@ function WaitFields({ d, set }) {
                                             {on.data?.label || on.data?.nodeType} (#{on.id})
                                         </option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                         )}
                     </div>
@@ -3902,10 +3867,9 @@ function WaitFields({ d, set }) {
                     <div className="flex gap-2">
                         <div className="flex-1">
                             <label className={labelCls}>Time period</label>
-                            <input
+                            <Input size="sm"
                                 type="number"
                                 min={1}
-                                className={inputCls}
                                 value={d.amount ?? 1}
                                 onChange={e => set('amount', parseInt(e.target.value, 10) || 1)}
                                 placeholder="1"
@@ -3913,12 +3877,12 @@ function WaitFields({ d, set }) {
                         </div>
                         <div className="flex-1">
                             <label className={labelCls}>Unit</label>
-                            <select className={selectCls} value={d.unit ?? 'minutes'} onChange={e => set('unit', e.target.value)}>
+                            <Select size="sm" value={d.unit ?? 'minutes'} onChange={e => set('unit', e.target.value)}>
                                 <option value="seconds">Seconds</option>
                                 <option value="minutes">Minutes</option>
                                 <option value="hours">Hours</option>
                                 <option value="days">Days</option>
-                            </select>
+                            </Select>
                         </div>
                     </div>
 
@@ -3987,9 +3951,8 @@ function WaitFields({ d, set }) {
                                         <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                             Resume Between
                                         </label>
-                                        <input
+                                        <Input size="sm"
                                             type="time"
-                                            className={inputCls}
                                             value={d.window_from || '09:00'}
                                             onChange={e => set('window_from', e.target.value)}
                                         />
@@ -3998,9 +3961,8 @@ function WaitFields({ d, set }) {
                                         <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>
                                             And
                                         </label>
-                                        <input
+                                        <Input size="sm"
                                             type="time"
-                                            className={inputCls}
                                             value={d.window_to || '18:00'}
                                             onChange={e => set('window_to', e.target.value)}
                                         />
@@ -4048,21 +4010,19 @@ function WaitFields({ d, set }) {
                             <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                                 <div>
                                     <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>Days</label>
-                                    <input
+                                    <Input size="sm"
                                         type="number"
                                         min={0}
-                                        className={inputCls}
                                         value={d.offset_days ?? 1}
                                         onChange={e => set('offset_days', parseInt(e.target.value, 10) || 0)}
                                     />
                                 </div>
                                 <div>
                                     <label style={{ fontSize: 10, fontWeight: 600, color: '#64748b', display: 'block', marginBottom: 4 }}>Hours</label>
-                                    <input
+                                    <Input size="sm"
                                         type="number"
                                         min={0}
                                         max={23}
-                                        className={inputCls}
                                         value={d.offset_hours ?? 0}
                                         onChange={e => set('offset_hours', parseInt(e.target.value, 10) || 0)}
                                     />
@@ -4075,11 +4035,11 @@ function WaitFields({ d, set }) {
                         <label style={{ fontSize: 11, fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: 6 }}>
                             If invoice is already paid or date passed
                         </label>
-                        <select className={selectCls} value={d.past_action || 'exit'} onChange={e => set('past_action', e.target.value)}>
+                        <Select size="sm" value={d.past_action || 'exit'} onChange={e => set('past_action', e.target.value)}>
                             <option value="exit">Exit contact from automation (Recommended)</option>
                             <option value="skip_outbound">Skip outbound reminder messages</option>
                             <option value="continue">Continue to next step</option>
-                        </select>
+                        </Select>
                     </div>
                 </div>
             )}
@@ -4088,32 +4048,31 @@ function WaitFields({ d, set }) {
             {waitType === 'contact_reply' && (
                 <div className="space-y-3" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
                     <Field label="Reply To Channel">
-                        <select className={selectCls} value={d.channel || ''} onChange={e => set('channel', e.target.value)}>
+                        <Select size="sm" value={d.channel || ''} onChange={e => set('channel', e.target.value)}>
                             <option value="">All Supported Channels</option>
                             <option value="whatsapp">WhatsApp</option>
                             <option value="sms">SMS</option>
                             <option value="email">Email</option>
-                        </select>
+                        </Select>
                     </Field>
 
                     <div className="flex gap-2">
                         <div className="flex-1">
                             <label className={labelCls}>Timeout (Maximum Wait)</label>
-                            <input
+                            <Input size="sm"
                                 type="number"
                                 min={1}
-                                className={inputCls}
                                 value={d.timeout_amount ?? 24}
                                 onChange={e => set('timeout_amount', parseInt(e.target.value, 10) || 1)}
                             />
                         </div>
                         <div className="flex-1">
                             <label className={labelCls}>Unit</label>
-                            <select className={selectCls} value={d.timeout_unit ?? 'hours'} onChange={e => set('timeout_unit', e.target.value)}>
+                            <Select size="sm" value={d.timeout_unit ?? 'hours'} onChange={e => set('timeout_unit', e.target.value)}>
                                 <option value="minutes">Minutes</option>
                                 <option value="hours">Hours</option>
                                 <option value="days">Days</option>
-                            </select>
+                            </Select>
                         </div>
                     </div>
                 </div>
@@ -4127,41 +4086,40 @@ function WaitFields({ d, set }) {
                     </div>
 
                     <Field label="Reply Channel">
-                        <select className={selectCls} value={d.channel || ''} onChange={e => set('channel', e.target.value)}>
+                        <Select size="sm" value={d.channel || ''} onChange={e => set('channel', e.target.value)}>
                             <option value="">Any Channel</option>
                             <option value="whatsapp">WhatsApp</option>
                             <option value="sms">SMS</option>
                             <option value="email">Email</option>
-                        </select>
+                        </Select>
                     </Field>
 
                     <Field label="Which User">
-                        <select className={selectCls} value={d.assigned_user_id || ''} onChange={e => set('assigned_user_id', e.target.value)}>
+                        <Select size="sm" value={d.assigned_user_id || ''} onChange={e => set('assigned_user_id', e.target.value)}>
                             <option value="">Any Team Member</option>
                             <option value="assigned">Contact's Assigned Agent</option>
                             {(resources.agents || []).map(a => (
                                 <option key={a.id} value={a.id}>{a.name}</option>
                             ))}
-                        </select>
+                        </Select>
                     </Field>
 
                     <div className="flex gap-2">
                         <div className="flex-1">
                             <label className={labelCls}>SLA Timeout</label>
-                            <input
+                            <Input size="sm"
                                 type="number"
                                 min={1}
-                                className={inputCls}
                                 value={d.timeout_amount ?? 15}
                                 onChange={e => set('timeout_amount', parseInt(e.target.value, 10) || 1)}
                             />
                         </div>
                         <div className="flex-1">
                             <label className={labelCls}>Unit</label>
-                            <select className={selectCls} value={d.timeout_unit ?? 'minutes'} onChange={e => set('timeout_unit', e.target.value)}>
+                            <Select size="sm" value={d.timeout_unit ?? 'minutes'} onChange={e => set('timeout_unit', e.target.value)}>
                                 <option value="minutes">Minutes</option>
                                 <option value="hours">Hours</option>
-                            </select>
+                            </Select>
                         </div>
                     </div>
                 </div>
@@ -4176,20 +4134,19 @@ function WaitFields({ d, set }) {
                     <div className="flex gap-2">
                         <div className="flex-1">
                             <label className={labelCls}>Max Wait Timeout</label>
-                            <input
+                            <Input size="sm"
                                 type="number"
                                 min={1}
-                                className={inputCls}
                                 value={d.timeout_amount ?? 48}
                                 onChange={e => set('timeout_amount', parseInt(e.target.value, 10) || 1)}
                             />
                         </div>
                         <div className="flex-1">
                             <label className={labelCls}>Unit</label>
-                            <select className={selectCls} value={d.timeout_unit ?? 'hours'} onChange={e => set('timeout_unit', e.target.value)}>
+                            <Select size="sm" value={d.timeout_unit ?? 'hours'} onChange={e => set('timeout_unit', e.target.value)}>
                                 <option value="hours">Hours</option>
                                 <option value="days">Days</option>
-                            </select>
+                            </Select>
                         </div>
                     </div>
                 </div>
@@ -4223,25 +4180,23 @@ function WaitForReplyFields({ d, set }) {
                 <label className={labelCls}>Maximum Wait Time (Timeout)</label>
                 <div className="flex gap-2">
                     <div className="flex-1">
-                        <input
+                        <Input size="sm"
                             type="number"
                             min={1}
-                            className={inputCls}
                             value={timeoutAmount}
                             onChange={e => set('timeout_amount', parseInt(e.target.value, 10) || 1)}
                             placeholder="24"
                         />
                     </div>
                     <div className="flex-1">
-                        <select
-                            className={selectCls}
+                        <Select size="sm"
                             value={timeoutUnit}
                             onChange={e => set('timeout_unit', e.target.value)}
                         >
                             <option value="minutes">Minutes</option>
                             <option value="hours">Hours</option>
                             <option value="days">Days</option>
-                        </select>
+                        </Select>
                     </div>
                 </div>
             </div>
@@ -4249,21 +4204,19 @@ function WaitForReplyFields({ d, set }) {
             {/* Reply Matching Filter */}
             <div>
                 <label className={labelCls}>Reply Matching Rule</label>
-                <select
-                    className={selectCls}
+                <Select size="sm"
                     value={matchType}
                     onChange={e => set('match_type', e.target.value)}
                 >
                     <option value="any">Any Customer Reply (Default)</option>
                     <option value="contains">Reply Contains Phrase / Keyword</option>
                     <option value="exact">Reply Exactly Matches Keyword</option>
-                </select>
+                </Select>
             </div>
 
             {matchType !== 'any' && (
                 <Field label="Target Keyword / Phrase">
-                    <input
-                        className={inputCls}
+                    <Input size="sm"
                         value={matchPhrase}
                         onChange={e => set('match_phrase', e.target.value)}
                         placeholder="e.g. YES, DEMO, CONFIRM, 1"
@@ -4275,8 +4228,7 @@ function WaitForReplyFields({ d, set }) {
             <Field label="Save Reply Body to Variable">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 11, color: '#64748b', fontFamily: 'monospace' }}>{'{{context.'}</span>
-                    <input
-                        className={inputCls}
+                    <Input size="sm"
                         style={{ flex: 1 }}
                         value={replyVar}
                         onChange={e => set('reply_variable', e.target.value)}
@@ -4471,7 +4423,7 @@ function ConditionFields({ d, set }) {
                         display: 'flex', alignItems: 'center', gap: 10, background: '#fafafa',
                     }}>
                         <GripVertical size={14} style={{ color: '#94a3b8', cursor: 'grab', flexShrink: 0 }} />
-                        <input
+                        <Input size="sm"
                             style={{
                                 flex: 1, minWidth: 0, fontWeight: 600, fontSize: 13, color: '#0f172a',
                                 background: 'transparent', border: 'none', outline: 'none',
@@ -4550,8 +4502,7 @@ function ConditionFields({ d, set }) {
                                     <div key={cIdx} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: cIdx < (branch.conditions.length - 1) ? 8 : 0 }}>
                                         {/* Dynamic AND / OR Selector for subsequent condition lines */}
                                         {cIdx > 0 ? (
-                                            <select
-                                                className={selectCls}
+                                            <Select size="sm"
                                                 style={{
                                                     flex: '0 0 66px', fontSize: 10.5, fontWeight: 700, padding: '6px 4px',
                                                     borderRadius: 6, background: cond.logic === 'OR' ? '#eff6ff' : '#faf5ff',
@@ -4563,7 +4514,7 @@ function ConditionFields({ d, set }) {
                                             >
                                                 <option value="AND">AND</option>
                                                 <option value="OR">OR</option>
-                                            </select>
+                                            </Select>
                                         ) : (
                                             <div style={{ color: '#94a3b8', flexShrink: 0, width: 20, display: 'flex', justifyContent: 'center' }} title="Initial condition">
                                                 <HelpCircle size={15} />
@@ -4589,8 +4540,7 @@ function ConditionFields({ d, set }) {
                                         />
 
                                         {/* Operator Dropdown */}
-                                        <select
-                                            className={selectCls}
+                                        <Select size="sm"
                                             style={{ flex: '0 0 100px', fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                             value={cond.operator || 'equals'}
                                             onChange={e => updateCondition(bIdx, cIdx, { operator: e.target.value })}
@@ -4598,13 +4548,12 @@ function ConditionFields({ d, set }) {
                                             {CONDITION_OPERATORS.map(o => (
                                                 <option key={o.value} value={o.value}>{o.labelKey}</option>
                                             ))}
-                                        </select>
+                                        </Select>
 
                                         {/* Smart Value Selector */}
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             {cond.field === 'trigger.name' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6, borderColor: '#93c5fd' }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4616,10 +4565,9 @@ function ConditionFields({ d, set }) {
                                                     {cond.value && !triggerOptions.includes(cond.value) && (
                                                         <option value={cond.value}>{cond.value}</option>
                                                     )}
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'contact.tag' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4628,10 +4576,9 @@ function ConditionFields({ d, set }) {
                                                     {(resources.tags ?? []).map(t => (
                                                         <option key={t.id} value={t.name}>{t.name}</option>
                                                     ))}
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'appointment.status' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4642,10 +4589,9 @@ function ConditionFields({ d, set }) {
                                                     <option value="no_show">No Show</option>
                                                     <option value="rescheduled">Rescheduled</option>
                                                     <option value="cancelled">Cancelled</option>
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'appointment.calendar_id' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4654,10 +4600,9 @@ function ConditionFields({ d, set }) {
                                                     {(resources.calendars ?? []).map(c => (
                                                         <option key={c.id} value={c.id}>{c.name}</option>
                                                     ))}
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'opportunity.status' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4667,10 +4612,9 @@ function ConditionFields({ d, set }) {
                                                     <option value="won">Won</option>
                                                     <option value="lost">Lost</option>
                                                     <option value="abandoned">Abandoned</option>
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'opportunity.pipeline_id' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4679,10 +4623,9 @@ function ConditionFields({ d, set }) {
                                                     {(resources.pipelines ?? []).map(p => (
                                                         <option key={p.id} value={p.id}>{p.name}</option>
                                                     ))}
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'opportunity.stage_id' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4695,10 +4638,9 @@ function ConditionFields({ d, set }) {
                                                             ))}
                                                         </optgroup>
                                                     ))}
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'invoice.status' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4708,10 +4650,9 @@ function ConditionFields({ d, set }) {
                                                     <option value="unpaid">Unpaid</option>
                                                     <option value="overdue">Overdue</option>
                                                     <option value="pending">Pending</option>
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'funnel.order_bump' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4719,10 +4660,9 @@ function ConditionFields({ d, set }) {
                                                     <option value="">Order Bump Taken?</option>
                                                     <option value="yes">Yes (Purchased)</option>
                                                     <option value="no">No (Skipped)</option>
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'funnel.variant' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4730,10 +4670,9 @@ function ConditionFields({ d, set }) {
                                                     <option value="">Select Variant</option>
                                                     <option value="A">Variant A</option>
                                                     <option value="B">Variant B</option>
-                                                </select>
+                                                </Select>
                                             ) : cond.field === 'form.slug' ? (
-                                                <select
-                                                    className={selectCls}
+                                                <Select size="sm"
                                                     style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                     value={cond.value || ''}
                                                     onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4742,7 +4681,7 @@ function ConditionFields({ d, set }) {
                                                     {(resources.subscription_forms ?? []).map(f => (
                                                         <option key={f.id} value={f.slug}>{f.name}</option>
                                                     ))}
-                                                </select>
+                                                </Select>
                                             ) : (() => {
                                                 const activeCustomKey = cond.field === 'custom.field'
                                                     ? cond.custom_key
@@ -4754,8 +4693,7 @@ function ConditionFields({ d, set }) {
 
                                                 if (cond.field === 'custom.field' && !cond.custom_key) {
                                                     return (
-                                                        <input
-                                                            className={inputCls}
+                                                        <Input size="sm"
                                                             style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6, color: '#94a3b8' }}
                                                             disabled
                                                             value=""
@@ -4766,8 +4704,7 @@ function ConditionFields({ d, set }) {
 
                                                 if (activeCustomField && activeCustomField.options && activeCustomField.options.length > 0) {
                                                     return (
-                                                        <select
-                                                            className={selectCls}
+                                                        <Select size="sm"
                                                             style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                             value={cond.value || ''}
                                                             onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4778,14 +4715,13 @@ function ConditionFields({ d, set }) {
                                                                     {typeof opt === 'object' ? (opt.label || opt.value) : opt}
                                                                 </option>
                                                             ))}
-                                                        </select>
+                                                        </Select>
                                                     );
                                                 }
 
                                                 if (activeCustomField && (activeCustomField.key?.startsWith('consent_') || activeCustomField.type === 'checkbox' || activeCustomField.type === 'boolean' || activeCustomField.type === 'gdpr')) {
                                                     return (
-                                                        <select
-                                                            className={selectCls}
+                                                        <Select size="sm"
                                                             style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                             value={cond.value || ''}
                                                             onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4793,15 +4729,14 @@ function ConditionFields({ d, set }) {
                                                             <option value="">Select State</option>
                                                             <option value="yes">Yes (Consented / Checked)</option>
                                                             <option value="no">No (Unchecked / Declined)</option>
-                                                        </select>
+                                                        </Select>
                                                     );
                                                 }
 
                                                 if (activeCustomField && activeCustomField.type === 'date') {
                                                     return (
-                                                        <input
+                                                        <Input size="sm"
                                                             type="date"
-                                                            className={inputCls}
                                                             style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                             value={cond.value || ''}
                                                             onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4811,9 +4746,8 @@ function ConditionFields({ d, set }) {
 
                                                 if (activeCustomField && activeCustomField.type === 'number') {
                                                     return (
-                                                        <input
+                                                        <Input size="sm"
                                                             type="number"
-                                                            className={inputCls}
                                                             style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                             value={cond.value || ''}
                                                             onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4823,8 +4757,7 @@ function ConditionFields({ d, set }) {
                                                 }
 
                                                 return (
-                                                    <input
-                                                        className={inputCls}
+                                                    <Input size="sm"
                                                         style={{ fontSize: 11, padding: '7px 8px', borderRadius: 6 }}
                                                         value={cond.value || ''}
                                                         onChange={e => updateCondition(bIdx, cIdx, { value: e.target.value })}
@@ -4906,8 +4839,7 @@ function ConditionFields({ d, set }) {
                 <div style={{ fontSize: 10.5, color: '#64748b', marginBottom: 8, marginLeft: 22 }}>
                     When no condition is met
                 </div>
-                <input
-                    className={inputCls}
+                <Input size="sm"
                     style={{ marginLeft: 22, width: 'calc(100% - 22px)' }}
                     value={d.noneBranchName || 'None'}
                     onChange={e => set('noneBranchName', e.target.value)}
@@ -4937,10 +4869,10 @@ function UpdateContactFields({ d, set, triggerType }) {
     return (
         <>
             <Field label={t('automation.field_field_to_update_required')}>
-                <select className={selectCls} value={d.field ?? ''} onChange={e => set('field', e.target.value)}>
+                <Select size="sm" value={d.field ?? ''} onChange={e => set('field', e.target.value)}>
                     <option value="">{t('automation.select_field')}</option>
                     {UPDATE_FIELDS.map(f => <option key={f.value} value={f.value}>{t(f.labelKey)}</option>)}
-                </select>
+                </Select>
             </Field>
             <InlineTokenInput
                 label={t('automation.field_new_value_required')}
@@ -4960,12 +4892,12 @@ function CampaignFields({ d, set }) {
     return (
         <Field label={t('automation.field_campaign_required')}>
             {campaigns.length ? (
-                <select className={selectCls} value={d.campaign_id ?? ''} onChange={e => set('campaign_id', e.target.value)}>
+                <Select size="sm" value={d.campaign_id ?? ''} onChange={e => set('campaign_id', e.target.value)}>
                     <option value="">{t('automation.select_campaign')}</option>
                     {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                </Select>
             ) : (
-                <input type="number" className={inputCls} value={d.campaign_id ?? ''} onChange={e => set('campaign_id', e.target.value)} placeholder="123" />
+                <Input size="sm" type="number" value={d.campaign_id ?? ''} onChange={e => set('campaign_id', e.target.value)} placeholder="123" />
             )}
         </Field>
     );
@@ -4986,10 +4918,10 @@ function SubflowFields({ d, set }) {
         <div className="space-y-4">
             <Field label={t('automation.field_subflow_required')}>
                 {subflows.length ? (
-                    <select className={selectCls} value={d.automation_uuid ?? ''} onChange={e => pick(e.target.value)}>
+                    <Select size="sm" value={d.automation_uuid ?? ''} onChange={e => pick(e.target.value)}>
                         <option value="">{t('automation.select_subflow')}</option>
                         {subflows.map(s => <option key={s.uuid} value={s.uuid}>{s.name}{s.status !== 'active' ? ` (${s.status})` : ''}</option>)}
-                    </select>
+                    </Select>
                 ) : (
                     <p style={{ fontSize: 11, color: '#94a3b8' }}>{t('automation.no_subflows')}</p>
                 )}
@@ -5102,8 +5034,7 @@ function RemoveFromWorkflowFields({ d, set }) {
             </p>
 
             <Field label="WORKFLOW">
-                <select
-                    className={selectCls}
+                <Select size="sm"
                     value={targetType === 'specific' ? 'another' : targetType}
                     onChange={e => set('target_type', e.target.value)}
                 >
@@ -5111,13 +5042,12 @@ function RemoveFromWorkflowFields({ d, set }) {
                     <option value="another">Another workflow</option>
                     <option value="all_except_current">All workflows except current workflow</option>
                     <option value="all">All workflows</option>
-                </select>
+                </Select>
             </Field>
 
             {(targetType === 'another' || targetType === 'specific') && (
                 <Field label="Select Workflow">
-                    <select
-                        className={selectCls}
+                    <Select size="sm"
                         value={d.target_automation_id ?? ''}
                         onChange={e => {
                             const selectedId = e.target.value;
@@ -5134,13 +5064,12 @@ function RemoveFromWorkflowFields({ d, set }) {
                                 {a.name} ({a.status})
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </Field>
             )}
 
             <Field label="Exit Reason (Recorded in audit logs)">
-                <input
-                    className={inputCls}
+                <Input size="sm"
                     value={d.reason ?? ''}
                     onChange={e => set('reason', e.target.value)}
                     placeholder="e.g. Customer replied, Goal achieved, Deal won"
@@ -5163,10 +5092,10 @@ function AIReplyFields({ d, set, triggerType }) {
     return (
         <>
             <Field label={t('automation.field_chatbot_optional')}>
-                <select className={selectCls} value={d.chatbot_id ?? ''} onChange={e => set('chatbot_id', e.target.value)}>
+                <Select size="sm" value={d.chatbot_id ?? ''} onChange={e => set('chatbot_id', e.target.value)}>
                     <option value="">{t('automation.ai_use_prompt')}</option>
                     {chatbots.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                </Select>
             </Field>
             <InlineTokenTextarea
                 label={d.chatbot_id ? t('automation.field_prompt_optional') : t('automation.field_prompt_instructions_required')}
@@ -5188,10 +5117,10 @@ function RunChatbotFields({ d, set, triggerType }) {
         <>
             <Field label={t('automation.field_chatbot_required')}>
                 {chatbots.length ? (
-                    <select className={selectCls} value={d.chatbot_id ?? ''} onChange={e => set('chatbot_id', e.target.value)}>
+                    <Select size="sm" value={d.chatbot_id ?? ''} onChange={e => set('chatbot_id', e.target.value)}>
                         <option value="">{t('automation.select_chatbot')}</option>
                         {chatbots.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    </Select>
                 ) : (
                     <p style={{ fontSize: 11, color: '#94a3b8' }}>{t('automation.no_chatbots')}</p>
                 )}
@@ -5218,10 +5147,10 @@ function AssignAgentFields({ d, set }) {
     };
     return (
         <Field label={t('automation.field_assign_to')}>
-            <select className={selectCls} value={d.user_id ?? ''} onChange={e => pick(e.target.value)}>
+            <Select size="sm" value={d.user_id ?? ''} onChange={e => pick(e.target.value)}>
                 <option value="">{t('automation.assign_unassigned')}</option>
                 {agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
+            </Select>
         </Field>
     );
 }
@@ -5240,7 +5169,7 @@ function CtaButtonFields({ d, set, triggerType }) {
                 triggerType={triggerType}
             />
             <Field label={t('automation.field_button_text_required')}>
-                <input className={inputCls} maxLength={20} value={d.display_text ?? ''} onChange={e => set('display_text', e.target.value)} placeholder={t('automation.placeholder_button_text')} />
+                <Input size="sm" maxLength={20} value={d.display_text ?? ''} onChange={e => set('display_text', e.target.value)} placeholder={t('automation.placeholder_button_text')} />
             </Field>
             <InlineTokenInput
                 label={t('automation.field_url_required')}
@@ -5261,18 +5190,18 @@ function LocationFields({ d, set }) {
             <div className="flex gap-2">
                 <div className="flex-1">
                     <label className={labelCls}>{t('automation.field_latitude_required')}</label>
-                    <input className={inputCls} value={d.latitude ?? ''} onChange={e => set('latitude', e.target.value)} placeholder="37.4220" />
+                    <Input size="sm" value={d.latitude ?? ''} onChange={e => set('latitude', e.target.value)} placeholder="37.4220" />
                 </div>
                 <div className="flex-1">
                     <label className={labelCls}>{t('automation.field_longitude_required')}</label>
-                    <input className={inputCls} value={d.longitude ?? ''} onChange={e => set('longitude', e.target.value)} placeholder="-122.0841" />
+                    <Input size="sm" value={d.longitude ?? ''} onChange={e => set('longitude', e.target.value)} placeholder="-122.0841" />
                 </div>
             </div>
             <Field label={t('automation.field_place_name_optional')}>
-                <input className={inputCls} value={d.name ?? ''} onChange={e => set('name', e.target.value)} placeholder={t('automation.placeholder_place_name')} />
+                <Input size="sm" value={d.name ?? ''} onChange={e => set('name', e.target.value)} placeholder={t('automation.placeholder_place_name')} />
             </Field>
             <Field label={t('automation.field_address_optional')}>
-                <input className={inputCls} value={d.address ?? ''} onChange={e => set('address', e.target.value)} placeholder={t('automation.placeholder_address')} />
+                <Input size="sm" value={d.address ?? ''} onChange={e => set('address', e.target.value)} placeholder={t('automation.placeholder_address')} />
             </Field>
         </>
     );
@@ -5317,15 +5246,15 @@ function BookAppointmentFields({ d, set, triggerType }) {
             <div className="flex gap-2">
                 <div className="flex-1">
                     <label className={labelCls}>{t('automation.field_duration_min')}</label>
-                    <input type="number" min={1} className={inputCls} value={d.duration_minutes ?? ''} onChange={e => set('duration_minutes', e.target.value)} placeholder="30" />
+                    <Input size="sm" type="number" min={1} value={d.duration_minutes ?? ''} onChange={e => set('duration_minutes', e.target.value)} placeholder="30" />
                 </div>
                 <div className="flex-1">
                     <label className={labelCls}>{t('automation.field_timezone_optional')}</label>
-                    <input className={inputCls} value={d.timezone ?? ''} onChange={e => set('timezone', e.target.value)} placeholder="UTC" />
+                    <Input size="sm" value={d.timezone ?? ''} onChange={e => set('timezone', e.target.value)} placeholder="UTC" />
                 </div>
             </div>
             <Field label={t('automation.field_calendar_id_optional')}>
-                <input className={inputCls} value={d.calendar_id ?? ''} onChange={e => set('calendar_id', e.target.value)} placeholder="primary" />
+                <Input size="sm" value={d.calendar_id ?? ''} onChange={e => set('calendar_id', e.target.value)} placeholder="primary" />
             </Field>
             <CheckField label={t('automation.field_send_confirmation')} checked={d.send_confirmation} onChange={v => set('send_confirmation', v)} />
         </>
@@ -5356,11 +5285,11 @@ function GoogleMeetFields({ d, set, triggerType }) {
             <div className="flex gap-2">
                 <div className="flex-1">
                     <label className={labelCls}>{t('automation.field_duration_min')}</label>
-                    <input type="number" min={1} className={inputCls} value={d.duration_minutes ?? ''} onChange={e => set('duration_minutes', e.target.value)} placeholder="30" />
+                    <Input size="sm" type="number" min={1} value={d.duration_minutes ?? ''} onChange={e => set('duration_minutes', e.target.value)} placeholder="30" />
                 </div>
                 <div className="flex-1">
                     <label className={labelCls}>{t('automation.field_timezone_optional')}</label>
-                    <input className={inputCls} value={d.timezone ?? ''} onChange={e => set('timezone', e.target.value)} placeholder="UTC" />
+                    <Input size="sm" value={d.timezone ?? ''} onChange={e => set('timezone', e.target.value)} placeholder="UTC" />
                 </div>
             </div>
             <CheckField label={t('automation.field_send_link')} checked={d.send_link ?? true} onChange={v => set('send_link', v)} />
@@ -5373,16 +5302,16 @@ function WhatsappFormFields({ d, set }) {
     return (
         <>
             <Field label={t('automation.field_flow_id_required')}>
-                <input className={inputCls} value={d.flow_id ?? ''} onChange={e => set('flow_id', e.target.value)} placeholder="1234567890" />
+                <Input size="sm" value={d.flow_id ?? ''} onChange={e => set('flow_id', e.target.value)} placeholder="1234567890" />
             </Field>
             <Field label={t('automation.field_message_body_required')}>
                 <textarea className={textareaCls} rows={3} value={d.body ?? ''} onChange={e => set('body', e.target.value)} placeholder={t('automation.placeholder_form_body')} />
             </Field>
             <Field label={t('automation.field_flow_cta')}>
-                <input className={inputCls} maxLength={20} value={d.flow_cta ?? ''} onChange={e => set('flow_cta', e.target.value)} placeholder={t('automation.placeholder_flow_cta')} />
+                <Input size="sm" maxLength={20} value={d.flow_cta ?? ''} onChange={e => set('flow_cta', e.target.value)} placeholder={t('automation.placeholder_flow_cta')} />
             </Field>
             <Field label={t('automation.field_flow_screen_optional')}>
-                <input className={inputCls} value={d.screen ?? ''} onChange={e => set('screen', e.target.value)} placeholder="WELCOME_SCREEN" />
+                <Input size="sm" value={d.screen ?? ''} onChange={e => set('screen', e.target.value)} placeholder="WELCOME_SCREEN" />
             </Field>
         </>
     );
@@ -5396,7 +5325,7 @@ function WhatsappCatalogFields({ d, set }) {
                 <textarea className={textareaCls} rows={3} value={d.body ?? ''} onChange={e => set('body', e.target.value)} placeholder={t('automation.placeholder_catalog_body')} />
             </Field>
             <Field label={t('automation.field_thumbnail_product_optional')}>
-                <input className={inputCls} value={d.thumbnail_product_retailer_id ?? ''} onChange={e => set('thumbnail_product_retailer_id', e.target.value)} placeholder="SKU_123" />
+                <Input size="sm" value={d.thumbnail_product_retailer_id ?? ''} onChange={e => set('thumbnail_product_retailer_id', e.target.value)} placeholder="SKU_123" />
             </Field>
         </>
     );
@@ -5410,16 +5339,16 @@ function ProductFields({ d, set, platform }) {
         <>
             <Field label={t('automation.field_store_required')}>
                 {platformStores.length ? (
-                    <select className={selectCls} value={d.store_id ?? ''} onChange={e => set('store_id', e.target.value)}>
+                    <Select size="sm" value={d.store_id ?? ''} onChange={e => set('store_id', e.target.value)}>
                         <option value="">{t('automation.select_store')}</option>
                         {platformStores.map(s => <option key={s.id} value={s.id}>{s.name || s.platform}</option>)}
-                    </select>
+                    </Select>
                 ) : (
                     <p style={{ fontSize: 11, color: '#94a3b8' }}>{t('automation.no_stores', { platform })}</p>
                 )}
             </Field>
             <Field label={t('automation.field_product_id_required')}>
-                <input className={inputCls} value={d.product_id ?? ''} onChange={e => set('product_id', e.target.value)} placeholder={t('automation.placeholder_product_id')} />
+                <Input size="sm" value={d.product_id ?? ''} onChange={e => set('product_id', e.target.value)} placeholder={t('automation.placeholder_product_id')} />
             </Field>
             <Field label={t('automation.field_intro_text_optional')}>
                 <textarea className={textareaCls} rows={2} value={d.body ?? ''} onChange={e => set('body', e.target.value)} placeholder={t('automation.placeholder_product_intro')} />
@@ -5435,16 +5364,16 @@ function GoogleSheetsFields({ d, set }) {
         <>
             <GoogleWarning />
             <Field label={t('automation.field_sheets_mode')}>
-                <select className={selectCls} value={mode} onChange={e => set('mode', e.target.value)}>
+                <Select size="sm" value={mode} onChange={e => set('mode', e.target.value)}>
                     <option value="append">{t('automation.sheets_append')}</option>
                     <option value="read">{t('automation.sheets_read')}</option>
-                </select>
+                </Select>
             </Field>
             <Field label={t('automation.field_spreadsheet_id_required')}>
-                <input className={inputCls} value={d.spreadsheet_id ?? ''} onChange={e => set('spreadsheet_id', e.target.value)} placeholder="1AbC...xyz" />
+                <Input size="sm" value={d.spreadsheet_id ?? ''} onChange={e => set('spreadsheet_id', e.target.value)} placeholder="1AbC...xyz" />
             </Field>
             <Field label={t('automation.field_range_required')}>
-                <input className={inputCls} value={d.range ?? ''} onChange={e => set('range', e.target.value)} placeholder="Sheet1!A:D" />
+                <Input size="sm" value={d.range ?? ''} onChange={e => set('range', e.target.value)} placeholder="Sheet1!A:D" />
             </Field>
             {mode === 'append' ? (
                 <Field label={t('automation.field_row_values_required')}>
@@ -5452,7 +5381,7 @@ function GoogleSheetsFields({ d, set }) {
                 </Field>
             ) : (
                 <Field label={t('automation.field_result_var')}>
-                    <input className={inputCls} value={d.result_var ?? ''} onChange={e => set('result_var', e.target.value)} placeholder="sheet" />
+                    <Input size="sm" value={d.result_var ?? ''} onChange={e => set('result_var', e.target.value)} placeholder="sheet" />
                 </Field>
             )}
         </>
@@ -5465,10 +5394,10 @@ function GoogleDocsFields({ d, set }) {
         <>
             <GoogleWarning />
             <Field label={t('automation.field_template_doc_id_required')}>
-                <input className={inputCls} value={d.template_doc_id ?? ''} onChange={e => set('template_doc_id', e.target.value)} placeholder="1AbC...xyz" />
+                <Input size="sm" value={d.template_doc_id ?? ''} onChange={e => set('template_doc_id', e.target.value)} placeholder="1AbC...xyz" />
             </Field>
             <Field label={t('automation.field_doc_title')}>
-                <input className={inputCls} value={d.title ?? ''} onChange={e => set('title', e.target.value)} placeholder={t('automation.placeholder_doc_title', { token: '{{contact.name}}' })} />
+                <Input size="sm" value={d.title ?? ''} onChange={e => set('title', e.target.value)} placeholder={t('automation.placeholder_doc_title', { token: '{{contact.name}}' })} />
             </Field>
             <Field label={t('automation.field_replacements_optional')}>
                 <textarea className={textareaCls} rows={4} value={d.replacements ?? ''} onChange={e => set('replacements', e.target.value)} placeholder={t('automation.placeholder_replacements')} />
@@ -5485,13 +5414,13 @@ function GoogleFormsFields({ d, set }) {
         <>
             <GoogleWarning />
             <Field label={t('automation.field_forms_mode')}>
-                <select className={selectCls} value={mode} onChange={e => set('mode', e.target.value)}>
+                <Select size="sm" value={mode} onChange={e => set('mode', e.target.value)}>
                     <option value="send_link">{t('automation.forms_send_link')}</option>
                     <option value="read_response">{t('automation.forms_read_response')}</option>
-                </select>
+                </Select>
             </Field>
             <Field label={t('automation.field_form_id_required')}>
-                <input className={inputCls} value={d.form_id ?? ''} onChange={e => set('form_id', e.target.value)} placeholder="1AbC...xyz" />
+                <Input size="sm" value={d.form_id ?? ''} onChange={e => set('form_id', e.target.value)} placeholder="1AbC...xyz" />
             </Field>
             {mode === 'send_link' ? (
                 <>
@@ -5502,7 +5431,7 @@ function GoogleFormsFields({ d, set }) {
                 </>
             ) : (
                 <Field label={t('automation.field_result_var')}>
-                    <input className={inputCls} value={d.result_var ?? ''} onChange={e => set('result_var', e.target.value)} placeholder="form" />
+                    <Input size="sm" value={d.result_var ?? ''} onChange={e => set('result_var', e.target.value)} placeholder="form" />
                 </Field>
             )}
         </>
@@ -5518,8 +5447,7 @@ function InternalNotificationFields({ d, set, triggerType }) {
     return (
         <>
             <Field label="Action Name">
-                <input
-                    className={inputCls}
+                <Input size="sm"
                     value={d.label ?? 'Internal Notification'}
                     onChange={e => set('label', e.target.value)}
                     placeholder="Internal Notification"
@@ -5527,8 +5455,7 @@ function InternalNotificationFields({ d, set, triggerType }) {
             </Field>
 
             <Field label="Type of Notification">
-                <select
-                    className={selectCls}
+                <Select size="sm"
                     value={notificationType}
                     onChange={e => set('notification_type', e.target.value)}
                 >
@@ -5536,12 +5463,11 @@ function InternalNotificationFields({ d, set, triggerType }) {
                     <option value="notification">In-App System Notification</option>
                     <option value="sms">SMS Alert</option>
                     <option value="whatsapp">WhatsApp Alert</option>
-                </select>
+                </Select>
             </Field>
 
             <Field label="Send To">
-                <select
-                    className={selectCls}
+                <Select size="sm"
                     value={sendTo}
                     onChange={e => set('send_to', e.target.value)}
                 >
@@ -5549,13 +5475,12 @@ function InternalNotificationFields({ d, set, triggerType }) {
                     <option value="assigned_user">Assigned Contact Owner / Agent</option>
                     <option value="custom_email">Custom Email Address(es)</option>
                     <option value="custom_phone">Custom Mobile Number(s)</option>
-                </select>
+                </Select>
             </Field>
 
             {sendTo === 'user' && (
                 <Field label="Select User / Agent">
-                    <select
-                        className={selectCls}
+                    <Select size="sm"
                         value={d.user_id ?? ''}
                         onChange={e => set('user_id', e.target.value ? parseInt(e.target.value, 10) : null)}
                     >
@@ -5565,7 +5490,7 @@ function InternalNotificationFields({ d, set, triggerType }) {
                                 {u.name} ({u.email})
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </Field>
             )}
 
@@ -5630,12 +5555,12 @@ function WebhookFields({ d, set, triggerType }) {
                 triggerType={triggerType}
             />
             <Field label={t('automation.field_method')}>
-                <select className={selectCls} value={d.method ?? 'POST'} onChange={e => set('method', e.target.value)}>
+                <Select size="sm" value={d.method ?? 'POST'} onChange={e => set('method', e.target.value)}>
                     <option>POST</option>
                     <option>GET</option>
                     <option>PUT</option>
                     <option>PATCH</option>
-                </select>
+                </Select>
             </Field>
             <InlineTokenTextarea
                 label={t('automation.field_headers_json_optional')}
@@ -5665,8 +5590,8 @@ function CreateOpportunityFields({ d, set, triggerType }) {
     return (
         <>
             <Field label="Select Target Pipeline">
-                <select
-                    className={selectCls}
+                <Select
+                    size="sm"
                     value={d.pipeline_id ?? (selectedPipeline?.id || '')}
                     onChange={e => {
                         const pid = parseInt(e.target.value, 10);
@@ -5678,19 +5603,19 @@ function CreateOpportunityFields({ d, set, triggerType }) {
                     {pipelines.map(p => (
                         <option key={p.id} value={p.id}>{p.name} {p.is_default ? '(Default)' : ''}</option>
                     ))}
-                </select>
+                </Select>
             </Field>
 
             <Field label="Target Pipeline Stage">
-                <select
-                    className={selectCls}
+                <Select
+                    size="sm"
                     value={d.stage_id ?? (stages[0]?.id || '')}
                     onChange={e => set('stage_id', parseInt(e.target.value, 10))}
                 >
                     {stages.map(s => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
-                </select>
+                </Select>
             </Field>
 
             <InlineTokenInput
@@ -5710,8 +5635,8 @@ function CreateOpportunityFields({ d, set, triggerType }) {
             />
 
             <Field label="Assigned Sales Agent">
-                <select
-                    className={selectCls}
+                <Select
+                    size="sm"
                     value={d.assigned_user_id ?? ''}
                     onChange={e => set('assigned_user_id', e.target.value ? parseInt(e.target.value, 10) : null)}
                 >
@@ -5719,12 +5644,12 @@ function CreateOpportunityFields({ d, set, triggerType }) {
                     {agents.map(u => (
                         <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
-                </select>
+                </Select>
             </Field>
 
             <Field label="Opportunity Status">
-                <select
-                    className={selectCls}
+                <Select
+                    size="sm"
                     value={d.status ?? 'open'}
                     onChange={e => set('status', e.target.value)}
                 >
@@ -5732,7 +5657,7 @@ function CreateOpportunityFields({ d, set, triggerType }) {
                     <option value="won">🏆 Closed Won (Converted)</option>
                     <option value="lost">🔴 Closed Lost</option>
                     <option value="abandoned">⚪ Abandoned</option>
-                </select>
+                </Select>
             </Field>
 
             {(d.status === 'lost' || d.status === 'abandoned') && (
@@ -5746,15 +5671,15 @@ function CreateOpportunityFields({ d, set, triggerType }) {
             )}
 
             <Field label="Status Overwrite Policy">
-                <select
-                    className={selectCls}
+                <Select
+                    size="sm"
                     value={d.status_policy ?? 'preserve_if_won'}
                     onChange={e => set('status_policy', e.target.value)}
                 >
                     <option value="preserve_if_won">🛡️ Don't overwrite if deal is already Won</option>
                     <option value="always_update">⚡ Always update status</option>
                     <option value="keep_existing">🔒 Leave existing status unchanged on existing deals</option>
-                </select>
+                </Select>
             </Field>
         </>
     );
@@ -5768,8 +5693,8 @@ function ChangeStageFields({ d, set }) {
     return (
         <>
             <Field label="Select Pipeline">
-                <select
-                    className={selectCls}
+                <Select
+                    size="sm"
                     value={d.pipeline_id ?? (selectedPipeline?.id || '')}
                     onChange={e => {
                         const pid = parseInt(e.target.value, 10);
@@ -5781,19 +5706,19 @@ function ChangeStageFields({ d, set }) {
                     {pipelines.map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
-                </select>
+                </Select>
             </Field>
 
             <Field label="New Target Stage">
-                <select
-                    className={selectCls}
+                <Select
+                    size="sm"
                     value={d.stage_id ?? (stages[0]?.id || '')}
                     onChange={e => set('stage_id', parseInt(e.target.value, 10))}
                 >
                     {stages.map(s => (
                         <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
-                </select>
+                </Select>
             </Field>
         </>
     );
@@ -5803,8 +5728,8 @@ function UpdateOpportunityStatusFields({ d, set, triggerType }) {
     return (
         <>
             <Field label="Target Opportunity Outcome Status">
-                <select
-                    className={selectCls}
+                <Select
+                    size="sm"
                     value={d.status ?? 'won'}
                     onChange={e => set('status', e.target.value)}
                 >
@@ -5812,7 +5737,7 @@ function UpdateOpportunityStatusFields({ d, set, triggerType }) {
                     <option value="lost">🔴 Closed Lost</option>
                     <option value="abandoned">⚪ Abandoned</option>
                     <option value="open">🟢 Open</option>
-                </select>
+                </Select>
             </Field>
 
             {(d.status === 'lost' || d.status === 'abandoned') && (
@@ -6723,11 +6648,12 @@ function AutomationBuilderInner({ automation: initial }) {
                         <GripVertical size={10} /> {t('automation.drag_node_hint')}
                     </div>
 
-                    <input
+                    <Input
+                        size="sm"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         placeholder={t('automation.search_nodes')}
-                        style={{ width: '100%', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', padding: '6px 9px', fontSize: 11, marginBottom: 10, boxSizing: 'border-box', outline: 'none' }}
+                        wrapperClassName="mb-2.5"
                     />
 
                     {grouped.map(({ cat, items }) => (

@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Badge, Button, Card, Modal, Tabs } from '@/Components/ui';
+import { Badge, Button, Card, Modal, Tabs, Input } from '@/Components/ui';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -101,7 +101,14 @@ export default function AdminRolesPermissionsIndex({ roles = [], permissions = [
                             <div className="space-y-4">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <form onSubmit={submitRoleSearch} className="flex gap-2">
-                                        <input type="text" value={roleSearch} onChange={(e) => setRoleSearch(e.target.value)} placeholder={t('admin.search_roles')} className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm w-48" />
+                                        <Input
+                                            type="text"
+                                            size="sm"
+                                            value={roleSearch}
+                                            onChange={(e) => setRoleSearch(e.target.value)}
+                                            placeholder={t('admin.search_roles')}
+                                            wrapperClassName="w-48"
+                                        />
                                         <Button type="submit" variant="outline" size="sm">{t('common.search')}</Button>
                                     </form>
                                     {canManageRoles && <Button onClick={() => setAddRoleOpen(true)}>{t('admin.add_role')}</Button>}
@@ -148,7 +155,14 @@ export default function AdminRolesPermissionsIndex({ roles = [], permissions = [
                             <div className="space-y-4">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <form onSubmit={submitPermissionSearch} className="flex gap-2">
-                                        <input type="text" value={permissionSearch} onChange={(e) => setPermissionSearch(e.target.value)} placeholder={t('admin.search_permissions')} className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm w-56" />
+                                        <Input
+                                            type="text"
+                                            size="sm"
+                                            value={permissionSearch}
+                                            onChange={(e) => setPermissionSearch(e.target.value)}
+                                            placeholder={t('admin.search_permissions')}
+                                            wrapperClassName="w-56"
+                                        />
                                         <Button type="submit" variant="outline" size="sm">{t('common.search')}</Button>
                                     </form>
                                     {canManageRoles && <Button onClick={() => setAddPermOpen(true)}>{t('admin.add_permission')}</Button>}
@@ -199,20 +213,30 @@ export default function AdminRolesPermissionsIndex({ roles = [], permissions = [
                 <form onSubmit={(e) => { e.preventDefault(); roleForm.post(route('admin.roles.store'), { onSuccess: () => { setAddRoleOpen(false); roleForm.reset(); } }); }}>
                     <Modal.Body>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">{t('admin.role_name_label')}</label>
-                                <input type="text" value={roleForm.data.name} onChange={(e) => roleForm.setData('name', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                {roleForm.errors.name && <p className="mt-1 text-sm text-red-500">{roleForm.errors.name}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">{t('admin.role_key_label')}</label>
-                                <input type="text" value={roleForm.data.key} onChange={(e) => roleForm.setData('key', e.target.value.toUpperCase())} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-mono" placeholder={t('admin.role_key_placeholder')} required />
-                                {roleForm.errors.key && <p className="mt-1 text-sm text-red-500">{roleForm.errors.key}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">{t('admin.col_description')}</label>
-                                <input type="text" value={roleForm.data.description} onChange={(e) => roleForm.setData('description', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
-                            </div>
+                            <Input
+                                label={t('admin.role_name_label')}
+                                type="text"
+                                value={roleForm.data.name}
+                                onChange={(e) => roleForm.setData('name', e.target.value)}
+                                required
+                                error={roleForm.errors.name}
+                            />
+                            <Input
+                                label={t('admin.role_key_label')}
+                                type="text"
+                                value={roleForm.data.key}
+                                onChange={(e) => roleForm.setData('key', e.target.value.toUpperCase())}
+                                className="font-mono"
+                                placeholder={t('admin.role_key_placeholder')}
+                                required
+                                error={roleForm.errors.key}
+                            />
+                            <Input
+                                label={t('admin.col_description')}
+                                type="text"
+                                value={roleForm.data.description}
+                                onChange={(e) => roleForm.setData('description', e.target.value)}
+                            />
                             <div>
                                 <label className="block text-sm font-medium mb-2">{t('admin.col_permissions')}</label>
                                 <div className="max-h-48 overflow-y-auto space-y-2 border border-neutral-200 dark:border-neutral-700 rounded-soft p-3">
@@ -245,20 +269,30 @@ export default function AdminRolesPermissionsIndex({ roles = [], permissions = [
                     <form onSubmit={(e) => { e.preventDefault(); editRoleForm.put(route('admin.roles.update', editingRole.id), { onSuccess: () => { setEditRoleOpen(false); setEditingRole(null); } }); }}>
                         <Modal.Body>
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">{t('admin.role_name_label')}</label>
-                                    <input type="text" value={editRoleForm.data.name} onChange={(e) => editRoleForm.setData('name', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                    {editRoleForm.errors.name && <p className="mt-1 text-sm text-red-500">{editRoleForm.errors.name}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">{t('admin.role_key_label')}</label>
-                                    <input type="text" value={editRoleForm.data.key} onChange={(e) => editRoleForm.setData('key', e.target.value.toUpperCase())} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-mono" required readOnly={editingRole?.is_system} />
-                                    {editRoleForm.errors.key && <p className="mt-1 text-sm text-red-500">{editRoleForm.errors.key}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">{t('admin.col_description')}</label>
-                                    <input type="text" value={editRoleForm.data.description} onChange={(e) => editRoleForm.setData('description', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
-                                </div>
+                                <Input
+                                    label={t('admin.role_name_label')}
+                                    type="text"
+                                    value={editRoleForm.data.name}
+                                    onChange={(e) => editRoleForm.setData('name', e.target.value)}
+                                    required
+                                    error={editRoleForm.errors.name}
+                                />
+                                <Input
+                                    label={t('admin.role_key_label')}
+                                    type="text"
+                                    value={editRoleForm.data.key}
+                                    onChange={(e) => editRoleForm.setData('key', e.target.value.toUpperCase())}
+                                    className="font-mono"
+                                    required
+                                    readOnly={editingRole?.is_system}
+                                    error={editRoleForm.errors.key}
+                                />
+                                <Input
+                                    label={t('admin.col_description')}
+                                    type="text"
+                                    value={editRoleForm.data.description}
+                                    onChange={(e) => editRoleForm.setData('description', e.target.value)}
+                                />
                                 <div>
                                     <label className="block text-sm font-medium mb-2">{t('admin.col_permissions')}</label>
                                     <div className="max-h-48 overflow-y-auto space-y-2 border border-neutral-200 dark:border-neutral-700 rounded-soft p-3">
@@ -291,25 +325,38 @@ export default function AdminRolesPermissionsIndex({ roles = [], permissions = [
                 <form onSubmit={(e) => { e.preventDefault(); permForm.post(route('admin.permissions.store'), { onSuccess: () => { setAddPermOpen(false); permForm.reset(); } }); }}>
                     <Modal.Body>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">{t('admin.permission_key_label')}</label>
-                                <input type="text" value={permForm.data.key} onChange={(e) => permForm.setData('key', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-mono" placeholder={t('admin.permission_key_placeholder')} required />
-                                {permForm.errors.key && <p className="mt-1 text-sm text-red-500">{permForm.errors.key}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">{t('admin.permission_name_label')}</label>
-                                <input type="text" value={permForm.data.name} onChange={(e) => permForm.setData('name', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                {permForm.errors.name && <p className="mt-1 text-sm text-red-500">{permForm.errors.name}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">{t('admin.permission_category_label')}</label>
-                                <input type="text" value={permForm.data.category} onChange={(e) => permForm.setData('category', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                {permForm.errors.category && <p className="mt-1 text-sm text-red-500">{permForm.errors.category}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">{t('admin.permission_description_label')}</label>
-                                <input type="text" value={permForm.data.description} onChange={(e) => permForm.setData('description', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
-                            </div>
+                            <Input
+                                label={t('admin.permission_key_label')}
+                                type="text"
+                                value={permForm.data.key}
+                                onChange={(e) => permForm.setData('key', e.target.value)}
+                                className="font-mono"
+                                placeholder={t('admin.permission_key_placeholder')}
+                                required
+                                error={permForm.errors.key}
+                            />
+                            <Input
+                                label={t('admin.permission_name_label')}
+                                type="text"
+                                value={permForm.data.name}
+                                onChange={(e) => permForm.setData('name', e.target.value)}
+                                required
+                                error={permForm.errors.name}
+                            />
+                            <Input
+                                label={t('admin.permission_category_label')}
+                                type="text"
+                                value={permForm.data.category}
+                                onChange={(e) => permForm.setData('category', e.target.value)}
+                                required
+                                error={permForm.errors.category}
+                            />
+                            <Input
+                                label={t('admin.permission_description_label')}
+                                type="text"
+                                value={permForm.data.description}
+                                onChange={(e) => permForm.setData('description', e.target.value)}
+                            />
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
@@ -326,25 +373,37 @@ export default function AdminRolesPermissionsIndex({ roles = [], permissions = [
                     <form onSubmit={(e) => { e.preventDefault(); editPermForm.put(route('admin.permissions.update', editingPerm.id), { onSuccess: () => { setEditPermOpen(false); setEditingPerm(null); } }); }}>
                         <Modal.Body>
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">{t('admin.permission_key_label')}</label>
-                                    <input type="text" value={editPermForm.data.key} onChange={(e) => editPermForm.setData('key', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-mono" required />
-                                    {editPermForm.errors.key && <p className="mt-1 text-sm text-red-500">{editPermForm.errors.key}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">{t('admin.permission_name_label')}</label>
-                                    <input type="text" value={editPermForm.data.name} onChange={(e) => editPermForm.setData('name', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                    {editPermForm.errors.name && <p className="mt-1 text-sm text-red-500">{editPermForm.errors.name}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">{t('admin.permission_category_label')}</label>
-                                    <input type="text" value={editPermForm.data.category} onChange={(e) => editPermForm.setData('category', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" required />
-                                    {editPermForm.errors.category && <p className="mt-1 text-sm text-red-500">{editPermForm.errors.category}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">{t('admin.permission_description_label')}</label>
-                                    <input type="text" value={editPermForm.data.description} onChange={(e) => editPermForm.setData('description', e.target.value)} className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
-                                </div>
+                                <Input
+                                    label={t('admin.permission_key_label')}
+                                    type="text"
+                                    value={editPermForm.data.key}
+                                    onChange={(e) => editPermForm.setData('key', e.target.value)}
+                                    className="font-mono"
+                                    required
+                                    error={editPermForm.errors.key}
+                                />
+                                <Input
+                                    label={t('admin.permission_name_label')}
+                                    type="text"
+                                    value={editPermForm.data.name}
+                                    onChange={(e) => editPermForm.setData('name', e.target.value)}
+                                    required
+                                    error={editPermForm.errors.name}
+                                />
+                                <Input
+                                    label={t('admin.permission_category_label')}
+                                    type="text"
+                                    value={editPermForm.data.category}
+                                    onChange={(e) => editPermForm.setData('category', e.target.value)}
+                                    required
+                                    error={editPermForm.errors.category}
+                                />
+                                <Input
+                                    label={t('admin.permission_description_label')}
+                                    type="text"
+                                    value={editPermForm.data.description}
+                                    onChange={(e) => editPermForm.setData('description', e.target.value)}
+                                />
                             </div>
                         </Modal.Body>
                         <Modal.Footer>

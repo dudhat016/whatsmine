@@ -1,5 +1,6 @@
 import { Head, router, usePage, Link, useForm } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import { Input } from '@/Components/ui';
 import { MessageSquare, Check, Link2, Phone, Webhook, Copy, Inbox, AlertTriangle, RefreshCw, Plus, Trash2, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
@@ -202,18 +203,15 @@ function WabaCard({ waba, webhookUrl, webhookToken, activePhoneIds, onSyncTempla
                 {showPhoneForm && (
                     <form onSubmit={submitPhoneNumber} className="flex items-end gap-2">
                         <div className="flex-1">
-                            <input
+                            <Input
                                 type="text"
                                 inputMode="numeric"
                                 autoComplete="off"
                                 value={phoneForm.data.phone_number_id}
                                 onChange={e => phoneForm.setData('phone_number_id', e.target.value)}
                                 placeholder="e.g. 106540573042353"
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                error={phoneForm.errors.phone_number_id}
                             />
-                            {phoneForm.errors.phone_number_id && (
-                                <p className="mt-1 text-xs text-red-500">{phoneForm.errors.phone_number_id}</p>
-                            )}
                         </div>
                         <button
                             type="submit"
@@ -276,12 +274,13 @@ function WabaCard({ waba, webhookUrl, webhookToken, activePhoneIds, onSyncTempla
 
                                     {needsVerify && verifyingPhone === phoneId && (
                                         <div className="flex items-center gap-2 pt-1 border-t border-neutral-200 dark:border-neutral-700">
-                                            <input
+                                            <Input
                                                 type="text"
                                                 value={verifyCode}
                                                 onChange={e => setVerifyCode(e.target.value)}
                                                 placeholder={t('whatsapp.setup_enter_sms_code')}
-                                                className="flex-1 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1 text-xs font-mono"
+                                                className="flex-1 font-mono"
+                                                size="sm"
                                             />
                                             <button
                                                 type="button"

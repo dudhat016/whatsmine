@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Input, Select } from '@/Components/ui';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
@@ -43,15 +44,14 @@ function ChangePlanModal({ subscription, plans, onClose }) {
                 <form onSubmit={submit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('subscription.plan_label')}</label>
-                        <select
+                        <Select
                             value={data.plan_id}
                             onChange={e => setData('plan_id', e.target.value)}
-                            className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
                         >
                             {plans.map(p => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
-                        </select>
+                        </Select>
                         {errors.plan_id && <p className="text-coral-600 text-xs mt-1">{errors.plan_id}</p>}
                     </div>
                     <div>
@@ -72,11 +72,11 @@ function ChangePlanModal({ subscription, plans, onClose }) {
                     <div>
                         <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('subscription.coupon_code_label')}</label>
                         <div className="flex gap-2">
-                            <input
+                            <Input
                                 type="text"
                                 value={couponCode}
                                 onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(null); }}
-                                className="flex-1 border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white font-mono"
+                                className="flex-1 font-mono"
                                 placeholder="SAVE20"
                             />
                             <button type="button" onClick={checkCoupon} className="px-3 py-2 text-sm bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600">

@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { Upload, Link, X, Image, FileText, Check, Loader2, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Input from '@/Components/ui/Input';
 
 /**
  * MediaUpload — dual-mode media input component.
@@ -127,19 +128,19 @@ export default function MediaUpload({
             {/* URL mode */}
             {mode === 'url' && (
                 <div className="relative">
-                    <input
+                    <Input
+                        size="sm"
                         type="url"
                         value={value}
                         onChange={(e) => { setError(null); onChange?.(e.target.value); }}
                         placeholder={placeholder}
                         disabled={disabled}
-                        className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 disabled:opacity-50"
                     />
                     {value && (
                         <button
                             type="button"
                             onClick={clear}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 z-10"
                         >
                             <X className="h-4 w-4" />
                         </button>

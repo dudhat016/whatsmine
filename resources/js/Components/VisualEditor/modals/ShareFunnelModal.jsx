@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Copy, Check, Share2, Globe, Key, ShieldCheck } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 export default function ShareFunnelModal({ isOpen, onClose, funnel }) {
     const [copiedField, setCopiedField] = useState(null);
@@ -50,11 +51,13 @@ export default function ShareFunnelModal({ isOpen, onClose, funnel }) {
                             <Globe className="w-4 h-4 text-brand-500" /> Public Share Link
                         </label>
                         <div className="flex items-center gap-2">
-                            <input
+                            <Input
+                                size="sm"
+                                wrapperClassName="flex-1"
                                 type="text"
                                 readOnly
                                 value={shareUrl}
-                                className="flex-1 px-3 py-2 text-xs font-mono bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
+                                className="font-mono"
                             />
                             <button
                                 type="button"
@@ -73,11 +76,13 @@ export default function ShareFunnelModal({ isOpen, onClose, funnel }) {
                             <Key className="w-4 h-4 text-indigo-500" /> Agency Clone Token
                         </label>
                         <div className="flex items-center gap-2">
-                            <input
+                            <Input
+                                size="sm"
+                                wrapperClassName="flex-1"
                                 type="text"
                                 readOnly
                                 value={cloneToken}
-                                className="flex-1 px-3 py-2 text-xs font-mono bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white"
+                                className="font-mono"
                             />
                             <button
                                 type="button"

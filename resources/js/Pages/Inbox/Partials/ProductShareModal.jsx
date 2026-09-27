@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '@/Components/ui/Modal';
+import { Input } from '@/Components/ui';
 import { Search, Package, Send, Tag, RefreshCw, CreditCard, Gift, ExternalLink } from 'lucide-react';
 
 export default function ProductShareModal({ isOpen, onClose, onShareProduct }) {
@@ -50,16 +51,13 @@ export default function ProductShareModal({ isOpen, onClose, onShareProduct }) {
             <Modal.Header title="Share Native Product to Chat" onClose={onClose} />
             <Modal.Body>
                 <div className="space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={handleSearchChange}
-                            placeholder="Search product catalog by name or SKU..."
-                            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800"
-                        />
-                    </div>
+                    <Input
+                        type="text"
+                        value={search}
+                        onChange={handleSearchChange}
+                        leftIcon={<Search className="h-4 w-4 text-neutral-400" />}
+                        placeholder="Search product catalog by name or SKU..."
+                    />
 
                     <div className="max-h-80 overflow-y-auto divide-y divide-neutral-100 dark:divide-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
                         {loading && <p className="text-center py-6 text-xs text-neutral-400">Loading catalog...</p>}

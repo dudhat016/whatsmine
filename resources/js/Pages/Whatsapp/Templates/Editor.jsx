@@ -1,5 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import { Input, Select } from '@/Components/ui';
 import {
     ArrowLeft, Plus, Trash2, Info, Upload, Image, FileVideo,
     FileText as FileTextIcon, ChevronUp, ChevronDown, Phone, Link as LinkIcon,
@@ -113,12 +114,12 @@ function ExampleInputs({ label, placeholders, values, onChange }) {
             {placeholders.map(n => (
                 <div key={n} className="flex items-center gap-2">
                     <span className="text-xs font-mono text-neutral-400 w-10 shrink-0">{`{{${n}}}`}</span>
-                    <input
+                    <Input
                         type="text"
                         placeholder={t('whatsapp.templates_example_for', { token: `{{${n}}}` })}
                         value={values[n] ?? ''}
                         onChange={e => onChange(n, e.target.value)}
-                        className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
+                        className="flex-1"
                     />
                 </div>
             ))}
@@ -198,13 +199,12 @@ function HeaderBlock({ comp, onChange, onRemove }) {
 
             {format === 'TEXT' ? (
                 <>
-                    <input
+                    <Input
                         type="text"
                         value={comp.text ?? ''}
                         onChange={e => onChange({ ...comp, text: e.target.value })}
                         placeholder={t('whatsapp.templates_header_text_placeholder')}
                         maxLength={60}
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                     />
                     <ExampleInputs
                         label={t('whatsapp.templates_section_header')}
@@ -312,13 +312,12 @@ function FooterBlock({ comp, onChange, onRemove }) {
     const { t } = useTranslation();
     return (
         <SectionCard title={t('whatsapp.templates_section_footer')} onRemove={onRemove}>
-            <input
+            <Input
                 type="text"
                 value={comp.text ?? ''}
                 onChange={e => onChange({ ...comp, text: e.target.value })}
                 placeholder={t('whatsapp.templates_footer_text_placeholder')}
                 maxLength={60}
-                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
             />
         </SectionCard>
     );
@@ -358,38 +357,36 @@ function ButtonRow({ btn, idx, total, onChange, onRemove, onMove }) {
 
             {/* Button text (label) */}
             <div>
-                <label className="block text-xs text-neutral-500 mb-1">{t('whatsapp.templates_button_label')} <span className="text-red-500">*</span> <span className="text-neutral-400">{t('whatsapp.templates_max_25_chars')}</span></label>
-                <input
+                <Input
+                    label={<>{t('whatsapp.templates_button_label')} <span className="text-red-500">*</span> <span className="text-neutral-400">{t('whatsapp.templates_max_25_chars')}</span></>}
                     type="text"
                     value={btn.text ?? ''}
                     onChange={e => onChange({ ...btn, text: e.target.value })}
                     maxLength={25}
                     placeholder={t('whatsapp.templates_button_label_placeholder')}
-                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
                 />
             </div>
 
             {btn.type === 'URL' && (
                 <div className="space-y-2">
                     <div>
-                        <label className="block text-xs text-neutral-500 mb-1">URL <span className="text-red-500">*</span> <span className="text-neutral-400">{t('whatsapp.templates_url_hint', { token: '{{1}}' })}</span></label>
-                        <input
+                        <Input
+                            label={<>URL <span className="text-red-500">*</span> <span className="text-neutral-400">{t('whatsapp.templates_url_hint', { token: '{{1}}' })}</span></>}
                             type="text"
                             value={btn.url ?? ''}
                             onChange={e => onChange({ ...btn, url: e.target.value })}
                             placeholder="https://example.com/order/{{1}}"
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm font-mono"
+                            className="font-mono"
                         />
                     </div>
                     {phs.length > 0 && (
                         <div>
-                            <label className="block text-xs text-neutral-500 mb-1">{t('whatsapp.templates_url_example_label', { token: '{{1}}' })}</label>
-                            <input
+                            <Input
+                                label={t('whatsapp.templates_url_example_label', { token: '{{1}}' })}
                                 type="text"
                                 value={exampleValues[0] ?? ''}
                                 onChange={e => onChange({ ...btn, example: [e.target.value] })}
                                 placeholder="https://example.com/order/12345"
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm"
                             />
                         </div>
                     )}
@@ -398,13 +395,13 @@ function ButtonRow({ btn, idx, total, onChange, onRemove, onMove }) {
 
             {btn.type === 'PHONE_NUMBER' && (
                 <div>
-                    <label className="block text-xs text-neutral-500 mb-1">{t('whatsapp.templates_phone_number_label')} <span className="text-red-500">*</span> <span className="text-neutral-400">{t('whatsapp.templates_phone_hint')}</span></label>
-                    <input
+                    <Input
+                        label={<>{t('whatsapp.templates_phone_number_label')} <span className="text-red-500">*</span> <span className="text-neutral-400">{t('whatsapp.templates_phone_hint')}</span></>}
                         type="text"
                         value={btn.phone_number ?? ''}
                         onChange={e => onChange({ ...btn, phone_number: e.target.value })}
                         placeholder="+8801XXXXXXXXX"
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm font-mono"
+                        className="font-mono"
                     />
                 </div>
             )}
@@ -609,50 +606,40 @@ export default function WhatsappTemplateEditor({ template, phoneNumbers = [] }) 
                         <h3 className="font-medium text-neutral-800 dark:text-neutral-200">{t('whatsapp.templates_basic_info')}</h3>
 
                         {phoneNumbers.length > 0 && (
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                    {t('whatsapp.templates_whatsapp_number')} <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    value={phoneNumberId}
-                                    onChange={e => setPhoneNumberId(e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                >
-                                    {phoneNumbers.map(p => (
-                                        <option key={p.phone_number_id} value={p.phone_number_id}>
-                                            {p.verified_name ? `${p.verified_name} (${p.display_phone})` : p.display_phone}
-                                        </option>
-                                    ))}
-                                </select>
-                                <p className="mt-1 text-xs text-neutral-400">{t('whatsapp.templates_phone_select_hint')}</p>
-                            </div>
+                            <Select
+                                label={<>{t('whatsapp.templates_whatsapp_number')} <span className="text-red-500">*</span></>}
+                                value={phoneNumberId}
+                                onChange={e => setPhoneNumberId(e.target.value)}
+                                helperText={t('whatsapp.templates_phone_select_hint')}
+                            >
+                                {phoneNumbers.map(p => (
+                                    <option key={p.phone_number_id} value={p.phone_number_id}>
+                                        {p.verified_name ? `${p.verified_name} (${p.display_phone})` : p.display_phone}
+                                    </option>
+                                ))}
+                            </Select>
                         )}
 
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                    {t('whatsapp.templates_template_name')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
+                                <Input
+                                    label={<>{t('whatsapp.templates_template_name')} <span className="text-red-500">*</span></>}
                                     type="text"
                                     value={name}
                                     onChange={e => setName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))}
                                     placeholder="order_confirmation"
                                     disabled={isEdit}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-mono disabled:opacity-60 disabled:cursor-not-allowed"
+                                    className="font-mono"
+                                    hint={isEdit ? t('whatsapp.templates_name_locked_hint') : t('whatsapp.templates_name_format_hint')}
+                                    error={errors.name}
                                 />
-                                <p className="mt-1 text-xs text-neutral-400">{isEdit ? t('whatsapp.templates_name_locked_hint') : t('whatsapp.templates_name_format_hint')}</p>
-                                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                    {t('whatsapp.templates_language')} <span className="text-red-500">*</span>
-                                </label>
-                                <select
+                                <Select
+                                    label={<>{t('whatsapp.templates_language')} <span className="text-red-500">*</span></>}
                                     value={language}
                                     onChange={e => setLanguage(e.target.value)}
                                     disabled={isEdit}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     {!LANGUAGES.some(([v]) => v === language) && language && (
                                         <option value={language}>{language}</option>
@@ -660,7 +647,7 @@ export default function WhatsappTemplateEditor({ template, phoneNumbers = [] }) 
                                     {LANGUAGES.map(([v, l]) => (
                                         <option key={v} value={v}>{t(l)}</option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                         </div>
                         <div>

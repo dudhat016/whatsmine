@@ -19,6 +19,7 @@ import React, { useState } from 'react';
 import {
     RotateCcw, Globe, Edit2, Link as LinkIcon, Unlink, ChevronDown, ChevronRight
 } from 'lucide-react';
+import { Input, Select } from '@/Components/ui';
 import ColorPickerInput from './ColorPicker';
 import { GOOGLE_FONTS, SYSTEM_FONTS } from './constants';
 
@@ -72,15 +73,16 @@ export function UnitSelect({
     className = '',
 }) {
     return (
-        <select
+        <Select
+            size="sm"
             value={value}
             onChange={e => onChange(e.target.value)}
-            className={`text-[10px] font-bold text-neutral-700 bg-white hover:bg-neutral-50 rounded-md px-1.5 py-0.5 border border-neutral-300 focus:outline-none focus:border-brand-500 cursor-pointer shadow-2xs ${className}`}
+            className={`text-[10px] font-bold ${className}`}
         >
             {options.map(u => (
                 <option key={u} value={u}>{u}</option>
             ))}
-        </select>
+        </Select>
     );
 }
 
@@ -97,14 +99,18 @@ export function SizeInput({
 }) {
     return (
         <div className="flex items-center gap-1.5">
-            <input
+            <Input
+                size="sm"
                 type="number"
                 value={value}
                 onChange={e => onChange(e.target.value === '' ? '' : Number(e.target.value))}
                 placeholder={placeholder}
-                className={`w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-bold text-neutral-800 focus:outline-none focus:border-brand-500 ${inputClass}`}
+                className={`font-bold ${inputClass}`}
+                wrapperClassName="flex-1"
             />
-            <UnitSelect value={unit} options={units} onChange={onUnitChange} />
+            <div className="w-18">
+                <UnitSelect value={unit} options={units} onChange={onUnitChange} />
+            </div>
         </div>
     );
 }
@@ -258,10 +264,10 @@ export function TypographyControl({
                     {/* Family */}
                     <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Font Family</label>
-                        <select
+                        <Select
+                            size="sm"
                             value={font.family || 'Default'}
                             onChange={e => set('family', e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-semibold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         >
                             <option value="Default">Default</option>
                             <optgroup label="Google Fonts">
@@ -270,34 +276,38 @@ export function TypographyControl({
                             <optgroup label="System Fonts">
                                 {SYSTEM_FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
                             </optgroup>
-                        </select>
+                        </Select>
                     </div>
 
                     {/* Size — numeric input */}
                     <div className="space-y-1">
                         <div className="flex justify-between items-center">
                             <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Font Size</label>
-                            <UnitSelect
-                                value={font.sizeUnit || 'px'}
-                                onChange={u => set('sizeUnit', u)}
-                            />
+                            <div className="w-16">
+                                <UnitSelect
+                                    value={font.sizeUnit || 'px'}
+                                    onChange={u => set('sizeUnit', u)}
+                                />
+                            </div>
                         </div>
-                        <input
+                        <Input
+                            size="sm"
                             type="number"
                             value={font.size || ''}
                             onChange={e => set('size', e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="e.g. 16"
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-bold text-xs text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
+                            className="font-bold"
+                            wrapperClassName="w-full"
                         />
                     </div>
 
                     {/* Weight */}
                     <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Weight</label>
-                        <select
+                        <Select
+                            size="sm"
                             value={font.weight || 'Default'}
                             onChange={e => set('weight', e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-semibold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         >
                             <option value="Default">Default</option>
                             {[
@@ -305,54 +315,54 @@ export function TypographyControl({
                                 ['400','400 (Normal)'],['500','500 (Medium)'],['600','600 (Semi Bold)'],
                                 ['700','700 (Bold)'],['800','800 (Extra Bold)'],['900','900 (Black)']
                             ].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                        </select>
+                        </Select>
                     </div>
 
                     {/* Transform */}
                     <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Transform</label>
-                        <select
+                        <Select
+                            size="sm"
                             value={font.transform || 'Default'}
                             onChange={e => set('transform', e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-semibold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         >
                             <option value="Default">Default</option>
                             <option value="uppercase">Uppercase</option>
                             <option value="lowercase">Lowercase</option>
                             <option value="capitalize">Capitalize</option>
                             <option value="none">Normal (None)</option>
-                        </select>
+                        </Select>
                     </div>
 
                     {/* Style */}
                     <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Style</label>
-                        <select
+                        <Select
+                            size="sm"
                             value={font.style || 'Default'}
                             onChange={e => set('style', e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-semibold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         >
                             <option value="Default">Default</option>
                             <option value="normal">Normal</option>
                             <option value="italic">Italic</option>
                             <option value="oblique">Oblique</option>
-                        </select>
+                        </Select>
                     </div>
 
                     {/* Decoration */}
                     <div className="space-y-1">
                         <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Decoration</label>
-                        <select
+                        <Select
+                            size="sm"
                             value={font.decoration || 'Default'}
                             onChange={e => set('decoration', e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-semibold text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         >
                             <option value="Default">Default</option>
                             <option value="underline">Underline</option>
                             <option value="overline">Overline</option>
                             <option value="line-through">Line Through</option>
                             <option value="none">None</option>
-                        </select>
+                        </Select>
                     </div>
 
                     {/* Line Height */}
@@ -365,13 +375,13 @@ export function TypographyControl({
                                 onChange={u => set('lineHeightUnit', u)}
                             />
                         </div>
-                        <input
+                        <Input
+                            size="sm"
                             type="number"
                             step="0.1"
                             value={font.lineHeight || ''}
                             onChange={e => set('lineHeight', e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="e.g. 24"
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-bold text-xs text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         />
                     </div>
 
@@ -385,13 +395,13 @@ export function TypographyControl({
                                 onChange={u => set('letterSpacingUnit', u)}
                             />
                         </div>
-                        <input
+                        <Input
+                            size="sm"
                             type="number"
                             step="0.1"
                             value={font.letterSpacing || ''}
                             onChange={e => set('letterSpacing', e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="e.g. 0.5"
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-bold text-xs text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         />
                     </div>
 
@@ -405,13 +415,13 @@ export function TypographyControl({
                                 onChange={u => set('wordSpacingUnit', u)}
                             />
                         </div>
-                        <input
+                        <Input
+                            size="sm"
                             type="number"
                             step="0.1"
                             value={font.wordSpacing || ''}
                             onChange={e => set('wordSpacing', e.target.value === '' ? '' : Number(e.target.value))}
                             placeholder="e.g. 1"
-                            className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-bold text-xs text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         />
                     </div>
                 </div>
@@ -504,14 +514,14 @@ export function FourSideInput({
             <div className="flex items-center gap-1.5">
                 {isLinked ? (
                     <div className="flex-1 relative flex items-center">
-                        <input
+                        <Input
+                            size="sm"
                             type="number"
                             step="1"
                             value={linkedVal ?? ''}
                             onChange={e => update('all', e.target.value)}
                             onKeyDown={e => handleKeyDown('top', e)}
                             placeholder="0"
-                            className="w-full rounded-lg border border-neutral-300 bg-white py-1 px-2.5 font-bold text-xs text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                         />
                         <span className="text-[10px] text-neutral-400 font-semibold absolute right-2 pointer-events-none">all sides</span>
                     </div>
@@ -519,14 +529,15 @@ export function FourSideInput({
                     <div className="grid grid-cols-4 gap-1 flex-1">
                         {sides.map(s => (
                             <div key={s.key} className="text-center">
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     step="1"
                                     value={s.val ?? ''}
                                     onChange={e => update(s.key, e.target.value)}
                                     onKeyDown={e => handleKeyDown(s.key, e)}
                                     placeholder="0"
-                                    className="w-full rounded border border-neutral-300 bg-white p-1 text-center font-bold text-xs focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                                    className="text-center"
                                 />
                                 <span className="text-[9px] text-neutral-400 font-semibold mt-0.5 block">{s.label}</span>
                             </div>
@@ -801,11 +812,11 @@ export function ShadowControl({
                         ].map(f => (
                             <div key={f.key} className="space-y-0.5">
                                 <label className="block text-[10px] font-semibold text-neutral-500">{f.label}</label>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     value={shadow[f.key] ?? f.def}
                                     onChange={e => set(f.key, Number(e.target.value))}
-                                    className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-bold text-xs text-neutral-800 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 shadow-2xs"
                                 />
                             </div>
                         ))}
@@ -895,19 +906,21 @@ export function BorderControl({
                         resetTitle="Reset Border to Brand Default"
                     />
                 </div>
-                <select
-                    value={border.type || 'Default'}
-                    onChange={e => set('type', e.target.value)}
-                    className="rounded-lg border border-neutral-300 px-2 py-1 text-xs font-semibold text-neutral-800 bg-white focus:outline-none focus:border-brand-500 shadow-2xs cursor-pointer"
-                >
-                    <option value="Default">None / Default</option>
-                    <option value="solid">Solid</option>
-                    <option value="dashed">Dashed</option>
-                    <option value="dotted">Dotted</option>
-                    <option value="double">Double</option>
-                    <option value="groove">Groove</option>
-                    <option value="ridge">Ridge</option>
-                </select>
+                <div className="w-32">
+                    <Select
+                        size="sm"
+                        value={border.type || 'Default'}
+                        onChange={e => set('type', e.target.value)}
+                    >
+                        <option value="Default">None / Default</option>
+                        <option value="solid">Solid</option>
+                        <option value="dashed">Dashed</option>
+                        <option value="dotted">Dotted</option>
+                        <option value="double">Double</option>
+                        <option value="groove">Groove</option>
+                        <option value="ridge">Ridge</option>
+                    </Select>
+                </div>
             </div>
 
             {hasType && (
@@ -1019,10 +1032,10 @@ export function HoverAnimationSelect({ value = 'none', onChange }) {
     return (
         <div className="space-y-1">
             <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Hover Animation</label>
-            <select
+            <Select
+                size="sm"
                 value={value}
                 onChange={e => onChange(e.target.value)}
-                className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-medium text-neutral-800 focus:outline-none focus:border-brand-500"
             >
                 <option value="none">None</option>
                 <option value="lift">↗ Lift Up (-3px)</option>
@@ -1030,7 +1043,7 @@ export function HoverAnimationSelect({ value = 'none', onChange }) {
                 <option value="shrink">🔬 Shrink (0.97x)</option>
                 <option value="glow">✨ Accent Glow</option>
                 <option value="pulse">💓 Pulse</option>
-            </select>
+            </Select>
         </div>
     );
 }
@@ -1044,28 +1057,29 @@ export function TransitionControl({ duration = 200, timing = 'ease', onDurationC
             <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-0.5">
                     <span className="text-[10px] text-neutral-500 font-medium">Duration (ms)</span>
-                    <input
+                    <Input
+                        size="sm"
                         type="number"
                         min="50"
                         max="1500"
                         step="50"
                         value={duration}
                         onChange={e => onDurationChange(Number(e.target.value))}
-                        className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-bold text-neutral-800"
+                        className="font-bold"
                     />
                 </div>
                 <div className="space-y-0.5">
                     <span className="text-[10px] text-neutral-500 font-medium">Easing Curve</span>
-                    <select
+                    <Select
+                        size="sm"
                         value={timing}
                         onChange={e => onTimingChange(e.target.value)}
-                        className="w-full rounded-lg border border-neutral-300 bg-white p-1.5 text-xs font-medium text-neutral-800"
                     >
                         <option value="ease">Ease</option>
                         <option value="ease-in-out">Ease In-Out</option>
                         <option value="ease-out">Ease Out</option>
                         <option value="linear">Linear</option>
-                    </select>
+                    </Select>
                 </div>
             </div>
         </div>
@@ -1249,13 +1263,14 @@ export function BackgroundControl({
                                 />
                                 <div className="flex items-center gap-1 shrink-0">
                                     <span className="text-[10px] text-neutral-400 font-semibold">Pos:</span>
-                                    <input
+                                    <Input
+                                        size="sm"
                                         type="number"
                                         min="0"
                                         max="100"
                                         value={stop.pos}
                                         onChange={e => updateStop(idx, 'pos', Math.max(0, Math.min(100, Number(e.target.value))))}
-                                        className="w-12 rounded border border-neutral-300 p-1 text-center font-bold text-xs bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                                        className="w-12 text-center"
                                     />
                                     <span className="text-[10px] font-bold text-neutral-500">%</span>
                                 </div>
@@ -1288,11 +1303,12 @@ export function BackgroundControl({
                                     onChange={e => update(k('gradientAngle'), Number(e.target.value))}
                                     className="flex-1 accent-brand-600 cursor-pointer h-1.5 bg-neutral-200 rounded-lg"
                                 />
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     value={angle}
                                     onChange={e => update(k('gradientAngle'), Number(e.target.value))}
-                                    className="w-14 rounded-lg border border-neutral-300 p-1 text-center font-bold text-xs bg-white"
+                                    className="w-14 text-center"
                                 />
                             </div>
                             <div className="flex gap-1 flex-wrap pt-0.5">
@@ -1321,55 +1337,55 @@ export function BackgroundControl({
                 <div className="space-y-2 p-2.5 rounded-xl bg-neutral-50 border border-neutral-200">
                     <div className="space-y-0.5">
                         <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Image URL</label>
-                        <input
+                        <Input
+                            size="sm"
                             type="text"
                             value={bgImage}
                             onChange={e => update(k('bgImage'), e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium focus:outline-none focus:border-brand-500 shadow-2xs"
                             placeholder="https://example.com/image.jpg"
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-0.5">
                             <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Size</label>
-                            <select
+                            <Select
+                                size="sm"
                                 value={bgSize}
                                 onChange={e => update(k('bgSize'), e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium"
                             >
                                 <option value="cover">Cover</option>
                                 <option value="contain">Contain</option>
                                 <option value="auto">Auto</option>
                                 <option value="100% 100%">Stretch (100%)</option>
-                            </select>
+                            </Select>
                         </div>
                         <div className="space-y-0.5">
                             <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Position</label>
-                            <select
+                            <Select
+                                size="sm"
                                 value={bgPosition}
                                 onChange={e => update(k('bgPosition'), e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium"
                             >
                                 <option value="center center">Center</option>
                                 <option value="top center">Top Center</option>
                                 <option value="bottom center">Bottom Center</option>
                                 <option value="left center">Left</option>
                                 <option value="right center">Right</option>
-                            </select>
+                            </Select>
                         </div>
                     </div>
                     <div className="space-y-0.5">
                         <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Repeat</label>
-                        <select
+                        <Select
+                            size="sm"
                             value={bgRepeat}
                             onChange={e => update(k('bgRepeat'), e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium"
                         >
                             <option value="no-repeat">No Repeat</option>
                             <option value="repeat">Repeat (Tile)</option>
                             <option value="repeat-x">Repeat Horizontal</option>
                             <option value="repeat-y">Repeat Vertical</option>
-                        </select>
+                        </Select>
                     </div>
                     <div className="space-y-0.5">
                         <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Overlay Tint Color</label>

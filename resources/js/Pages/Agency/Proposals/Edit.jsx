@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import Card from '@/Components/ui/Card';
 import Button from '@/Components/ui/Button';
+import Input from '@/Components/ui/Input';
+import Select from '@/Components/ui/Select';
 
 export default function ProposalEdit({ proposal = null, contacts = [], products = [] }) {
     const isEditing = Boolean(proposal?.id);
@@ -121,65 +123,45 @@ export default function ProposalEdit({ proposal = null, contacts = [], products 
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Proposal Title *
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Q4 Growth & Full-Stack Development"
-                                    value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
-                                    className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500"
-                                    required
-                                />
-                                {errors.title && <p className="text-red-500 text-[10px] mt-1">{errors.title}</p>}
-                            </div>
+                            <Input
+                                label="Proposal Title *"
+                                type="text"
+                                placeholder="e.g. Q4 Growth & Full-Stack Development"
+                                value={data.title}
+                                onChange={(e) => setData('title', e.target.value)}
+                                error={errors.title}
+                                required
+                            />
 
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Client Contact
-                                </label>
-                                <select
-                                    value={data.contact_id}
-                                    onChange={(e) => setData('contact_id', e.target.value)}
-                                    className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500"
-                                >
-                                    <option value="">Select a Contact...</option>
-                                    {contacts.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.name} {c.email ? `(${c.email})` : ''}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                label="Client Contact"
+                                value={data.contact_id}
+                                onChange={(e) => setData('contact_id', e.target.value)}
+                            >
+                                <option value="">Select a Contact...</option>
+                                {contacts.map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.name} {c.email ? `(${c.email})` : ''}
+                                    </option>
+                                ))}
+                            </Select>
 
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Pricing Structure
-                                </label>
-                                <select
-                                    value={data.pricing_type}
-                                    onChange={(e) => setData('pricing_type', e.target.value)}
-                                    className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500"
-                                >
-                                    <option value="one_time">Fixed One-Time Fee</option>
-                                    <option value="recurring">Monthly Retainer</option>
-                                    <option value="installments">Milestone Split-Pay</option>
-                                </select>
-                            </div>
+                            <Select
+                                label="Pricing Structure"
+                                value={data.pricing_type}
+                                onChange={(e) => setData('pricing_type', e.target.value)}
+                            >
+                                <option value="one_time">Fixed One-Time Fee</option>
+                                <option value="recurring">Monthly Retainer</option>
+                                <option value="installments">Milestone Split-Pay</option>
+                            </Select>
 
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Valid Until Date
-                                </label>
-                                <input
-                                    type="date"
-                                    value={data.valid_until}
-                                    onChange={(e) => setData('valid_until', e.target.value)}
-                                    className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500"
-                                />
-                            </div>
+                            <Input
+                                label="Valid Until Date"
+                                type="date"
+                                value={data.valid_until}
+                                onChange={(e) => setData('valid_until', e.target.value)}
+                            />
                         </div>
                     </div>
 
@@ -204,10 +186,10 @@ export default function ProposalEdit({ proposal = null, contacts = [], products 
                                     {products.length > 0 && (
                                         <div className="flex items-center gap-2">
                                             <span className="text-[10px] font-medium text-neutral-500">Pick from Catalog:</span>
-                                            <select
+                                            <Select
+                                                size="sm"
                                                 value={item.product_id || ''}
                                                 onChange={(e) => handleSelectProduct(idx, e.target.value)}
-                                                className="text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-1 text-neutral-900 dark:text-neutral-100"
                                             >
                                                 <option value="">Custom Service</option>
                                                 {products.map((p) => (
@@ -215,41 +197,42 @@ export default function ProposalEdit({ proposal = null, contacts = [], products 
                                                         {p.name} (${p.price})
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         </div>
                                     )}
 
                                     <div className="flex items-center gap-2">
-                                        <input
+                                        <Input
+                                            size="sm"
                                             type="text"
                                             placeholder="Item description"
                                             value={item.name}
                                             onChange={(e) => handleLineItemChange(idx, 'name', e.target.value)}
-                                            className="flex-1 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-100"
+                                            wrapperClassName="flex-1"
                                             required
                                         />
-                                        <div className="w-20">
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                placeholder="Qty"
-                                                value={item.quantity || 1}
-                                                onChange={(e) => handleLineItemChange(idx, 'quantity', e.target.value)}
-                                                className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-1.5 text-xs text-neutral-900 dark:text-neutral-100 text-center"
-                                            />
-                                        </div>
-                                        <div className="relative w-28">
-                                            <span className="absolute left-2.5 top-1.5 text-xs text-neutral-400">$</span>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                placeholder="Price"
-                                                value={item.price}
-                                                onChange={(e) => handleLineItemChange(idx, 'price', e.target.value)}
-                                                className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 pl-6 pr-2 py-1.5 text-xs text-neutral-900 dark:text-neutral-100 text-right"
-                                                required
-                                            />
-                                        </div>
+                                        <Input
+                                            size="sm"
+                                            type="number"
+                                            min="1"
+                                            placeholder="Qty"
+                                            value={item.quantity || 1}
+                                            onChange={(e) => handleLineItemChange(idx, 'quantity', e.target.value)}
+                                            wrapperClassName="w-20"
+                                            className="text-center"
+                                        />
+                                        <Input
+                                            size="sm"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="Price"
+                                            value={item.price}
+                                            onChange={(e) => handleLineItemChange(idx, 'price', e.target.value)}
+                                            leftElement={<span className="text-xs text-neutral-400">$</span>}
+                                            wrapperClassName="w-28"
+                                            className="text-right"
+                                            required
+                                        />
                                         {data.line_items.length > 1 && (
                                             <button
                                                 type="button"
@@ -267,30 +250,20 @@ export default function ProposalEdit({ proposal = null, contacts = [], products 
                         {/* Financial Totals */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                             <div className="space-y-2">
-                                <div>
-                                    <label className="block text-[11px] font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                                        Discount ($)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={data.discount_amount}
-                                        onChange={(e) => setData('discount_amount', e.target.value)}
-                                        className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-100"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[11px] font-bold text-neutral-700 dark:text-neutral-300 mb-1">
-                                        Tax Rate (%)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={data.tax_rate}
-                                        onChange={(e) => setData('tax_rate', e.target.value)}
-                                        className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs text-neutral-900 dark:text-neutral-100"
-                                    />
-                                </div>
+                                <Input
+                                    label="Discount ($)"
+                                    type="number"
+                                    step="0.01"
+                                    value={data.discount_amount}
+                                    onChange={(e) => setData('discount_amount', e.target.value)}
+                                />
+                                <Input
+                                    label="Tax Rate (%)"
+                                    type="number"
+                                    step="0.1"
+                                    value={data.tax_rate}
+                                    onChange={(e) => setData('tax_rate', e.target.value)}
+                                />
                             </div>
 
                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-lg space-y-1 text-xs text-neutral-600 dark:text-neutral-300 self-end">

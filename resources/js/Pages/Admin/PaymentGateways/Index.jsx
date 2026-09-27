@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Modal, Toggle } from '@/Components/ui';
+import { Button, Card, Modal, Toggle, Input } from '@/Components/ui';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
@@ -220,93 +220,59 @@ function EditGatewayModal({ show, gatewayKey, initialData, loading, error, valid
                             <div>
                                 <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">{t('admin.test_credentials')}</h4>
                                 <div className="mt-3 space-y-3">
-                                    <div>
-                                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                            {t('admin.publishable_key')} <span className="text-coral-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.test_publishable_key}
-                                            onChange={(e) => setData('test_publishable_key', e.target.value)}
-                                            placeholder={t('admin.stripe_pk_placeholder')}
-                                            className="mt-1 w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                        />
-                                        <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{publishableHint}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                            {t('admin.secret_key')} <span className="text-coral-500">*</span>
-                                        </label>
-                                        <input
-                                            type="password"
-                                            value={data.test_secret_key}
-                                            onChange={(e) => setData('test_secret_key', e.target.value)}
-                                            placeholder={t('admin.stripe_sk_placeholder')}
-                                            className={`mt-1 w-full rounded-soft border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-                                                validationErrors.test_secret_key
-                                                    ? 'border-coral-500 bg-coral-50 dark:bg-coral-900/10 dark:border-coral-600'
-                                                    : 'border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800'
-                                            } text-neutral-900 dark:text-neutral-100`}
-                                        />
-                                        {validationErrors.test_secret_key && (
-                                            <p className="mt-0.5 text-xs text-coral-600 dark:text-coral-400">{validationErrors.test_secret_key}</p>
-                                        )}
-                                        <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{secretHint}</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.webhook_secret')}</label>
-                                        <input
-                                            type="password"
-                                            value={data.test_webhook_secret}
-                                            onChange={(e) => setData('test_webhook_secret', e.target.value)}
-                                            placeholder={t('admin.webhook_secret_placeholder')}
-                                            className="mt-1 w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                        />
-                                        <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">{webhookHint}</p>
-                                    </div>
+                                    <Input
+                                        label={`${t('admin.publishable_key')} *`}
+                                        type="text"
+                                        value={data.test_publishable_key}
+                                        onChange={(e) => setData('test_publishable_key', e.target.value)}
+                                        placeholder={t('admin.stripe_pk_placeholder')}
+                                        hint={publishableHint}
+                                    />
+                                    <Input
+                                        label={`${t('admin.secret_key')} *`}
+                                        type="password"
+                                        value={data.test_secret_key}
+                                        onChange={(e) => setData('test_secret_key', e.target.value)}
+                                        placeholder={t('admin.stripe_sk_placeholder')}
+                                        hint={secretHint}
+                                        error={validationErrors.test_secret_key}
+                                    />
+                                    <Input
+                                        label={t('admin.webhook_secret')}
+                                        type="password"
+                                        value={data.test_webhook_secret}
+                                        onChange={(e) => setData('test_webhook_secret', e.target.value)}
+                                        placeholder={t('admin.webhook_secret_placeholder')}
+                                        hint={webhookHint}
+                                    />
                                 </div>
                             </div>
 
                             <div>
                                 <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 uppercase tracking-wide">{t('admin.live_credentials')}</h4>
                                 <div className="mt-3 space-y-3">
-                                    <div>
-                                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.publishable_key')}</label>
-                                        <input
-                                            type="text"
-                                            value={data.live_publishable_key}
-                                            onChange={(e) => setData('live_publishable_key', e.target.value)}
-                                            placeholder={t('admin.stripe_pk_live_placeholder')}
-                                            className="mt-1 w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.secret_key')}</label>
-                                        <input
-                                            type="password"
-                                            value={data.live_secret_key}
-                                            onChange={(e) => setData('live_secret_key', e.target.value)}
-                                            placeholder={t('admin.stripe_sk_live_placeholder')}
-                                            className={`mt-1 w-full rounded-soft border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-                                                validationErrors.live_secret_key
-                                                    ? 'border-coral-500 bg-coral-50 dark:bg-coral-900/10 dark:border-coral-600'
-                                                    : 'border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800'
-                                            } text-neutral-900 dark:text-neutral-100`}
-                                        />
-                                        {validationErrors.live_secret_key && (
-                                            <p className="mt-0.5 text-xs text-coral-600 dark:text-coral-400">{validationErrors.live_secret_key}</p>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.webhook_secret')}</label>
-                                        <input
-                                            type="password"
-                                            value={data.live_webhook_secret}
-                                            onChange={(e) => setData('live_webhook_secret', e.target.value)}
-                                            placeholder={t('admin.webhook_secret_placeholder')}
-                                            className="mt-1 w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                        />
-                                    </div>
+                                    <Input
+                                        label={t('admin.publishable_key')}
+                                        type="text"
+                                        value={data.live_publishable_key}
+                                        onChange={(e) => setData('live_publishable_key', e.target.value)}
+                                        placeholder={t('admin.stripe_pk_live_placeholder')}
+                                    />
+                                    <Input
+                                        label={t('admin.secret_key')}
+                                        type="password"
+                                        value={data.live_secret_key}
+                                        onChange={(e) => setData('live_secret_key', e.target.value)}
+                                        placeholder={t('admin.stripe_sk_live_placeholder')}
+                                        error={validationErrors.live_secret_key}
+                                    />
+                                    <Input
+                                        label={t('admin.webhook_secret')}
+                                        type="password"
+                                        value={data.live_webhook_secret}
+                                        onChange={(e) => setData('live_webhook_secret', e.target.value)}
+                                        placeholder={t('admin.webhook_secret_placeholder')}
+                                    />
                                 </div>
                             </div>
 

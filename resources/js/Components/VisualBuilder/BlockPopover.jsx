@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Upload, Link2, AlignLeft, AlignCenter, AlignRight, Check, Sparkles } from 'lucide-react';
 import MediaUpload from '@/Components/MediaUpload';
 import Toggle from '@/Components/ui/Toggle';
+import { Input } from '@/Components/ui';
 
 export default function BlockPopover({
     block,
@@ -81,47 +82,47 @@ export default function BlockPopover({
                     ) : (
                         <div>
                             <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Image URL</label>
-                            <input
+                            <Input
+                                size="sm"
                                 type="url"
                                 value={block.src || block.url || ''}
                                 onChange={(e) => update('src', e.target.value)}
                                 placeholder="https://..."
-                                className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500"
                             />
                         </div>
                     )}
 
                     <div>
                         <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Alt text</label>
-                        <input
+                        <Input
+                            size="sm"
                             type="text"
                             value={block.alt || ''}
                             onChange={(e) => update('alt', e.target.value)}
                             placeholder="Describe the image"
-                            className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500"
                         />
                     </div>
 
                     <div>
                         <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Link URL (optional)</label>
-                        <input
+                        <Input
+                            size="sm"
                             type="url"
                             value={block.href || ''}
                             onChange={(e) => update('href', e.target.value)}
                             placeholder="https://example.com"
-                            className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500"
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                         <div>
                             <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Width</label>
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={block.width || '100%'}
                                 onChange={(e) => update('width', e.target.value)}
                                 placeholder="e.g. 320px or 100%"
-                                className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500"
                             />
                         </div>
                         <div>
@@ -154,12 +155,13 @@ export default function BlockPopover({
                 <div className="space-y-3.5">
                     <div>
                         <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Link URL</label>
-                        <input
+                        <Input
+                            size="sm"
                             type="text"
                             value={block.url || block.href || '#'}
                             onChange={(e) => update('url', e.target.value)}
                             placeholder="https://... or #"
-                            className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500 font-mono"
+                            className="font-mono"
                         />
                     </div>
 
@@ -194,11 +196,13 @@ export default function BlockPopover({
                                 onChange={(e) => update('bgColor', e.target.value)}
                                 className="h-8 w-12 rounded cursor-pointer border border-neutral-300 dark:border-neutral-700 p-0"
                             />
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={block.bgColor || block.buttonColor || '#2563eb'}
                                 onChange={(e) => update('bgColor', e.target.value)}
-                                className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-mono"
+                                className="font-mono"
+                                wrapperClassName="flex-1"
                             />
                         </div>
                     </div>
@@ -212,11 +216,13 @@ export default function BlockPopover({
                                 onChange={(e) => update('textColor', e.target.value)}
                                 className="h-8 w-12 rounded cursor-pointer border border-neutral-300 dark:border-neutral-700 p-0"
                             />
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={block.textColor || '#ffffff'}
                                 onChange={(e) => update('textColor', e.target.value)}
-                                className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-mono"
+                                className="font-mono"
+                                wrapperClassName="flex-1"
                             />
                         </div>
                     </div>
@@ -279,11 +285,13 @@ export default function BlockPopover({
                                 onChange={(e) => update('color', e.target.value)}
                                 className="h-8 w-12 rounded cursor-pointer border border-neutral-300 dark:border-neutral-700 p-0"
                             />
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={block.color || '#111827'}
                                 onChange={(e) => update('color', e.target.value)}
-                                className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-mono"
+                                className="font-mono"
+                                wrapperClassName="flex-1"
                             />
                         </div>
                     </div>
@@ -295,20 +303,20 @@ export default function BlockPopover({
                 <div className="space-y-3">
                     <div>
                         <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Field Label</label>
-                        <input
+                        <Input
+                            size="sm"
                             type="text"
                             value={block.label || ''}
                             onChange={(e) => update('label', e.target.value)}
-                            className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs"
                         />
                     </div>
                     <div>
                         <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Placeholder</label>
-                        <input
+                        <Input
+                            size="sm"
                             type="text"
                             value={block.placeholder || ''}
                             onChange={(e) => update('placeholder', e.target.value)}
-                            className="w-full rounded-soft border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs"
                         />
                     </div>
                     <div className="flex items-center justify-between pt-1">

@@ -1,6 +1,7 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import { Input, Select } from '@/Components/ui';
 import { useState } from 'react';
 import { Plus, Trash2, Filter, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -13,14 +14,14 @@ function RuleRow({ condition, onChange, onRemove }) {
     const { t } = useTranslation();
     return (
         <div className="flex flex-wrap gap-2 items-center bg-neutral-50 dark:bg-neutral-800 rounded-lg px-3 py-2">
-            <select value={condition.field} onChange={e => onChange({ ...condition, field: e.target.value })} className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-2 py-1 text-sm">
+            <Select value={condition.field} onChange={e => onChange({ ...condition, field: e.target.value })} size="sm" className="w-36">
                 {FIELDS.map(f => <option key={f} value={f}>{f}</option>)}
-            </select>
-            <select value={condition.operator} onChange={e => onChange({ ...condition, operator: e.target.value })} className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-2 py-1 text-sm">
+            </Select>
+            <Select value={condition.operator} onChange={e => onChange({ ...condition, operator: e.target.value })} size="sm" className="w-28">
                 {OPERATORS.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
+            </Select>
             {!['is_null', 'is_not_null'].includes(condition.operator) && (
-                <input type="text" value={condition.value ?? ''} onChange={e => onChange({ ...condition, value: e.target.value })} placeholder={t('contacts_page.seg_rule_value')} className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-2 py-1 text-sm w-40" />
+                <Input type="text" value={condition.value ?? ''} onChange={e => onChange({ ...condition, value: e.target.value })} placeholder={t('contacts_page.seg_rule_value')} className="w-40" />
             )}
             <button type="button" onClick={onRemove} className="text-neutral-400 hover:text-red-500 ml-auto"><Trash2 className="h-4 w-4" /></button>
         </div>
@@ -126,8 +127,7 @@ export default function ContactsSegments({ segments }) {
                         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('contacts_page.seg_new')}</h3>
                         <form onSubmit={submitCreate} className="space-y-4">
                             <div>
-                                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('common.name')}</label>
-                                <input type="text" value={data.name} onChange={e => setData('name', e.target.value)} required className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
+                                <Input label={t('common.name')} type="text" value={data.name} onChange={e => setData('name', e.target.value)} required />
                             </div>
                             <div className="flex gap-4">
                                 {['static', 'dynamic'].map(type => (
@@ -142,10 +142,10 @@ export default function ContactsSegments({ segments }) {
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('contacts_page.seg_rules')}</label>
-                                        <select value={data.rules_json.combinator} onChange={e => setData('rules_json', { ...data.rules_json, combinator: e.target.value })} className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 px-2 py-1 text-xs">
+                                        <Select value={data.rules_json.combinator} onChange={e => setData('rules_json', { ...data.rules_json, combinator: e.target.value })} size="sm" className="w-36">
                                             <option value="AND">{t('contacts_page.seg_match_all')}</option>
                                             <option value="OR">{t('contacts_page.seg_match_any')}</option>
-                                        </select>
+                                        </Select>
                                     </div>
                                     {data.rules_json.conditions.map((cond, i) => (
                                         <RuleRow key={i} condition={cond} onChange={c => updateCondition(i, c)} onRemove={() => removeCondition(i)} />

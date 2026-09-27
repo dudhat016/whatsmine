@@ -2,6 +2,8 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import InboxLayout from '@/Layouts/InboxLayout';
 import EmptyState from '@/Components/EmptyState';
 import NewConversationModal from '@/Components/Inbox/NewConversationModal';
+import Input from '@/Components/ui/Input';
+import Select from '@/Components/ui/Select';
 import {
     Send, AlertTriangle, Eye, StickyNote, MessageSquare, Phone, Globe,
     RefreshCw, Search, Inbox, User, CheckCircle, Clock, X, Smile,
@@ -1114,9 +1116,14 @@ function TemplatePicker({ conversationId, onSent, onClose }) {
             <div className="flex items-center gap-2 px-3 py-2 border-b border-neutral-100 dark:border-neutral-800 shrink-0">
                 <LayoutTemplate className="h-4 w-4 text-neutral-400 shrink-0" />
                 {!picked ? (
-                    <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
+                    <Input
+                        size="sm"
+                        wrapperClassName="flex-1"
+                        autoFocus
+                        value={query}
+                        onChange={e => setQuery(e.target.value)}
                         placeholder={t('inbox.search_templates')}
-                        className="flex-1 text-sm bg-transparent focus:outline-none placeholder-neutral-400" />
+                    />
                 ) : (
                     <button type="button" onClick={() => setPicked(null)} className="text-xs text-brand-600 hover:underline dark:text-brand-400 flex-1 text-left">
                         {t('inbox.back_to_templates')}
@@ -1208,9 +1215,13 @@ function TemplatePicker({ conversationId, onSent, onClose }) {
                             {varIds.map(id => (
                                 <div key={id}>
                                     <label className="text-xs text-neutral-500 mb-0.5 block">{'{{' + id + '}}'}</label>
-                                    <input type="text" value={vars[id] ?? ''} onChange={e => setVars(v => ({ ...v, [id]: e.target.value }))}
+                                    <Input
+                                        size="sm"
+                                        type="text"
+                                        value={vars[id] ?? ''}
+                                        onChange={e => setVars(v => ({ ...v, [id]: e.target.value }))}
                                         placeholder={t('inbox.value_for_variable', { token: `{{${id}}}` })}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                                    />
                                 </div>
                             ))}
                         </div>
@@ -1286,10 +1297,15 @@ function ProductPicker({ conversationId, onSent, onClose }) {
     return (
         <div ref={ref} className="absolute bottom-full mb-2 left-0 right-0 z-20 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-xl flex flex-col max-h-80">
             <div className="p-2 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
-                <Search className="h-4 w-4 text-neutral-400 shrink-0" />
-                <input autoFocus value={query} onChange={e => setQuery(e.target.value)}
+                <Input
+                    size="sm"
+                    wrapperClassName="flex-1"
+                    leftIcon={Search}
+                    autoFocus
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
                     placeholder={t('inbox.search_products_share')}
-                    className="flex-1 bg-transparent text-sm focus:outline-none text-neutral-700 dark:text-neutral-200" />
+                />
                 <button type="button" onClick={onClose} className="text-neutral-400 hover:text-neutral-600 transition"><X className="h-4 w-4" /></button>
             </div>
             {error && <p className="px-3 py-2 text-xs text-red-500">{error}</p>}
@@ -1349,12 +1365,12 @@ function AgentDropdown({ teamMembers, currentUserId, conversationId, onAssigned,
     return (
         <div ref={ref} className="absolute top-full mt-1 right-0 z-50 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg overflow-hidden">
             <div className="p-2 border-b border-neutral-100 dark:border-neutral-800">
-                <input
+                <Input
+                    size="sm"
                     autoFocus
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder={t('inbox.search_agents')}
-                    className="w-full text-xs bg-neutral-100 dark:bg-neutral-800 rounded-lg px-2.5 py-1.5 focus:outline-none placeholder-neutral-400"
                 />
             </div>
             <div className="max-h-52 overflow-y-auto">
@@ -1811,13 +1827,13 @@ export default function InboxShow({
                                 </button>
                             </div>
                         </div>
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400 pointer-events-none" />
-                            <input value={listSearch} onChange={e => setListSearch(e.target.value)}
-                                placeholder={t('inbox.search_conversations')}
-                                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-neutral-100 dark:bg-neutral-800 border-0 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-neutral-400"
-                            />
-                        </div>
+                        <Input
+                            size="sm"
+                            value={listSearch}
+                            onChange={e => setListSearch(e.target.value)}
+                            placeholder={t('inbox.search_conversations')}
+                            leftIcon={<Search className="h-3.5 w-3.5 text-neutral-400" />}
+                        />
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         {filteredList.length === 0 ? (
@@ -1883,17 +1899,19 @@ export default function InboxShow({
                         </div>
 
                         {/* Status */}
-                        <select
-                            defaultValue={conversation.status}
-                            onChange={e => handleStatus(e.target.value)}
-                            className={`rounded-full border-0 px-3 py-1 text-xs font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500 ${STATUS_COLORS[conversation.status] ?? 'bg-neutral-100 text-neutral-600'}`}
-                        >
-                            {['open','pending','resolved','snoozed'].map(s => (
-                                <option key={s} value={s} className="bg-white dark:bg-neutral-800 text-neutral-900">
-                                    {t(`inbox.status_${s}`)}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="w-32">
+                            <Select
+                                size="sm"
+                                defaultValue={conversation.status}
+                                onChange={e => handleStatus(e.target.value)}
+                            >
+                                {['open','pending','resolved','snoozed'].map(s => (
+                                    <option key={s} value={s}>
+                                        {t(`inbox.status_${s}`)}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
                     </div>
 
                     {/* Tab bar */}

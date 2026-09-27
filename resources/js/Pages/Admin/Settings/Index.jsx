@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Tabs } from '@/Components/ui';
+import { Button, Card, Tabs, Input } from '@/Components/ui';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Upload, X, Image, Globe, Palette, Settings2, Code2, Flame } from 'lucide-react';
@@ -41,40 +41,33 @@ function GeneralTab({ general, flash }) {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div className="space-y-1">
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('settings.app_name')}</label>
-                                <input
-                                    type="text"
-                                    value={data.app_name}
-                                    onChange={(e) => setData('app_name', e.target.value)}
-                                    placeholder={t('settings.app_name_placeholder')}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                />
-                                {errors.app_name && <p className="text-xs text-red-500">{errors.app_name}</p>}
-                            </div>
+                            <Input
+                                label={t('settings.app_name')}
+                                type="text"
+                                value={data.app_name}
+                                onChange={(e) => setData('app_name', e.target.value)}
+                                placeholder={t('settings.app_name_placeholder')}
+                                error={errors.app_name}
+                            />
 
-                            <div className="space-y-1">
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('settings.support_email')}</label>
-                                <input
-                                    type="email"
-                                    value={data.support_email}
-                                    onChange={(e) => setData('support_email', e.target.value)}
-                                    placeholder="support@example.com"
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                />
-                                {errors.support_email && <p className="text-xs text-red-500">{errors.support_email}</p>}
-                            </div>
+                            <Input
+                                label={t('settings.support_email')}
+                                type="email"
+                                value={data.support_email}
+                                onChange={(e) => setData('support_email', e.target.value)}
+                                placeholder="support@example.com"
+                                error={errors.support_email}
+                            />
 
-                            <div className="space-y-1 sm:col-span-2">
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('settings.tagline')}</label>
-                                <input
+                            <div className="sm:col-span-2">
+                                <Input
+                                    label={t('settings.tagline')}
                                     type="text"
                                     value={data.app_tagline}
                                     onChange={(e) => setData('app_tagline', e.target.value)}
                                     placeholder={t('settings.tagline_placeholder')}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                    error={errors.app_tagline}
                                 />
-                                {errors.app_tagline && <p className="text-xs text-red-500">{errors.app_tagline}</p>}
                             </div>
                         </div>
 
@@ -95,13 +88,15 @@ function GeneralTab({ general, flash }) {
                                     onChange={(e) => setData('primary_color', e.target.value)}
                                     className="h-10 w-16 cursor-pointer rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-1"
                                 />
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={data.primary_color}
                                     onChange={(e) => setData('primary_color', e.target.value)}
                                     placeholder="#467235"
                                     maxLength={7}
-                                    className="w-32 rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                    className="font-mono"
+                                    wrapperClassName="w-32"
                                 />
                                 <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('settings.hex_color_hint')}</span>
                             </div>
@@ -326,7 +321,8 @@ function AdvancedTab({ settingsByGroup, flash }) {
                             return (
                                 <div key={s.id || i} className="flex flex-wrap gap-2 items-center border-b border-neutral-100 dark:border-neutral-800 pb-2 last:border-0 last:pb-0">
                                     <span className="font-mono text-xs w-44 text-neutral-600 dark:text-neutral-400 truncate" title={s.key}>{s.key}</span>
-                                    <input
+                                    <Input
+                                        size="sm"
                                         type={s.is_secret ? 'password' : 'text'}
                                         value={s.value}
                                         onChange={(e) => {
@@ -335,7 +331,7 @@ function AdvancedTab({ settingsByGroup, flash }) {
                                             setData('settings', next);
                                         }}
                                         placeholder={s.is_secret ? t('admin.secret_value') : t('admin.value_label')}
-                                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-1.5 text-sm flex-1 min-w-[180px] focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                        wrapperClassName="flex-1 min-w-[180px]"
                                     />
                                     <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400">
                                         <input
@@ -350,7 +346,8 @@ function AdvancedTab({ settingsByGroup, flash }) {
                                         />
                                         {t('settings.secret')}
                                     </label>
-                                    <input
+                                    <Input
+                                        size="sm"
                                         type="text"
                                         value={s.group ?? ''}
                                         onChange={(e) => {
@@ -359,7 +356,8 @@ function AdvancedTab({ settingsByGroup, flash }) {
                                             setData('settings', n);
                                         }}
                                         placeholder={t('admin.group_label')}
-                                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1.5 w-24 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                                        className="text-xs"
+                                        wrapperClassName="w-24"
                                     />
                                 </div>
                             );
@@ -395,18 +393,16 @@ function FirebaseTab({ firebase, flash }) {
     };
 
     const field = (label, key, description, placeholder = '') => (
-        <div className="space-y-1">
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</label>
-            {description && <p className="text-xs text-neutral-400 dark:text-neutral-500">{description}</p>}
-            <input
-                type="text"
-                value={data[key]}
-                onChange={(e) => setData(key, e.target.value)}
-                placeholder={placeholder}
-                className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            />
-            {errors[key] && <p className="text-xs text-red-500">{errors[key]}</p>}
-        </div>
+        <Input
+            label={label}
+            type="text"
+            value={data[key]}
+            onChange={(e) => setData(key, e.target.value)}
+            placeholder={placeholder}
+            hint={description}
+            className="font-mono"
+            error={errors[key]}
+        />
     );
 
     return (

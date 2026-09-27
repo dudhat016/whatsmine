@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Folder, FolderPlus, Palette } from 'lucide-react';
 import Button from '@/Components/ui/Button';
+import Input from '@/Components/ui/Input';
 
 const FOLDER_COLORS = [
     '#16a34a', // Emerald
@@ -72,27 +73,18 @@ export default function FolderModal({ isOpen, folder = null, onClose, onSave }) 
 
                 {/* Body Form */}
                 <form onSubmit={handleSubmit} className="p-5 space-y-4">
-                    <div>
-                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                            Folder Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => {
-                                setName(e.target.value);
-                                if (error) setError('');
-                            }}
-                            placeholder="e.g. Lead Magnets, Product Launches, Client Onboarding"
-                            className={`w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 ${
-                                error
-                                    ? 'border-red-500 focus:ring-red-500/20'
-                                    : 'border-neutral-300 dark:border-neutral-700 focus:border-brand-500 focus:ring-brand-500/20'
-                            }`}
-                            autoFocus
-                        />
-                        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-                    </div>
+                    <Input
+                        label="Folder Name"
+                        required
+                        value={name}
+                        onChange={(e) => {
+                            setName(e.target.value);
+                            if (error) setError('');
+                        }}
+                        placeholder="e.g. Lead Magnets, Product Launches, Client Onboarding"
+                        error={error}
+                        autoFocus
+                    />
 
                     <div>
                         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-1.5">

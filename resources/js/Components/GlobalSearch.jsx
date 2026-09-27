@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { router } from '@inertiajs/react';
 import { Search, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Input } from '@/Components/ui';
 
 export default function GlobalSearch() {
     const { t } = useTranslation();
@@ -94,25 +95,29 @@ export default function GlobalSearch() {
         <div className="fixed inset-0 z-[200] flex items-start justify-center pt-20 px-4">
             <div className="fixed inset-0 bg-black/50" onClick={() => setOpen(false)} />
             <div className="relative w-full max-w-xl bg-white dark:bg-neutral-900 rounded-xl shadow-soft-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
-                    <Search className="h-4 w-4 text-neutral-400 shrink-0" />
-                    <input
+                <div className="p-3 border-b border-neutral-200 dark:border-neutral-700">
+                    <Input
                         ref={inputRef}
                         type="text"
                         value={query}
                         onChange={handleChange}
                         onKeyDown={handleKeyDown}
                         placeholder={t('ui.global_search_placeholder')}
-                        className="flex-1 bg-transparent text-sm text-neutral-900 dark:text-white placeholder-neutral-400 outline-none"
+                        leftIcon={Search}
+                        rightElement={
+                            <div className="flex items-center gap-1.5">
+                                {query && (
+                                    <button type="button" onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus(); }} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                )}
+                                <button type="button" onClick={() => setOpen(false)} className="text-xs text-neutral-400 border border-neutral-300 dark:border-neutral-600 px-1.5 py-0.5 rounded">
+                                    Esc
+                                </button>
+                            </div>
+                        }
+                        className="border-none shadow-none focus:ring-0 text-base"
                     />
-                    {query && (
-                        <button onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus(); }} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
-                            <X className="h-4 w-4" />
-                        </button>
-                    )}
-                    <button onClick={() => setOpen(false)} className="text-xs text-neutral-400 border border-neutral-300 dark:border-neutral-600 px-1.5 py-0.5 rounded">
-                        Esc
-                    </button>
                 </div>
 
                 {results.length > 0 && (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trash2, Settings2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
-import Toggle from '@/Components/ui/Toggle';
+import { Input, Toggle, Select } from '@/Components/ui';
 import MiniRichEditor from './components/MiniRichEditor';
 
 const OBJECT_TARGETS = [
@@ -87,11 +87,11 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                 {field.type === 'button' && (
                     <div className="space-y-3">
                         <Row label="Button Text">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.buttonText || ''}
                                 onChange={e => update('buttonText', e.target.value)}
-                                className={inputCls}
                                 placeholder="Submit"
                             />
                         </Row>
@@ -103,11 +103,13 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                     onChange={e => update('backgroundColor', e.target.value)}
                                     className="w-8 h-8 rounded cursor-pointer border-0 p-0"
                                 />
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={field.backgroundColor || '#16a34a'}
                                     onChange={e => update('backgroundColor', e.target.value)}
-                                    className={inputCls + ' flex-1 font-mono'}
+                                    className="font-mono"
+                                    wrapperClassName="flex-1"
                                 />
                             </div>
                         </Row>
@@ -119,32 +121,34 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                     onChange={e => update('textColor', e.target.value)}
                                     className="w-8 h-8 rounded cursor-pointer border-0 p-0"
                                 />
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={field.textColor || '#ffffff'}
                                     onChange={e => update('textColor', e.target.value)}
-                                    className={inputCls + ' flex-1 font-mono'}
+                                    className="font-mono"
+                                    wrapperClassName="flex-1"
                                 />
                             </div>
                         </Row>
                         <Row label="Border Radius (px)">
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 min={0}
                                 max={50}
                                 value={field.borderRadius ?? 12}
                                 onChange={e => update('borderRadius', parseInt(e.target.value) || 0)}
-                                className={inputCls}
                             />
                         </Row>
                         <Row label="Font Size (px)">
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 min={10}
                                 max={24}
                                 value={field.fontSize ?? 14}
                                 onChange={e => update('fontSize', parseInt(e.target.value) || 14)}
-                                className={inputCls}
                             />
                         </Row>
                         <Row label="Alignment">
@@ -175,20 +179,20 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                 {field.type === 'image' && (
                     <>
                         <Row label="Image URL">
-                            <input
+                            <Input
+                                size="sm"
                                 type="url"
                                 value={field.imageUrl || ''}
                                 onChange={e => update('imageUrl', e.target.value)}
-                                className={inputCls}
                                 placeholder="https://example.com/banner.jpg"
                             />
                         </Row>
                         <Row label="Alt Text">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.imageAlt || ''}
                                 onChange={e => update('imageAlt', e.target.value)}
-                                className={inputCls}
                                 placeholder="e.g. Company Logo or Header Banner"
                             />
                         </Row>
@@ -204,7 +208,8 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
 
                         {ecommerceProducts && ecommerceProducts.length > 0 && (
                             <Row label="Select Main Product from Catalog">
-                                <select
+                                <Select
+                                    size="sm"
                                     value={field.productId || ''}
                                     onChange={e => {
                                         const pId = parseInt(e.target.value) || null;
@@ -227,7 +232,6 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                             onChange({ ...field, productId: null, prices: [] });
                                         }
                                     }}
-                                    className={inputCls}
                                 >
                                     <option value="">-- Choose from Catalog --</option>
                                     {ecommerceProducts.map(p => (
@@ -235,43 +239,43 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                             {p.name} (${parseFloat(p.price || 0).toFixed(2)}) {p.prices?.length > 1 ? `• ${p.prices.length} Tiers` : ''}
                                         </option>
                                     ))}
-                                </select>
+                                </Select>
                             </Row>
                         )}
 
                         <Row label="Step 1 Header Title">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.step1Title || '1. Contact Info'}
                                 onChange={e => update('step1Title', e.target.value)}
-                                className={inputCls}
                                 placeholder="1. Contact Info"
                             />
                         </Row>
                         <Row label="Step 2 Header Title">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.step2Title || '2. Products & Pay'}
                                 onChange={e => update('step2Title', e.target.value)}
-                                className={inputCls}
                                 placeholder="2. Products & Pay"
                             />
                         </Row>
                         <Row label="Step 1 Button Label">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.step1ButtonText || 'Go to Step 2 →'}
                                 onChange={e => update('step1ButtonText', e.target.value)}
-                                className={inputCls}
                                 placeholder="Go to Step 2 →"
                             />
                         </Row>
                         <Row label="Step 2 Submit Button Label">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.step2ButtonText || 'Complete Order 🔒'}
                                 onChange={e => update('step2ButtonText', e.target.value)}
-                                className={inputCls}
                                 placeholder="Complete Order 🔒"
                             />
                         </Row>
@@ -282,30 +286,30 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                 Main Product Details
                             </label>
                             <Row label="Product Name">
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={field.productTitle || 'Standard Access Plan'}
                                     onChange={e => update('productTitle', e.target.value)}
-                                    className={inputCls}
                                     placeholder="Standard Access Plan"
                                 />
                             </Row>
                             <Row label="Product Subtitle">
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={field.productSubtitle || 'Instant digital access & updates'}
                                     onChange={e => update('productSubtitle', e.target.value)}
-                                    className={inputCls}
                                     placeholder="Instant digital access & updates"
                                 />
                             </Row>
                             <Row label="Product Price ($)">
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     step="0.01"
                                     value={field.productPrice || '49.00'}
                                     onChange={e => update('productPrice', e.target.value)}
-                                    className={inputCls}
                                     placeholder="49.00"
                                 />
                             </Row>
@@ -325,7 +329,8 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                 <div className="space-y-2 pl-2 border-l-2 border-amber-400">
                                     {ecommerceProducts && ecommerceProducts.length > 0 && (
                                         <Row label="Select Bump Product from Catalog">
-                                            <select
+                                            <Select
+                                                size="sm"
                                                 value={field.orderBumpProductId || ''}
                                                 onChange={e => {
                                                     const pId = parseInt(e.target.value) || null;
@@ -342,7 +347,6 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                                         onChange({ ...field, orderBumpProductId: null });
                                                     }
                                                 }}
-                                                className={inputCls}
                                             >
                                                 <option value="">-- Choose from Catalog --</option>
                                                 {ecommerceProducts.map(p => (
@@ -350,35 +354,35 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                                         {p.name} (${parseFloat(p.price || 0).toFixed(2)})
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </Select>
                                         </Row>
                                     )}
 
                                     <Row label="Bump Offer Headline">
-                                        <input
+                                        <Input
+                                            size="sm"
                                             type="text"
                                             value={field.orderBumpTitle || 'Yes! Add the VIP Bonus Pack'}
                                             onChange={e => update('orderBumpTitle', e.target.value)}
-                                            className={inputCls}
                                             placeholder="Yes! Add the VIP Bonus Pack"
                                         />
                                     </Row>
                                     <Row label="Bump Badge Pill">
-                                        <input
+                                        <Input
+                                            size="sm"
                                             type="text"
                                             value={field.orderBumpBadge || 'ONE-TIME OFFER - 80% OFF'}
                                             onChange={e => update('orderBumpBadge', e.target.value)}
-                                            className={inputCls}
                                             placeholder="ONE-TIME OFFER - 80% OFF"
                                         />
                                     </Row>
                                     <Row label="Bump Price ($)">
-                                        <input
+                                        <Input
+                                            size="sm"
                                             type="number"
                                             step="0.01"
                                             value={field.orderBumpPrice || '19.00'}
                                             onChange={e => update('orderBumpPrice', e.target.value)}
-                                            className={inputCls}
                                             placeholder="19.00"
                                         />
                                     </Row>
@@ -410,7 +414,8 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
 
                             {ecommerceProducts && ecommerceProducts.length > 0 && (
                                 <Row label="Select Product from Catalog">
-                                    <select
+                                    <Select
+                                        size="sm"
                                         value={field.productId || ''}
                                         onChange={e => {
                                             const pId = parseInt(e.target.value) || null;
@@ -437,7 +442,6 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                                 onChange({ ...field, productId: null, prices: [] });
                                             }
                                         }}
-                                        className={inputCls}
                                     >
                                         <option value="">-- Choose from Catalog --</option>
                                         {ecommerceProducts.map(p => (
@@ -445,7 +449,7 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                                 {p.name} (${parseFloat(p.price || 0).toFixed(2)}) {p.prices?.length > 1 ? `• ${p.prices.length} Tiers` : ''}
                                             </option>
                                         ))}
-                                    </select>
+                                    </Select>
                                 </Row>
                             )}
 
@@ -484,7 +488,8 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                                 </span>
                                             </div>
                                             <Row label="Plan Display Name">
-                                                <input
+                                                <Input
+                                                    size="sm"
                                                     type="text"
                                                     value={pTier.name || ''}
                                                     onChange={e => {
@@ -492,12 +497,12 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                                         updated[idx] = { ...updated[idx], name: e.target.value };
                                                         onChange({ ...field, prices: updated });
                                                     }}
-                                                    className={inputCls}
                                                     placeholder="e.g. Monthly VIP Pass"
                                                 />
                                             </Row>
                                             <Row label="Plan Description / Subtitle">
-                                                <input
+                                                <Input
+                                                    size="sm"
                                                     type="text"
                                                     value={pTier.description || ''}
                                                     onChange={e => {
@@ -505,7 +510,6 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                                         updated[idx] = { ...updated[idx], description: e.target.value };
                                                         onChange({ ...field, prices: updated });
                                                     }}
-                                                    className={inputCls}
                                                     placeholder={pTier.pricing_type === 'recurring' ? `Billed every ${pTier.billing_interval || 'month'}` : 'Tier description'}
                                                 />
                                             </Row>
@@ -515,30 +519,31 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                             ) : (
                                 <>
                                     <Row label="Plan Display Name">
-                                        <input
+                                        <Input
+                                            size="sm"
                                             type="text"
                                             value={field.productTitle || ''}
                                             onChange={e => update('productTitle', e.target.value)}
-                                            className={inputCls}
                                             placeholder="Standard Access Plan"
                                         />
                                     </Row>
                                     <Row label="Plan Description / Subtitle">
-                                        <input
+                                        <Input
+                                            size="sm"
                                             type="text"
                                             value={field.productSubtitle || ''}
                                             onChange={e => update('productSubtitle', e.target.value)}
-                                            className={inputCls}
                                             placeholder="Instant digital access"
                                         />
                                     </Row>
                                     <Row label="Catalog Price ($)">
-                                        <input
+                                        <Input
+                                            size="sm"
                                             type="text"
                                             value={`$${parseFloat(field.productPrice || 49.00).toFixed(2)} 🔒 (Catalog Price)`}
                                             readOnly
                                             disabled
-                                            className={inputCls + ' bg-neutral-100 dark:bg-neutral-800 opacity-75 font-mono font-bold cursor-not-allowed'}
+                                            className="bg-neutral-100 dark:bg-neutral-800 opacity-75 font-mono font-bold cursor-not-allowed"
                                         />
                                     </Row>
                                 </>
@@ -552,7 +557,8 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                     <div className="space-y-3 pt-1">
                         {ecommerceProducts && ecommerceProducts.length > 0 && (
                             <Row label="Select Bump Product from Catalog">
-                                <select
+                                <Select
+                                    size="sm"
                                     value={field.productId || ''}
                                     onChange={e => {
                                         const pId = parseInt(e.target.value) || null;
@@ -570,7 +576,6 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                             onChange({ ...field, productId: null });
                                         }
                                     }}
-                                    className={inputCls}
                                 >
                                     <option value="">-- Choose from Catalog --</option>
                                     {ecommerceProducts.map(p => (
@@ -578,35 +583,35 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                             {p.name} (${parseFloat(p.price || 0).toFixed(2)})
                                         </option>
                                     ))}
-                                </select>
+                                </Select>
                             </Row>
                         )}
 
                         <Row label="Offer Headline">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.headline || 'Yes! Add This Exclusive Bonus'}
                                 onChange={e => update('headline', e.target.value)}
-                                className={inputCls}
                                 placeholder="Yes! Add This Exclusive Bonus"
                             />
                         </Row>
                         <Row label="Badge Pill Text">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.badgeText || 'SPECIAL ONE-TIME OFFER'}
                                 onChange={e => update('badgeText', e.target.value)}
-                                className={inputCls}
                                 placeholder="SPECIAL ONE-TIME OFFER"
                             />
                         </Row>
                         <Row label="Price ($)">
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 step="0.01"
                                 value={field.price || '19.00'}
                                 onChange={e => update('price', e.target.value)}
-                                className={inputCls}
                                 placeholder="19.00"
                             />
                         </Row>
@@ -626,20 +631,20 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                 {field.type === 'coupon_code' && (
                     <div className="space-y-3 pt-1">
                         <Row label="Placeholder Text">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.placeholder || 'Enter coupon or promo code'}
                                 onChange={e => update('placeholder', e.target.value)}
-                                className={inputCls}
                                 placeholder="Enter coupon code"
                             />
                         </Row>
                         <Row label="Button Label">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.buttonText || 'Apply'}
                                 onChange={e => update('buttonText', e.target.value)}
-                                className={inputCls}
                                 placeholder="Apply"
                             />
                         </Row>
@@ -651,11 +656,12 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                     <>
                         {!isStandard && (
                             <Row label="Field Key (API)">
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={field.key || ''}
                                     onChange={e => update('key', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))}
-                                    className={inputCls + ' font-mono'}
+                                    className="font-mono"
                                     placeholder="e.g. company_name"
                                 />
                                 <p className="text-[10px] text-neutral-400 mt-1">Used in API response and CRM custom fields</p>
@@ -664,11 +670,12 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
 
                         {/* Query Key (URL Autofill Parameter) */}
                         <Row label="Query Key (URL Autofill)">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={field.queryKey !== undefined ? field.queryKey : (field.key || field.type)}
                                 onChange={e => update('queryKey', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_'))}
-                                className={inputCls + ' font-mono'}
+                                className="font-mono"
                                 placeholder="e.g. utm_source or features"
                             />
                             <p className="text-[10px] text-neutral-400 mt-1">
@@ -713,12 +720,13 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                                     onChange={(e) => update('color', e.target.value)}
                                     className="h-8 w-10 rounded cursor-pointer border border-neutral-300 dark:border-neutral-700 p-0"
                                 />
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={field.color || ''}
                                     onChange={(e) => update('color', e.target.value)}
-                                    className={inputCls}
                                     placeholder="#111827"
+                                    wrapperClassName="flex-1"
                                 />
                             </div>
                         </Row>
@@ -740,7 +748,7 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                 {/* Placeholder */}
                 {hasPlaceholder && (
                     <Row label="Placeholder">
-                        <input type="text" value={field.placeholder || ''} onChange={e => update('placeholder', e.target.value)} className={inputCls} placeholder="e.g. Enter your email" />
+                        <Input size="sm" type="text" value={field.placeholder || ''} onChange={e => update('placeholder', e.target.value)} placeholder="e.g. Enter your email" />
                     </Row>
                 )}
 
@@ -750,11 +758,12 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                         <div className="space-y-1.5">
                             {(field.options || ['Option 1']).map((opt, idx) => (
                                 <div key={idx} className="flex gap-1">
-                                    <input
+                                    <Input
+                                        size="sm"
                                         type="text"
                                         value={opt}
                                         onChange={e => updateOption(idx, e.target.value)}
-                                        className={inputCls + ' flex-1'}
+                                        wrapperClassName="flex-1"
                                         placeholder={`Option ${idx + 1}`}
                                     />
                                     <button type="button" onClick={() => removeOption(idx)} className="p-1 text-red-400 hover:text-red-600 rounded">
@@ -772,9 +781,9 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                 {/* Rating max */}
                 {field.type === 'rating' && (
                     <Row label="Max Stars">
-                        <select value={field.maxRating || 5} onChange={e => update('maxRating', Number(e.target.value))} className={inputCls}>
+                        <Select value={field.maxRating || 5} onChange={e => update('maxRating', Number(e.target.value))} size="sm">
                             {[3, 4, 5, 7, 10].map(n => <option key={n} value={n}>{n} Stars</option>)}
-                        </select>
+                        </Select>
                     </Row>
                 )}
 
@@ -782,17 +791,17 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                 {field.type === 'scale' && (
                     <>
                         <Row label="Scale Range">
-                            <select value={field.maxScale || 10} onChange={e => update('maxScale', Number(e.target.value))} className={inputCls}>
+                            <Select value={field.maxScale || 10} onChange={e => update('maxScale', Number(e.target.value))} size="sm">
                                 <option value={5}>1 to 5 Scale</option>
                                 <option value={7}>1 to 7 Scale</option>
                                 <option value={10}>1 to 10 Scale (NPS)</option>
-                            </select>
+                            </Select>
                         </Row>
                         <Row label="Left Label">
-                            <input type="text" value={field.minLabel || ''} onChange={e => update('minLabel', e.target.value)} className={inputCls} placeholder="e.g. Not likely" />
+                            <Input size="sm" type="text" value={field.minLabel || ''} onChange={e => update('minLabel', e.target.value)} placeholder="e.g. Not likely" />
                         </Row>
                         <Row label="Right Label">
-                            <input type="text" value={field.maxLabel || ''} onChange={e => update('maxLabel', e.target.value)} className={inputCls} placeholder="e.g. Very likely" />
+                            <Input size="sm" type="text" value={field.maxLabel || ''} onChange={e => update('maxLabel', e.target.value)} placeholder="e.g. Very likely" />
                         </Row>
                     </>
                 )}
@@ -815,7 +824,7 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                 {/* Hidden field default value */}
                 {field.type === 'hidden' && (
                     <Row label="Default Value">
-                        <input type="text" value={field.defaultValue || ''} onChange={e => update('defaultValue', e.target.value)} className={inputCls} placeholder="e.g. utm_source value" />
+                        <Input size="sm" type="text" value={field.defaultValue || ''} onChange={e => update('defaultValue', e.target.value)} placeholder="e.g. utm_source value" />
                     </Row>
                 )}
 
@@ -834,11 +843,11 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                 {/* Double OTP channel */}
                 {field.type === 'double_optin' && (
                     <Row label="OTP Channel">
-                        <select value={field.channel || 'whatsapp'} onChange={e => update('channel', e.target.value)} className={inputCls}>
+                        <Select value={field.channel || 'whatsapp'} onChange={e => update('channel', e.target.value)} size="sm">
                             <option value="whatsapp">WhatsApp</option>
                             <option value="email">Email</option>
                             <option value="sms">SMS</option>
-                        </select>
+                        </Select>
                     </Row>
                 )}
 
@@ -891,49 +900,49 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                         <div className="grid grid-cols-2 gap-2">
                             <div>
                                 <span className="text-[10px] text-neutral-400 block mb-0.5">Top (px)</span>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     min="0"
                                     max="120"
                                     value={field.marginTop !== undefined ? field.marginTop : ''}
                                     onChange={(e) => update('marginTop', e.target.value === '' ? '' : Number(e.target.value))}
-                                    className={inputCls}
                                     placeholder="0"
                                 />
                             </div>
                             <div>
                                 <span className="text-[10px] text-neutral-400 block mb-0.5">Bottom (px)</span>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     min="0"
                                     max="120"
                                     value={field.marginBottom !== undefined ? field.marginBottom : ''}
                                     onChange={(e) => update('marginBottom', e.target.value === '' ? '' : Number(e.target.value))}
-                                    className={inputCls}
                                     placeholder="0"
                                 />
                             </div>
                             <div>
                                 <span className="text-[10px] text-neutral-400 block mb-0.5">Left (px)</span>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     min="0"
                                     max="120"
                                     value={field.marginLeft !== undefined ? field.marginLeft : ''}
                                     onChange={(e) => update('marginLeft', e.target.value === '' ? '' : Number(e.target.value))}
-                                    className={inputCls}
                                     placeholder="0"
                                 />
                             </div>
                             <div>
                                 <span className="text-[10px] text-neutral-400 block mb-0.5">Right (px)</span>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     min="0"
                                     max="120"
                                     value={field.marginRight !== undefined ? field.marginRight : ''}
                                     onChange={(e) => update('marginRight', e.target.value === '' ? '' : Number(e.target.value))}
-                                    className={inputCls}
                                     placeholder="0"
                                 />
                             </div>
@@ -948,49 +957,49 @@ export default function FieldSettings({ field, onChange, onDelete, availableFold
                         <div className="grid grid-cols-2 gap-2">
                             <div>
                                 <span className="text-[10px] text-neutral-400 block mb-0.5">Top (px)</span>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     min="0"
                                     max="120"
                                     value={field.paddingTop !== undefined ? field.paddingTop : ''}
                                     onChange={(e) => update('paddingTop', e.target.value === '' ? '' : Number(e.target.value))}
-                                    className={inputCls}
                                     placeholder="0"
                                 />
                             </div>
                             <div>
                                 <span className="text-[10px] text-neutral-400 block mb-0.5">Bottom (px)</span>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     min="0"
                                     max="120"
                                     value={field.paddingBottom !== undefined ? field.paddingBottom : ''}
                                     onChange={(e) => update('paddingBottom', e.target.value === '' ? '' : Number(e.target.value))}
-                                    className={inputCls}
                                     placeholder="0"
                                 />
                             </div>
                             <div>
                                 <span className="text-[10px] text-neutral-400 block mb-0.5">Left (px)</span>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     min="0"
                                     max="120"
                                     value={field.paddingLeft !== undefined ? field.paddingLeft : ''}
                                     onChange={(e) => update('paddingLeft', e.target.value === '' ? '' : Number(e.target.value))}
-                                    className={inputCls}
                                     placeholder="0"
                                 />
                             </div>
                             <div>
                                 <span className="text-[10px] text-neutral-400 block mb-0.5">Right (px)</span>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     min="0"
                                     max="120"
                                     value={field.paddingRight !== undefined ? field.paddingRight : ''}
                                     onChange={(e) => update('paddingRight', e.target.value === '' ? '' : Number(e.target.value))}
-                                    className={inputCls}
                                     placeholder="0"
                                 />
                             </div>

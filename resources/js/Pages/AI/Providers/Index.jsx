@@ -1,6 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import { Input, Button, Select } from '@/Components/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, CheckCircle, Bot, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
@@ -134,25 +135,24 @@ function ProviderCard({ provider }) {
 
             <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('ai.api_key')}</label>
-                    <div className="relative mt-1">
-                        <input
-                            type={showKey ? 'text' : 'password'}
-                            value={data.api_key}
-                            onChange={e => setData('api_key', e.target.value)}
-                            placeholder={provider.configured ? t('ai.api_key_encrypted_placeholder') : 'sk-…'}
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-sm"
-                        />
-                        <button type="button" onClick={() => setShowKey(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
-                            {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                    </div>
+                    <Input
+                        label={t('ai.api_key')}
+                        type={showKey ? 'text' : 'password'}
+                        value={data.api_key}
+                        onChange={e => setData('api_key', e.target.value)}
+                        placeholder={provider.configured ? t('ai.api_key_encrypted_placeholder') : 'sk-…'}
+                        rightIcon={
+                            <button type="button" onClick={() => setShowKey(v => !v)} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300">
+                                {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        }
+                    />
                 </div>
                 <div>
-                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('ai.default_chat_model')}</label>
-                    <select value={data.default_model_chat} onChange={e => setData('default_model_chat', e.target.value)} className="mt-1 w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm">
+                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-1">{t('ai.default_chat_model')}</label>
+                    <Select value={data.default_model_chat} onChange={e => setData('default_model_chat', e.target.value)} size="sm">
                         {info.models?.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
+                    </Select>
                 </div>
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input type="checkbox" checked={data.enabled} onChange={e => setData('enabled', e.target.checked)} className="rounded" />

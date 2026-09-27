@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertTriangle, ArrowLeft, Check, ChevronDown, LifeBuoy, Search, Send, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Input, Select } from '@/Components/ui';
 
 const PRIORITY_OPTION_VALUES = ['low', 'normal', 'high', 'urgent'];
 
@@ -102,17 +103,15 @@ export default function AdminSupportCreate({ customers = [] }) {
                                 {custOpen && (
                                     <div className="absolute z-20 mt-1 w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-600 rounded-soft-lg shadow-lg overflow-hidden">
                                         <div className="p-2 border-b border-neutral-100 dark:border-neutral-700">
-                                            <div className="relative">
-                                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
-                                                <input
-                                                    type="text"
-                                                    autoFocus
-                                                    value={custQuery}
-                                                    onChange={e => setCustQuery(e.target.value)}
-                                                    placeholder={t('support_tickets.customer_search_placeholder')}
-                                                    className="w-full border border-neutral-200 dark:border-neutral-600 rounded-soft pl-8 pr-3 py-2 text-sm text-neutral-900 dark:text-white bg-white dark:bg-neutral-700 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-                                                />
-                                            </div>
+                                            <Input
+                                                type="text"
+                                                autoFocus
+                                                value={custQuery}
+                                                onChange={e => setCustQuery(e.target.value)}
+                                                placeholder={t('support_tickets.customer_search_placeholder')}
+                                                leftIcon={<Search className="h-4 w-4" />}
+                                                size="sm"
+                                            />
                                         </div>
                                         <ul className="max-h-60 overflow-y-auto py-1">
                                             <li>
@@ -153,38 +152,30 @@ export default function AdminSupportCreate({ customers = [] }) {
 
                         <div className="grid sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                                    {t('support_tickets.name_label')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
+                                <Input
+                                    label={<>{t('support_tickets.name_label')} <span className="text-red-500">*</span></>}
                                     type="text"
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
                                     readOnly={linked}
                                     placeholder={t('support_tickets.name_placeholder')}
-                                    className={`w-full border rounded-soft-lg px-3 py-2.5 text-sm text-neutral-900 dark:text-white bg-white dark:bg-neutral-700 placeholder-neutral-400 dark:placeholder-neutral-500 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 ${linked ? 'opacity-70 cursor-not-allowed' : ''} ${errors.name ? 'border-red-400 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-600'}`}
+                                    className={linked ? 'opacity-70 cursor-not-allowed' : ''}
+                                    error={errors.name}
                                     required
                                 />
-                                {errors.name && (
-                                    <p className="flex items-center gap-1 text-red-500 text-xs mt-1.5"><AlertTriangle className="h-3 w-3" /> {errors.name}</p>
-                                )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                                    {t('support_tickets.email_label')} <span className="text-red-500">*</span>
-                                </label>
-                                <input
+                                <Input
+                                    label={<>{t('support_tickets.email_label')} <span className="text-red-500">*</span></>}
                                     type="email"
                                     value={data.email}
                                     onChange={e => setData('email', e.target.value)}
                                     readOnly={linked}
                                     placeholder={t('support_tickets.email_placeholder')}
-                                    className={`w-full border rounded-soft-lg px-3 py-2.5 text-sm text-neutral-900 dark:text-white bg-white dark:bg-neutral-700 placeholder-neutral-400 dark:placeholder-neutral-500 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 ${linked ? 'opacity-70 cursor-not-allowed' : ''} ${errors.email ? 'border-red-400 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-600'}`}
+                                    className={linked ? 'opacity-70 cursor-not-allowed' : ''}
+                                    error={errors.email}
                                     required
                                 />
-                                {errors.email && (
-                                    <p className="flex items-center gap-1 text-red-500 text-xs mt-1.5"><AlertTriangle className="h-3 w-3" /> {errors.email}</p>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -192,36 +183,27 @@ export default function AdminSupportCreate({ customers = [] }) {
                     {/* Subject + Priority */}
                     <div className="bg-white dark:bg-neutral-800/70 rounded-xl border border-neutral-200 dark:border-neutral-700/50 p-5 space-y-4 shadow-soft">
                         <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                                {t('support_tickets.subject_label')} <span className="text-red-500">*</span>
-                            </label>
-                            <input
+                            <Input
+                                label={<>{t('support_tickets.subject_label')} <span className="text-red-500">*</span></>}
                                 type="text"
                                 value={data.subject}
                                 onChange={e => setData('subject', e.target.value)}
                                 placeholder={t('support_tickets.subject_placeholder')}
-                                className={`w-full border rounded-soft-lg px-3 py-2.5 text-sm text-neutral-900 dark:text-white bg-white dark:bg-neutral-700 placeholder-neutral-400 dark:placeholder-neutral-500 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 ${errors.subject ? 'border-red-400 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-600'}`}
+                                error={errors.subject}
                                 required
                             />
-                            {errors.subject && (
-                                <p className="flex items-center gap-1 text-red-500 text-xs mt-1.5"><AlertTriangle className="h-3 w-3" /> {errors.subject}</p>
-                            )}
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">{t('support_tickets.priority_label')}</label>
-                            <div className="relative">
-                                <select
-                                    value={data.priority}
-                                    onChange={e => setData('priority', e.target.value)}
-                                    className="w-full appearance-none border border-neutral-300 dark:border-neutral-600 rounded-soft-lg px-3 py-2.5 text-sm text-neutral-900 dark:text-white bg-white dark:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-colors pr-8"
-                                >
-                                    {priorityOptions.map(p => (
-                                        <option key={p.value} value={p.value}>{p.label} — {p.desc}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
-                            </div>
+                            <Select
+                                value={data.priority}
+                                onChange={e => setData('priority', e.target.value)}
+                            >
+                                {priorityOptions.map(p => (
+                                    <option key={p.value} value={p.value}>{p.label} — {p.desc}</option>
+                                ))}
+                            </Select>
                             <div className="mt-2 grid grid-cols-4 gap-1.5">
                                 {priorityOptions.map(p => (
                                     <button

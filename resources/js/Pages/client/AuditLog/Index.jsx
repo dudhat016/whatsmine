@@ -1,4 +1,5 @@
 import ClientLayout from '@/Layouts/ClientLayout';
+import { Button, Input } from '@/Components/ui';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -33,16 +34,16 @@ export default function ClientAuditLogIndex({ logs, filters = {} }) {
                 </div>
 
                 <form onSubmit={submitFilters} className="flex flex-wrap gap-2 items-center">
-                    <input
+                    <Input
                         type="text"
                         value={actionFilter}
                         onChange={(e) => setActionFilter(e.target.value)}
                         placeholder={t('client.filter_by_action') || 'Filter by action'}
-                        className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm w-48"
+                        className="w-48"
                     />
-                    <button type="submit" className="rounded-lg bg-neutral-200 dark:bg-neutral-700 px-3 py-2 text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
+                    <Button type="submit" variant="secondary">
                         {t('client.filter') || 'Filter'}
-                    </button>
+                    </Button>
                 </form>
 
                 <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800/50 overflow-hidden">

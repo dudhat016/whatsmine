@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Tabs } from '@/Components/ui';
+import { Button, Card, Input, Select, Tabs } from '@/Components/ui';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -77,58 +77,61 @@ export default function AdminLocalesIndex({
                                             }}
                                         >
                                             <div className="flex flex-wrap gap-3 items-end">
-                                                <div>
-                                                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-0.5">{t('locales.code')}</label>
-                                                    <input
-                                                        placeholder={t('locales.code')}
-                                                        value={newLocale.code}
-                                                        onChange={(e) => setNewLocale('code', e.target.value.toLowerCase())}
-                                                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-0.5">{t('common.name')}</label>
-                                                    <input
-                                                        placeholder={t('common.name')}
-                                                        value={newLocale.name}
-                                                        onChange={(e) => setNewLocale('name', e.target.value)}
-                                                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-0.5">{t('locales.native_name')}</label>
-                                                    <input
-                                                        placeholder={t('locales.native_name')}
-                                                        value={newLocale.native_name}
-                                                        onChange={(e) => setNewLocale('native_name', e.target.value)}
-                                                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-0.5">{t('locales.flag')}</label>
-                                                    <input
-                                                        placeholder={t('common.optional')}
-                                                        value={newLocale.flag}
-                                                        onChange={(e) => setNewLocale('flag', e.target.value)}
-                                                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-20 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                                                    />
-                                                </div>
-                                                <label className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100">
+                                                <Input
+                                                    label={t('locales.code')}
+                                                    placeholder={t('locales.code')}
+                                                    value={newLocale.code}
+                                                    onChange={(e) => setNewLocale('code', e.target.value.toLowerCase())}
+                                                    size="sm"
+                                                    wrapperClassName="w-24"
+                                                    required
+                                                />
+                                                <Input
+                                                    label={t('common.name')}
+                                                    placeholder={t('common.name')}
+                                                    value={newLocale.name}
+                                                    onChange={(e) => setNewLocale('name', e.target.value)}
+                                                    size="sm"
+                                                    wrapperClassName="w-32"
+                                                    required
+                                                />
+                                                <Input
+                                                    label={t('locales.native_name')}
+                                                    placeholder={t('locales.native_name')}
+                                                    value={newLocale.native_name}
+                                                    onChange={(e) => setNewLocale('native_name', e.target.value)}
+                                                    size="sm"
+                                                    wrapperClassName="w-32"
+                                                />
+                                                <Input
+                                                    label={t('locales.flag')}
+                                                    placeholder={t('common.optional')}
+                                                    value={newLocale.flag}
+                                                    onChange={(e) => setNewLocale('flag', e.target.value)}
+                                                    size="sm"
+                                                    wrapperClassName="w-20"
+                                                />
+                                                <label className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 pb-2">
                                                     <input type="checkbox" checked={newLocale.enabled} onChange={(e) => setNewLocale('enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" />
                                                     {t('common.enabled')}
                                                 </label>
-                                                <label className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100">
+                                                <label className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 pb-2">
                                                     <input type="checkbox" checked={newLocale.is_rtl} onChange={(e) => setNewLocale('is_rtl', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" />
                                                     {t('locales.rtl')}
                                                 </label>
-                                                <div>
-                                                    <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-0.5">{t('locales.sort')}</label>
-                                                    <input type="number" min={0} value={newLocale.sort_order} onChange={(e) => setNewLocale('sort_order', parseInt(e.target.value, 10) || 0)} className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-16 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+                                                <Input
+                                                    label={t('locales.sort')}
+                                                    type="number"
+                                                    min={0}
+                                                    value={newLocale.sort_order}
+                                                    onChange={(e) => setNewLocale('sort_order', parseInt(e.target.value, 10) || 0)}
+                                                    size="sm"
+                                                    wrapperClassName="w-16"
+                                                />
+                                                <div className="flex items-center gap-1 pb-0.5">
+                                                    <Button type="submit" size="sm" disabled={processing}>{t('common.add')}</Button>
+                                                    <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>{t('common.cancel')}</Button>
                                                 </div>
-                                                <Button type="submit" size="sm" disabled={processing}>{t('common.add')}</Button>
-                                                <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(false)}>{t('common.cancel')}</Button>
                                             </div>
                                         </form>
                                     </Card.Body>
@@ -229,8 +232,8 @@ function LocaleRow({ locale, locales }) {
                         className="inline-flex flex-wrap gap-2 items-center"
                         onSubmit={(e) => { e.preventDefault(); put(route('admin.locales.update', locale.code), { onSuccess: () => setOpen(false) }); }}
                     >
-                        <input value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={t('common.name')} className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
-                        <input value={data.native_name} onChange={(e) => setData('native_name', e.target.value)} placeholder={t('locales.native_name')} className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+                        <Input value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={t('common.name')} size="sm" wrapperClassName="w-28" />
+                        <Input value={data.native_name} onChange={(e) => setData('native_name', e.target.value)} placeholder={t('locales.native_name')} size="sm" wrapperClassName="w-28" />
                         <label className="text-neutral-900 dark:text-neutral-100 text-sm"><input type="checkbox" checked={data.enabled} onChange={(e) => setData('enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /> {t('common.enabled')}</label>
                         <label className="text-neutral-900 dark:text-neutral-100 text-sm"><input type="checkbox" checked={data.is_rtl} onChange={(e) => setData('is_rtl', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /> {t('locales.rtl')}</label>
                         <Button type="submit" size="sm" disabled={processing}>{t('common.save')}</Button>
@@ -282,32 +285,31 @@ function TranslationsTab({
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap gap-3 items-end">
-                <select
+            <div className="flex flex-wrap gap-3 items-center">
+                <Select
+                    size="sm"
                     value={filters.locale}
                     onChange={(e) => setFilters((f) => ({ ...f, locale: e.target.value }))}
-                    className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                >
-                    {locales.map((l) => (
-                        <option key={l.code} value={l.code}>{l.name} ({l.code})</option>
-                    ))}
-                </select>
-                <select
+                    options={locales.map((l) => ({ value: l.code, label: `${l.name} (${l.code})` }))}
+                    wrapperClassName="w-44"
+                />
+                <Select
+                    size="sm"
                     value={filters.group}
                     onChange={(e) => setFilters((f) => ({ ...f, group: e.target.value }))}
-                    className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                >
-                    <option value="">{t('locales.all_groups')}</option>
-                    {groups.map((g) => (
-                        <option key={g} value={g}>{g}</option>
-                    ))}
-                </select>
-                <input
+                    options={[
+                        { value: '', label: t('locales.all_groups') },
+                        ...groups.map((g) => ({ value: g, label: g })),
+                    ]}
+                    wrapperClassName="w-44"
+                />
+                <Input
                     type="text"
                     placeholder={t('locales.search_key_value')}
                     value={filters.search}
                     onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-                    className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    size="sm"
+                    wrapperClassName="w-48"
                 />
                 <label className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 text-sm">
                     <input type="checkbox" checked={filters.missingOnly} onChange={(e) => setFilters((f) => ({ ...f, missingOnly: e.target.checked }))} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" />
@@ -371,12 +373,12 @@ function TranslationRow({ item, localeCode }) {
             <td className="py-2 pr-4 font-mono text-neutral-700 dark:text-neutral-300 align-top">{toStr(item.flat_key)}</td>
             <td className="py-2 pr-4 text-neutral-600 dark:text-neutral-400 align-top whitespace-pre-wrap">{toStr(item.en_value) || '—'}</td>
             <td className="py-2 pr-4 align-top">
-                <input
+                <Input
                     type="text"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     onBlur={debouncedSave}
-                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    size="sm"
                     placeholder={t('locales.translation')}
                 />
             </td>

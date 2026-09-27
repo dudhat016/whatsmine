@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Clock, Globe, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Input } from '@/Components/ui';
 import TimezonePicker from '@/Components/TimezonePicker';
 
 export const DAYS = [
@@ -150,11 +151,11 @@ export function WorkingHoursEditor({ value, onChange }) {
                                         <span className={`w-24 text-sm ${day.enabled ? 'text-neutral-800 dark:text-neutral-200 font-medium' : 'text-neutral-400'}`}>{t(d.labelKey)}</span>
                                         {day.enabled ? (
                                             <div className="flex items-center gap-2 ml-auto">
-                                                <input type="time" value={day.open} onChange={e => setDay(d.key, { open: e.target.value })}
-                                                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                                                <Input type="time" size="sm" value={day.open} onChange={e => setDay(d.key, { open: e.target.value })}
+                                                    className="w-32" />
                                                 <span className="text-neutral-400 text-sm">–</span>
-                                                <input type="time" value={day.close} onChange={e => setDay(d.key, { close: e.target.value })}
-                                                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                                                <Input type="time" size="sm" value={day.close} onChange={e => setDay(d.key, { close: e.target.value })}
+                                                    className="w-32" />
                                             </div>
                                         ) : (
                                             <span className="ml-auto text-sm text-neutral-400">{t('whatsapp.widget_closed')}</span>
@@ -188,10 +189,13 @@ export function DomainEditor({ value, onChange }) {
             </div>
             <Field label={t('whatsapp.widget_add_domain')}>
                 <div className="flex gap-2">
-                    <input type="text" value={input} onChange={e => setInput(e.target.value)}
+                    <Input
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
                         placeholder="example.com"
-                        className={inputCls() + ' flex-1'} />
+                        className="flex-1"
+                    />
                     <button type="button" onClick={add}
                         className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition">
                         {t('common.add')}

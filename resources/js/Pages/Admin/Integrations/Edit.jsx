@@ -6,6 +6,7 @@ import axios from 'axios';
 import { formatInTz } from '@/Utils/datetime';
 import { useTranslation, Trans } from 'react-i18next';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input, Select } from '@/Components/ui';
 
 const SETUP_GUIDES = {
     storage_s3: {
@@ -529,45 +530,35 @@ function SecretField({ label, fieldKey, value, onChange, required, hint }) {
     const isMasked = value && /^•+/.test(value);
 
     return (
-        <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            <div className="relative">
-                <input
-                    type={visible ? 'text' : 'password'}
-                    value={value}
-                    onChange={e => onChange(fieldKey, e.target.value)}
-                    placeholder={isMasked ? t('integrations.unchanged_placeholder') : t('integrations.enter_value')}
-                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
+        <Input
+            label={required ? <>{label} <span className="text-red-500">*</span></> : label}
+            type={visible ? 'text' : 'password'}
+            value={value}
+            onChange={e => onChange(fieldKey, e.target.value)}
+            placeholder={isMasked ? t('integrations.unchanged_placeholder') : t('integrations.enter_value')}
+            hint={hint}
+            rightIcon={
                 <button
                     type="button"
                     onClick={() => setVisible(v => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                    className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
                 >
                     {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-            </div>
-            {hint && <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">{hint}</p>}
-        </div>
+            }
+        />
     );
 }
 
 function PlainField({ label, fieldKey, value, onChange, required, hint }) {
     return (
-        <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            <input
-                type="text"
-                value={value}
-                onChange={e => onChange(fieldKey, e.target.value)}
-                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
-            {hint && <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">{hint}</p>}
-        </div>
+        <Input
+            label={required ? <>{label} <span className="text-red-500">*</span></> : label}
+            type="text"
+            value={value}
+            onChange={e => onChange(fieldKey, e.target.value)}
+            hint={hint}
+        />
     );
 }
 
@@ -700,14 +691,16 @@ export default function IntegrationsEdit({ provider, label, category, fields, co
                             </label>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-neutral-500 dark:text-neutral-400">{t('integrations.mode_label')}</span>
-                                <select
+                                <Select
+                                    size="sm"
                                     value={data.mode}
                                     onChange={e => setData('mode', e.target.value)}
-                                    className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-2 py-1 text-sm text-neutral-800 dark:text-neutral-200"
-                                >
-                                    <option value="live">{t('integrations.mode_live')}</option>
-                                    <option value="test">{t('integrations.mode_test')}</option>
-                                </select>
+                                    options={[
+                                        { value: 'live', label: t('integrations.mode_live') },
+                                        { value: 'test', label: t('integrations.mode_test') },
+                                    ]}
+                                    wrapperClassName="w-32"
+                                />
                             </div>
                         </div>
                     </div>

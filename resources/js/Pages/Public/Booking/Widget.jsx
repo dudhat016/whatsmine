@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { Calendar, Clock, Video, CheckCircle2, Globe, ShieldCheck } from 'lucide-react';
 import DatePicker from '@/Components/ui/DatePicker';
+import { Input, Select } from '@/Components/ui';
 import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function Widget({ calendar, customFormFields = [] }) {
@@ -155,10 +156,10 @@ export default function Widget({ calendar, customFormFields = [] }) {
                                 <Globe className="w-3.5 h-3.5 text-indigo-400" />
                                 <span>Timezone</span>
                             </label>
-                            <select
+                            <Select
+                                size="sm"
                                 value={selectedTimezone}
                                 onChange={e => setSelectedTimezone(e.target.value)}
-                                className="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg p-1.5 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                             >
                                 <option value="UTC">UTC (Coordinated Universal Time)</option>
                                 <option value="America/New_York">Eastern Time (US & Canada)</option>
@@ -172,7 +173,7 @@ export default function Widget({ calendar, customFormFields = [] }) {
                                 <option value="Asia/Singapore">Singapore / Hong Kong (SGT)</option>
                                 <option value="Asia/Tokyo">Japan Standard Time (JST)</option>
                                 <option value="Australia/Sydney">Australian Eastern Time (AEST)</option>
-                            </select>
+                            </Select>
                         </div>
                     </div>
 
@@ -240,20 +241,20 @@ export default function Widget({ calendar, customFormFields = [] }) {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-500 mb-1">First Name *</label>
-                                    <input
+                                    <Input
+                                        size="sm"
                                         required
                                         value={form.first_name}
                                         onChange={e => setForm({ ...form, first_name: e.target.value })}
-                                        className="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                         placeholder="John"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-500 mb-1">Last Name</label>
-                                    <input
+                                    <Input
+                                        size="sm"
                                         value={form.last_name}
                                         onChange={e => setForm({ ...form, last_name: e.target.value })}
-                                        className="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                         placeholder="Doe"
                                     />
                                 </div>
@@ -261,23 +262,23 @@ export default function Widget({ calendar, customFormFields = [] }) {
 
                             <div>
                                 <label className="block text-xs font-semibold text-slate-500 mb-1">Email Address *</label>
-                                <input
+                                <Input
+                                    size="sm"
                                     required
                                     type="email"
                                     value={form.email}
                                     onChange={e => setForm({ ...form, email: e.target.value })}
-                                    className="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                     placeholder="john@example.com"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-xs font-semibold text-slate-500 mb-1">WhatsApp / Phone Number *</label>
-                                <input
+                                <Input
+                                    size="sm"
                                     required
                                     value={form.phone}
                                     onChange={e => setForm({ ...form, phone: e.target.value })}
-                                    className="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                     placeholder="+1234567890"
                                 />
                             </div>
@@ -292,15 +293,15 @@ export default function Widget({ calendar, customFormFields = [] }) {
                                                 {field.label}{field.required ? ' *' : ''}
                                             </label>
                                             {field.type === 'select' ? (
-                                                <select
+                                                <Select
+                                                    size="sm"
                                                     required={!!field.required}
                                                     value={customFieldValues[field.name] || ''}
                                                     onChange={e => setCustomFieldValues({ ...customFieldValues, [field.name]: e.target.value })}
-                                                    className="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                                 >
                                                     <option value="">Select an option...</option>
                                                     {(field.options || []).map((opt, oi) => <option key={oi} value={opt}>{opt}</option>)}
-                                                </select>
+                                                </Select>
                                             ) : field.type === 'textarea' ? (
                                                 <textarea
                                                     required={!!field.required}
@@ -311,12 +312,12 @@ export default function Widget({ calendar, customFormFields = [] }) {
                                                     placeholder={field.placeholder || ''}
                                                 />
                                             ) : (
-                                                <input
+                                                <Input
+                                                    size="sm"
                                                     type={field.type || 'text'}
                                                     required={!!field.required}
                                                     value={customFieldValues[field.name] || ''}
                                                     onChange={e => setCustomFieldValues({ ...customFieldValues, [field.name]: e.target.value })}
-                                                    className="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                                     placeholder={field.placeholder || ''}
                                                 />
                                             )}
@@ -331,7 +332,9 @@ export default function Widget({ calendar, customFormFields = [] }) {
                                     <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Additional Guest Emails</p>
                                     {additionalGuests.map((guest, idx) => (
                                         <div key={idx} className="flex items-center gap-2">
-                                            <input
+                                            <Input
+                                                size="sm"
+                                                wrapperClassName="flex-1"
                                                 type="email"
                                                 value={guest}
                                                 onChange={e => {
@@ -339,7 +342,6 @@ export default function Widget({ calendar, customFormFields = [] }) {
                                                     updated[idx] = e.target.value;
                                                     setAdditionalGuests(updated);
                                                 }}
-                                                className="flex-1 text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                                 placeholder={`Guest ${idx + 1} email`}
                                             />
                                             {additionalGuests.length > 1 && (
@@ -369,11 +371,11 @@ export default function Widget({ calendar, customFormFields = [] }) {
                                     <div className="space-y-2 pt-1">
                                         <div>
                                             <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Cardholder Name *</label>
-                                            <input
+                                            <Input
+                                                size="sm"
                                                 type="text"
                                                 required
                                                 defaultValue={`${form.first_name} ${form.last_name}`}
-                                                className="w-full text-xs p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
                                                 placeholder="Name on card"
                                             />
                                         </div>
@@ -381,21 +383,23 @@ export default function Widget({ calendar, customFormFields = [] }) {
                                         <div className="grid grid-cols-3 gap-2">
                                             <div className="col-span-2">
                                                 <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Card Number *</label>
-                                                <input
+                                                <Input
+                                                    size="sm"
                                                     type="text"
                                                     required
                                                     maxLength="19"
-                                                    className="w-full text-xs p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono"
+                                                    className="font-mono"
                                                     placeholder="4242 •••• •••• 4242"
                                                 />
                                             </div>
                                             <div>
                                                 <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">CVC *</label>
-                                                <input
+                                                <Input
+                                                    size="sm"
                                                     type="text"
                                                     required
                                                     maxLength="4"
-                                                    className="w-full text-xs p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono"
+                                                    className="font-mono"
                                                     placeholder="123"
                                                 />
                                             </div>

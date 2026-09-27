@@ -4,6 +4,7 @@ import {
     Smartphone, Monitor, ExternalLink, HelpCircle, CheckCircle2,
     AlertTriangle, XCircle, Copy, Eye, Sliders, MessageCircle, Twitter
 } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 export default function SeoTab({
     seoSettings = {},
@@ -173,12 +174,13 @@ export default function SeoTab({
                             {(seoSettings.metaTitle || '').length}/60
                         </span>
                     </div>
-                    <input
+                    <Input
+                        size="sm"
                         type="text"
                         value={seoSettings.metaTitle || ''}
                         onChange={e => handleSeoChange('metaTitle', e.target.value)}
                         placeholder="My High Converting Sales Funnel"
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 p-2 text-xs font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                        wrapperClassName="w-full"
                     />
                 </div>
 
@@ -202,12 +204,13 @@ export default function SeoTab({
                 {/* OG Social Image */}
                 <div className="space-y-1">
                     <label className="block font-semibold text-neutral-700 dark:text-neutral-300">Open Graph Social Image URL</label>
-                    <input
+                    <Input
+                        size="sm"
                         type="url"
                         value={seoSettings.ogImage || ''}
                         onChange={e => handleSeoChange('ogImage', e.target.value)}
                         placeholder="https://images.unsplash.com/... or https://yourdomain.com/og.jpg"
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 p-2 text-xs font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                        wrapperClassName="w-full"
                     />
                 </div>
 
@@ -215,22 +218,24 @@ export default function SeoTab({
                 <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                         <label className="block font-semibold text-neutral-700 dark:text-neutral-300">Canonical Tag URL</label>
-                        <input
+                        <Input
+                            size="sm"
                             type="url"
                             value={seoSettings.canonical || ''}
                             onChange={e => handleSeoChange('canonical', e.target.value)}
                             placeholder={pageUrl}
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 p-2 text-xs font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                            wrapperClassName="w-full"
                         />
                     </div>
                     <div className="space-y-1">
                         <label className="block font-semibold text-neutral-700 dark:text-neutral-300">Favicon URL (.ico/.png)</label>
-                        <input
+                        <Input
+                            size="sm"
                             type="url"
                             value={seoSettings.favicon || ''}
                             onChange={e => handleSeoChange('favicon', e.target.value)}
                             placeholder="https://.../favicon.png"
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 p-2 text-xs font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                            wrapperClassName="w-full"
                         />
                     </div>
                 </div>
@@ -271,12 +276,14 @@ export default function SeoTab({
                     </p>
                     <div className="grid grid-cols-1 gap-2">
                         <div className="flex gap-1.5">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={pixelId}
                                 onChange={e => setPixelId(e.target.value)}
                                 placeholder="Meta Pixel ID (e.g. 123456789)"
-                                className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-xs bg-white dark:bg-neutral-800 font-mono"
+                                className="font-mono"
+                                wrapperClassName="flex-1"
                             />
                             <button
                                 type="button"
@@ -287,12 +294,14 @@ export default function SeoTab({
                             </button>
                         </div>
                         <div className="flex gap-1.5">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={ga4Id}
                                 onChange={e => setGa4Id(e.target.value)}
                                 placeholder="GA4 ID (e.g. G-XXXXXXXXXX)"
-                                className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-700 px-2 py-1 text-xs bg-white dark:bg-neutral-800 font-mono"
+                                className="font-mono"
+                                wrapperClassName="flex-1"
                             />
                             <button
                                 type="button"

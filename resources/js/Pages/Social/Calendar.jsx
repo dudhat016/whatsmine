@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import Select from '@/Components/ui/Select';
 import { ChevronLeft, ChevronRight, Plus, Filter, X, ChevronDown } from 'lucide-react';
 import { formatInTz, browserTz } from '@/Utils/datetime';
 import { useState, useRef, useEffect } from 'react';
@@ -211,27 +212,27 @@ export default function SocialCalendar({ posts, month, accounts = [], filters = 
                     </span>
 
                     {/* Status filter */}
-                    <select
+                    <Select
+                        size="sm"
                         value={localFilters.status}
                         onChange={e => applyFilter({ status: e.target.value })}
-                        className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 text-xs px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     >
                         {STATUS_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
                         ))}
-                    </select>
+                    </Select>
 
                     {/* Network filter */}
-                    <select
+                    <Select
+                        size="sm"
                         value={localFilters.network}
                         onChange={e => applyFilter({ network: e.target.value, account_id: '' })}
-                        className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 text-xs px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     >
                         <option value="">{t('social.all_networks')}</option>
                         {networks.map(n => (
                             <option key={n} value={n}>{NETWORK_ICONS[n] ?? ''} {n.charAt(0).toUpperCase() + n.slice(1)}</option>
                         ))}
-                    </select>
+                    </Select>
 
                     {/* Profile/Account filter */}
                     <ProfilePicker

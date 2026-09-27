@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { Button, Card } from '@/Components/ui';
+import { Button, Card, Input } from '@/Components/ui';
 import axios from 'axios';
 import { Wifi, WifiOff, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -12,32 +12,27 @@ function Field({ label, name, value, onChange, type = 'text', hint }) {
     const inputType = isPassword && show ? 'text' : type;
 
     return (
-        <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                {label}
-            </label>
-            <div className="relative">
-                <input
-                    type={inputType}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    autoComplete="off"
-                    className="block w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 pr-10"
-                />
-                {isPassword && (
+        <Input
+            label={label}
+            type={inputType}
+            name={name}
+            value={value}
+            onChange={onChange}
+            autoComplete="off"
+            hint={hint}
+            rightIcon={
+                isPassword ? (
                     <button
                         type="button"
                         onClick={() => setShow((v) => !v)}
-                        className="absolute inset-y-0 right-2 flex items-center text-neutral-400 hover:text-neutral-600"
+                        className="text-neutral-400 hover:text-neutral-600 cursor-pointer"
                         tabIndex={-1}
                     >
                         {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
-                )}
-            </div>
-            {hint && <p className="mt-1 text-xs text-neutral-400">{hint}</p>}
-        </div>
+                ) : null
+            }
+        />
     );
 }
 

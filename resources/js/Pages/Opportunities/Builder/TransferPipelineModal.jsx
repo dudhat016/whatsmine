@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, GitBranch, ArrowRight, UserCheck, AlertCircle } from 'lucide-react';
 import axios from 'axios';
-import Button from '@/Components/ui/Button';
+import { Button, Select } from '@/Components/ui';
 
 export default function TransferPipelineModal({
     isOpen,
@@ -136,17 +136,17 @@ export default function TransferPipelineModal({
                         <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5">
                             Destination Pipeline
                         </label>
-                        <select
+                        <Select
                             value={targetPipelineId}
                             onChange={handlePipelineChange}
-                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+                            size="sm"
                         >
                             {pipelines.map((p) => (
                                 <option key={p.id} value={p.id}>
                                     {p.name} {p.id === currentPipelineId ? '(Current)' : ''} {p.is_default ? '★' : ''}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
 
                     {/* Target Stage */}
@@ -154,17 +154,17 @@ export default function TransferPipelineModal({
                         <label className="block text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider mb-1.5">
                             Initial Stage in Destination Pipeline
                         </label>
-                        <select
+                        <Select
                             value={targetStageId}
                             onChange={(e) => setTargetStageId(parseInt(e.target.value, 10))}
-                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+                            size="sm"
                         >
                             {availableStages.map((s) => (
                                 <option key={s.id} value={s.id}>
                                     {s.name} ({s.probability ?? 100}%)
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
 
                     {/* Optional Reassign Sales Rep */}
@@ -173,20 +173,18 @@ export default function TransferPipelineModal({
                             <span>Assign Sales Representative</span>
                             <span className="text-[10px] font-normal text-neutral-400 capitalize">Optional</span>
                         </label>
-                        <div className="relative">
-                            <select
-                                value={assignedUserId}
-                                onChange={(e) => setAssignedUserId(e.target.value)}
-                                className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-medium text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
-                            >
-                                <option value="">Keep current rep ({deal.assigned_user?.name || 'Unassigned'})</option>
-                                {users.map((u) => (
-                                    <option key={u.id} value={u.id}>
-                                        {u.name} ({u.email})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        <Select
+                            value={assignedUserId}
+                            onChange={(e) => setAssignedUserId(e.target.value)}
+                            size="sm"
+                        >
+                            <option value="">Keep current rep ({deal.assigned_user?.name || 'Unassigned'})</option>
+                            {users.map((u) => (
+                                <option key={u.id} value={u.id}>
+                                    {u.name} ({u.email})
+                                </option>
+                            ))}
+                        </Select>
                     </div>
 
                     {/* Helpful Context Alert */}

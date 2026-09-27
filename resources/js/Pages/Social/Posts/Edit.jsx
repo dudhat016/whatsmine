@@ -2,7 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import MediaUpload from '@/Components/MediaUpload';
 import TimezonePicker from '@/Components/TimezonePicker';
-import { DatePicker } from '@/Components/ui';
+import { DatePicker, Input } from '@/Components/ui';
 import { SocialBrandIcon } from '@/Components/BrandIcons';
 import { ArrowLeft, Clock, Trash2, Plus, Send, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -151,18 +151,12 @@ export default function EditPost({ post, accounts }) {
                         <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">{t('social.content')}</h3>
 
                         {/* Title */}
-                        <div>
-                            <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-                                {t('social.title_label')} <span className="text-neutral-400">({t('common.optional')})</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={data.title}
-                                onChange={e => setData('title', e.target.value)}
-                                placeholder={t('social.edit_title_placeholder')}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                            />
-                        </div>
+                        <Input
+                            label={<>{t('social.title_label')} <span className="text-neutral-400">({t('common.optional')})</span></>}
+                            value={data.title}
+                            onChange={e => setData('title', e.target.value)}
+                            placeholder={t('social.edit_title_placeholder')}
+                        />
 
                         {/* Body */}
                         <div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import MediaUpload from '@/Components/MediaUpload';
 import ProductLandingView from '@/Components/Ecommerce/ProductLandingView';
+import { Input, Select } from '@/Components/ui';
 import { 
     X, ArrowLeft, Monitor, Smartphone, Check, FileText, Link as LinkIcon, 
     Key, Clock, Sparkles, HelpCircle, MessageSquare, User, Tag, RefreshCw, 
@@ -315,14 +316,13 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             </label>
                                             <span className="text-xs font-mono text-neutral-400">{data.name.length}/75</span>
                                         </div>
-                                        <input
+                                        <Input
                                             type="text"
                                             maxLength={75}
                                             value={data.name}
                                             onChange={(e) => setData('name', e.target.value)}
                                             placeholder="e.g. Master Digital Product Vault 2026"
                                             required
-                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500"
                                         />
                                     </div>
 
@@ -394,16 +394,16 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <div>
                                                         <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Download Limit (times)</label>
-                                                        <input type="number" min="1" value={data.digital_download_limit || 5}
+                                                        <Input size="sm" type="number" min="1" value={data.digital_download_limit || 5}
                                                             onChange={(e) => setData('digital_download_limit', parseInt(e.target.value) || 5)}
-                                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-bold"
+                                                            className="font-bold"
                                                         />
                                                     </div>
                                                     <div>
                                                         <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Link Expires After (days)</label>
-                                                        <input type="number" min="1" value={data.digital_expiration_days || 30}
+                                                        <Input size="sm" type="number" min="1" value={data.digital_expiration_days || 30}
                                                             onChange={(e) => setData('digital_expiration_days', parseInt(e.target.value) || 30)}
-                                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-bold"
+                                                            className="font-bold"
                                                         />
                                                     </div>
                                                 </div>
@@ -415,10 +415,9 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                 <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
                                                     Private Access URL (Google Drive, Notion, Discord)
                                                 </label>
-                                                <input type="text" value={data.digital_external_url || ''}
+                                                <Input type="text" value={data.digital_external_url || ''}
                                                     onChange={(e) => setData('digital_external_url', e.target.value)}
                                                     placeholder="https://drive.google.com/..."
-                                                    className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm"
                                                 />
                                             </div>
                                         )}
@@ -439,15 +438,15 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                 <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
                                                     Select Booking Calendar / Webinar
                                                 </label>
-                                                <select value={data.calendar_id || ''}
+                                                <Select value={data.calendar_id || ''}
                                                     onChange={(e) => setData('calendar_id', e.target.value)}
-                                                    className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm"
+                                                    size="sm"
                                                 >
                                                     <option value="">-- Select Calendar --</option>
                                                     {calendars.map(c => (
                                                         <option key={c.id} value={c.id}>{c.name} ({c.type} • {c.duration_minutes}m)</option>
                                                     ))}
-                                                </select>
+                                                </Select>
                                             </div>
                                         )}
                                     </div>
@@ -476,10 +475,10 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                         {data.access_duration_type === 'days' && (
                                             <div>
                                                 <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Number of Days</label>
-                                                <input type="number" min="1" value={data.access_duration_days || 30}
+                                                <Input type="number" min="1" value={data.access_duration_days || 30}
                                                     onChange={(e) => setData('access_duration_days', parseInt(e.target.value) || 30)}
                                                     placeholder="e.g. 365"
-                                                    className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm font-bold"
+                                                    className="font-bold"
                                                 />
                                                 <p className="text-[10px] text-neutral-400 mt-1">Buyer loses access after <strong>{data.access_duration_days}</strong> days.</p>
                                             </div>
@@ -496,10 +495,9 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                 <label className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">Meta Title <span className="font-normal">(optional — defaults to product name)</span></label>
                                                 <span className="text-[10px] font-mono text-neutral-400">{(data.meta_title||'').length}/60</span>
                                             </div>
-                                            <input type="text" maxLength={60} value={data.meta_title}
+                                            <Input type="text" maxLength={60} value={data.meta_title}
                                                 onChange={(e) => setData('meta_title', e.target.value)}
                                                 placeholder={data.name || 'SEO page title...'}
-                                                className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm"
                                             />
                                         </div>
                                         <div>
@@ -519,23 +517,22 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
                                         <div>
                                             <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1.5">Product Status</label>
-                                            <select value={data.status} onChange={(e) => setData('status', e.target.value)}
-                                                className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-semibold"
+                                            <Select value={data.status} onChange={(e) => setData('status', e.target.value)}
+                                                size="sm"
                                             >
                                                 <option value="active">✅ Active</option>
                                                 <option value="draft">📝 Draft</option>
                                                 <option value="archived">📦 Archived</option>
-                                            </select>
+                                            </Select>
                                         </div>
                                         <div>
                                             <div className="flex justify-between items-center mb-1.5">
                                                 <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">Button Text</label>
                                                 <span className="text-xs font-mono text-neutral-400">{(data.button_text || '').length}/25</span>
                                             </div>
-                                            <input type="text" maxLength={25} value={data.button_text}
+                                            <Input type="text" maxLength={25} value={data.button_text}
                                                 onChange={(e) => setData('button_text', e.target.value)}
                                                 placeholder="Get it now"
-                                                className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm"
                                             />
                                         </div>
     
@@ -552,10 +549,10 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                 className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
                                             >⚡ Auto-generate</button>
                                         </div>
-                                        <input type="text" value={data.sku || ''}
+                                        <Input type="text" value={data.sku || ''}
                                             onChange={(e) => setData('sku', e.target.value.toUpperCase())}
                                             placeholder="e.g. MASTV-AB12CD"
-                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm font-mono font-bold"
+                                            className="font-mono font-bold"
                                         />
                                     </div>
                                 </div>
@@ -600,27 +597,26 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                     <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
                                                         {data.pricing_type === 'installments' ? 'Installment Amount (USD $) *' : 'Sale Price (USD $) *'}
                                                     </label>
-                                                    <input type="number" step="0.01" min="0" value={data.price}
+                                                    <Input type="number" step="0.01" min="0" value={data.price}
                                                         onChange={(e) => setData('price', e.target.value)}
                                                         placeholder="10.00" required
-                                                        className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm font-bold"
+                                                        className="font-bold"
                                                     />
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
                                                         Original Price ($) <span className="font-normal text-neutral-400">(optional — shown as strikethrough)</span>
                                                     </label>
-                                                    <input type="number" step="0.01" min="0" value={data.compare_price}
+                                                    <Input type="number" step="0.01" min="0" value={data.compare_price}
                                                         onChange={(e) => setData('compare_price', e.target.value)}
                                                         placeholder="e.g. 99.00"
-                                                        className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm"
                                                     />
                                                 </div>
 
                                                 {data.pricing_type === 'recurring' && (
                                                     <div className="space-y-2">
                                                         <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400">Billing Frequency</label>
-                                                        <select
+                                                        <Select
                                                             value={
                                                                 data.billing_interval === 'day'   && Number(data.billing_interval_count) === 7 ? '7days' :
                                                                 data.billing_interval === 'month' && Number(data.billing_interval_count) === 3 ? '3months' :
@@ -636,21 +632,21 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                                 if (v === '1year')   setData({ ...data, billing_interval: 'year',  billing_interval_count: 1 });
                                                                 if (v === 'custom')  setData({ ...data, billing_interval: 'day',   billing_interval_count: '' });
                                                             }}
-                                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
+                                                            size="sm"
                                                         >
                                                             <option value="7days">Every 7 Days</option>
                                                             <option value="3months">Every 3 Months (Quarterly)</option>
                                                             <option value="6months">Every 6 Months (Bi-Annually)</option>
                                                             <option value="1year">Every 1 Year (Annually)</option>
                                                             <option value="custom">Custom (days)</option>
-                                                        </select>
+                                                        </Select>
                                                         {data.billing_interval === 'day' && Number(data.billing_interval_count) !== 7 && (
                                                             <div>
                                                                 <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Custom Interval (in days)</label>
-                                                                <input type="number" min="1" value={data.billing_interval_count || ''}
+                                                                <Input type="number" min="1" value={data.billing_interval_count || ''}
                                                                     onChange={(e) => setData('billing_interval_count', parseInt(e.target.value) || '')}
                                                                     placeholder="e.g. 210"
-                                                                    className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm font-bold"
+                                                                    className="font-bold"
                                                                 />
                                                                 <p className="text-[10px] text-neutral-400 mt-1">Charge every <strong>{data.billing_interval_count || '?'}</strong> days</p>
                                                             </div>
@@ -659,10 +655,9 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                             <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
                                                                 Free Trial Days <span className="font-normal">(0 = no trial)</span>
                                                             </label>
-                                                            <input type="number" min="0" value={data.trial_days || 0}
+                                                            <Input type="number" min="0" value={data.trial_days || 0}
                                                                 onChange={(e) => setData('trial_days', parseInt(e.target.value) || 0)}
                                                                 placeholder="0"
-                                                                className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm"
                                                             />
                                                         </div>
                                                     </div>
@@ -671,9 +666,9 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                 {data.pricing_type === 'installments' && (
                                                     <div>
                                                         <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">Number of Installment Payments</label>
-                                                        <input type="number" min="2" max="24" value={data.installment_count || 3}
+                                                        <Input type="number" min="2" max="24" value={data.installment_count || 3}
                                                             onChange={(e) => setData('installment_count', parseInt(e.target.value) || 3)}
-                                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm font-bold"
+                                                            className="font-bold"
                                                         />
                                                         <p className="text-[11px] text-neutral-500 mt-1">
                                                             Total value: <strong>${(parseFloat(data.price || 0) * parseInt(data.installment_count || 1)).toFixed(2)}</strong>
@@ -706,12 +701,14 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                     <div key={idx} className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 space-y-3">
                                                         <div className="flex items-center justify-between gap-2">
                                                             <div className="flex items-center gap-2 flex-1">
-                                                                <input
+                                                                <Input
+                                                                    size="sm"
                                                                     type="text"
                                                                     value={tier.name || ''}
                                                                     onChange={(e) => updatePriceTier(idx, 'name', e.target.value)}
                                                                     placeholder="e.g. Annual VIP Pass (Save 20%)"
-                                                                    className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-xs font-bold"
+                                                                    className="font-bold"
+                                                                    wrapperClassName="flex-1"
                                                                 />
                                                                 <label className="flex items-center gap-1 text-[10px] font-semibold text-neutral-500 cursor-pointer shrink-0">
                                                                     <input
@@ -732,28 +729,29 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                         <div className="grid grid-cols-2 gap-2">
                                                             <div>
                                                                 <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Pricing Model</label>
-                                                                <select
+                                                                <Select
                                                                     value={tier.pricing_type || 'one_time'}
                                                                     onChange={(e) => updatePriceTier(idx, 'pricing_type', e.target.value)}
-                                                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-1.5 text-xs font-semibold"
+                                                                    size="sm"
                                                                 >
                                                                     <option value="one_time">💳 Fixed One-Time</option>
                                                                     <option value="recurring">🔄 Subscription</option>
                                                                     <option value="installments">📆 Installments</option>
                                                                     <option value="free">🎁 Free ($0)</option>
-                                                                </select>
+                                                                </Select>
                                                             </div>
 
                                                             <div>
                                                                 <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Price (USD $)</label>
-                                                                <input
+                                                                <Input
+                                                                    size="sm"
                                                                     type="number"
                                                                     step="0.01"
                                                                     min="0"
                                                                     value={tier.price ?? ''}
                                                                     onChange={(e) => updatePriceTier(idx, 'price', e.target.value)}
                                                                     placeholder="29.00"
-                                                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-xs font-bold"
+                                                                    className="font-bold"
                                                                 />
                                                             </div>
                                                         </div>
@@ -762,25 +760,25 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                             <div className="grid grid-cols-2 gap-2 pt-1">
                                                                 <div>
                                                                     <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Billing Frequency</label>
-                                                                    <select
+                                                                    <Select
                                                                         value={tier.billing_interval || 'month'}
                                                                         onChange={(e) => updatePriceTier(idx, 'billing_interval', e.target.value)}
-                                                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-1.5 text-xs"
+                                                                        size="sm"
                                                                     >
                                                                         <option value="day">Weekly / Daily</option>
                                                                         <option value="month">Monthly</option>
                                                                         <option value="year">Annually (Yearly)</option>
-                                                                    </select>
+                                                                    </Select>
                                                                 </div>
                                                                 <div>
                                                                     <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Trial Days</label>
-                                                                    <input
+                                                                    <Input
+                                                                        size="sm"
                                                                         type="number"
                                                                         min="0"
                                                                         value={tier.trial_days || 0}
                                                                         onChange={(e) => updatePriceTier(idx, 'trial_days', parseInt(e.target.value) || 0)}
                                                                         placeholder="0"
-                                                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-1.5 text-xs"
                                                                     />
                                                                 </div>
                                                             </div>
@@ -789,14 +787,15 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                         {tier.pricing_type === 'installments' && (
                                                             <div className="pt-1">
                                                                 <label className="block text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">Installment Payments Count</label>
-                                                                <input
+                                                                <Input
+                                                                    size="sm"
                                                                     type="number"
                                                                     min="2"
                                                                     max="24"
                                                                     value={tier.installment_count || 3}
                                                                     onChange={(e) => updatePriceTier(idx, 'installment_count', parseInt(e.target.value) || 3)}
                                                                     placeholder="3"
-                                                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-xs font-bold"
+                                                                    className="font-bold"
                                                                 />
                                                             </div>
                                                         )}
@@ -819,10 +818,9 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             placeholder="e.g. 30-day money-back guarantee, no questions asked."
                                             className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm"
                                         />
-                                        <input type="url" value={data.terms_url}
+                                        <Input type="url" value={data.terms_url}
                                             onChange={(e) => setData('terms_url', e.target.value)}
                                             placeholder="Terms & Conditions URL (optional)"
-                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm"
                                         />
                                     </div>
 
@@ -845,10 +843,10 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                         </div>
                                         {data.enable_stock_limit ? (
                                             <div>
-                                                <input type="number" min="0" value={data.inventory_quantity ?? 10}
+                                                <Input type="number" min="0" value={data.inventory_quantity ?? 10}
                                                     onChange={(e) => setData('inventory_quantity', parseInt(e.target.value) || 0)}
                                                     placeholder="10"
-                                                    className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-sm font-bold"
+                                                    className="font-bold"
                                                 />
                                                 <p className="text-[11px] text-neutral-500 mt-1">When stock reaches 0, the product shows as Sold Out.</p>
                                             </div>
@@ -873,22 +871,32 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             <div className="space-y-2">
                                                 {data.coupons.map((c, idx) => (
                                                     <div key={idx} className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 flex items-center gap-2">
-                                                        <input type="text" value={c.code}
+                                                        <Input
+                                                            size="sm"
+                                                            type="text"
+                                                            value={c.code}
                                                             onChange={(e) => { const arr=[...data.coupons]; arr[idx].code=e.target.value.toUpperCase(); setData('coupons',arr); }}
                                                             placeholder="LAUNCH20"
-                                                            className="w-1/3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-xs font-mono font-bold uppercase"
+                                                            className="font-mono font-bold uppercase"
+                                                            wrapperClassName="w-1/3"
                                                         />
-                                                        <select value={c.discount_type||'percent'}
+                                                        <Select value={c.discount_type||'percent'}
                                                             onChange={(e)=>{ const arr=[...data.coupons]; arr[idx].discount_type=e.target.value; setData('coupons',arr); }}
-                                                            className="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2 py-1.5 text-xs"
+                                                            size="sm"
+                                                            className="w-24"
                                                         >
                                                             <option value="percent">% Off</option>
                                                             <option value="fixed">$ Off</option>
-                                                        </select>
-                                                        <input type="number" step="0.01" value={c.discount_value}
+                                                        </Select>
+                                                        <Input
+                                                            size="sm"
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={c.discount_value}
                                                             onChange={(e)=>{ const arr=[...data.coupons]; arr[idx].discount_value=parseFloat(e.target.value)||0; setData('coupons',arr); }}
                                                             placeholder="20"
-                                                            className="w-20 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 py-1.5 text-xs font-bold"
+                                                            className="font-bold"
+                                                            wrapperClassName="w-20"
                                                         />
                                                         <button type="button" onClick={()=>removeCoupon(idx)} className="p-1 text-neutral-400 hover:text-red-500 ml-auto">
                                                             <Trash2 className="h-4 w-4" />
@@ -917,7 +925,7 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2.5">
                                                 <div>
                                                     <label className="block text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">Attach Existing Product</label>
-                                                    <select value={data.order_bump?.product_id||''}
+                                                    <Select value={data.order_bump?.product_id||''}
                                                         onChange={(e) => {
                                                             const id = parseInt(e.target.value)||null;
                                                             const found = allProducts.find(p => p.id === id);
@@ -927,29 +935,36 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                                 setData('order_bump', { ...data.order_bump, product_id:null });
                                                             }
                                                         }}
-                                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-semibold"
+                                                        size="sm"
                                                     >
                                                         <option value="">-- Select Product --</option>
                                                         {allProducts.filter(p => p.id !== product?.id).map(p => (
                                                             <option key={p.id} value={p.id}>📦 {p.name} (${p.price})</option>
                                                         ))}
-                                                    </select>
+                                                    </Select>
                                                 </div>
                                                 <div className="grid grid-cols-3 gap-2">
                                                     <div className="col-span-2">
                                                         <label className="block text-[10px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">Bump Offer Title *</label>
-                                                        <input type="text" value={data.order_bump?.title||''}
+                                                        <Input
+                                                            size="sm"
+                                                            type="text"
+                                                            value={data.order_bump?.title||''}
                                                             onChange={(e)=>setData('order_bump',{...data.order_bump,title:e.target.value})}
                                                             placeholder="Yes, Add 1-on-1 Strategy Call!"
-                                                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-semibold"
+                                                            className="font-semibold"
                                                         />
                                                     </div>
                                                     <div>
                                                         <label className="block text-[10px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">Bump Price ($)</label>
-                                                        <input type="number" step="0.01" value={data.order_bump?.price||'5.00'}
+                                                        <Input
+                                                            size="sm"
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={data.order_bump?.price||'5.00'}
                                                             onChange={(e)=>setData('order_bump',{...data.order_bump,price:e.target.value})}
                                                             placeholder="5.00"
-                                                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400"
+                                                            className="font-bold text-emerald-600 dark:text-emerald-400"
                                                         />
                                                     </div>
                                                 </div>
@@ -1014,10 +1029,13 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             {data.faqs.map((faq,idx)=>(
                                                 <div key={idx} className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 space-y-2 relative">
                                                     <button type="button" onClick={()=>removeFaq(idx)} className="absolute top-3 right-3 text-neutral-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
-                                                    <input type="text" value={faq.question||''}
+                                                    <Input
+                                                        size="sm"
+                                                        type="text"
+                                                        value={faq.question||''}
                                                         onChange={(e)=>{ const arr=[...data.faqs]; arr[idx].question=e.target.value; setData('faqs',arr); }}
                                                         placeholder="e.g. How do I access files after purchase?"
-                                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-medium"
+                                                        className="font-medium"
                                                     />
                                                     <textarea rows={2} value={faq.answer||''}
                                                         onChange={(e)=>{ const arr=[...data.faqs]; arr[idx].answer=e.target.value; setData('faqs',arr); }}
@@ -1042,24 +1060,30 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                                 <div key={idx} className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 space-y-2 relative">
                                                     <button type="button" onClick={()=>removeReview(idx)} className="absolute top-3 right-3 text-neutral-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
                                                     <div className="grid grid-cols-2 gap-2 pr-6">
-                                                        <input type="text" value={rev.name||''}
+                                                        <Input
+                                                            size="sm"
+                                                            type="text"
+                                                            value={rev.name||''}
                                                             onChange={(e)=>{ const arr=[...data.reviews]; arr[idx].name=e.target.value; setData('reviews',arr); }}
                                                             placeholder="Sarah J."
-                                                            className="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-semibold"
+                                                            className="font-semibold"
                                                         />
-                                                        <select value={rev.rating||5}
+                                                        <Select value={rev.rating||5}
                                                             onChange={(e)=>{ const arr=[...data.reviews]; arr[idx].rating=parseInt(e.target.value)||5; setData('reviews',arr); }}
-                                                            className="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs font-bold text-amber-500"
+                                                            size="sm"
+                                                            className="font-bold text-amber-500"
                                                         >
                                                             <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
                                                             <option value="4">⭐⭐⭐⭐ (4/5)</option>
                                                             <option value="3">⭐⭐⭐ (3/5)</option>
-                                                        </select>
+                                                        </Select>
                                                     </div>
-                                                    <input type="text" value={rev.role||''}
+                                                    <Input
+                                                        size="sm"
+                                                        type="text"
+                                                        value={rev.role||''}
                                                         onChange={(e)=>{ const arr=[...data.reviews]; arr[idx].role=e.target.value; setData('reviews',arr); }}
                                                         placeholder="Verified Buyer"
-                                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-1.5 text-xs"
                                                     />
                                                     <textarea rows={2} value={rev.text||''}
                                                         onChange={(e)=>{ const arr=[...data.reviews]; arr[idx].text=e.target.value; setData('reviews',arr); }}
@@ -1075,20 +1099,26 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             <label className="block text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
                                                 <User className="h-3.5 w-3.5 text-emerald-500" /> About Me & Custom Message
                                             </label>
-                                            <input type="text" value={data.about_me?.headline||''}
+                                            <Input
+                                                size="sm"
+                                                type="text"
+                                                value={data.about_me?.headline||''}
                                                 onChange={(e)=>setData('about_me',{...data.about_me,headline:e.target.value})}
                                                 placeholder="Hi, I'm Alex — Creator & Educator"
-                                                className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-xs font-semibold"
+                                                className="font-semibold"
                                             />
                                             <textarea rows={2} value={data.about_me?.bio||''}
                                                 onChange={(e)=>setData('about_me',{...data.about_me,bio:e.target.value})}
                                                 placeholder="Short bio e.g. I help creators build digital businesses..."
                                                 className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-xs"
                                             />
-                                            <input type="text" value={data.about_me?.custom_message||''}
+                                            <Input
+                                                size="sm"
+                                                type="text"
+                                                value={data.about_me?.custom_message||''}
                                                 onChange={(e)=>setData('about_me',{...data.about_me,custom_message:e.target.value})}
                                                 placeholder="⚡ Special Launch Offer — Instant Delivery!"
-                                                className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3.5 py-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold"
+                                                className="text-emerald-600 dark:text-emerald-400 font-bold"
                                             />
                                         </div>
                                     </div>

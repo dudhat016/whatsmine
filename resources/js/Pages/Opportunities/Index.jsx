@@ -184,17 +184,18 @@ export default function OpportunitiesIndex({ pipelines, activePipelineId, contac
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <select
+                                <Select
                                     value={selectedPipelineId}
                                     onChange={(e) => setSelectedPipelineId(parseInt(e.target.value, 10))}
-                                    className="font-semibold text-base text-neutral-900 dark:text-neutral-100 bg-transparent border-none focus:ring-0 cursor-pointer p-0 pr-6"
+                                    size="sm"
+                                    className="font-semibold text-sm w-48"
                                 >
                                     {pipelines.map((p) => (
-                                        <option key={p.id} value={p.id} className="dark:bg-neutral-900">
+                                        <option key={p.id} value={p.id}>
                                             {p.name}
                                         </option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-400 font-medium">
                                 <span>{totalDeals} Opportunities</span>

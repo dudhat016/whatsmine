@@ -301,11 +301,10 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                     {val('btnType') === 'url' && (
                         <div className="space-y-1.5 bg-neutral-50 p-2 rounded-lg border border-neutral-200">
                             <FieldLabel>Target Website URL</FieldLabel>
-                            <input
+                            <PanelInput
                                 type="text"
                                 value={val('targetUrl', '')}
                                 onChange={e => update('targetUrl', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium focus:outline-none focus:border-brand-500 shadow-2xs"
                                 placeholder="https://example.com/special-offer"
                             />
                             <label className="flex items-center gap-2 pt-1 text-[11px] text-neutral-600 cursor-pointer">
@@ -323,11 +322,10 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                     {val('btnType') === 'scroll_to' && (
                         <div className="space-y-1 bg-neutral-50 p-2 rounded-lg border border-neutral-200">
                             <FieldLabel>Target Section ID</FieldLabel>
-                            <input
+                            <PanelInput
                                 type="text"
                                 value={val('targetSectionId', '')}
                                 onChange={e => update('targetSectionId', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium"
                                 placeholder="#pricing-section"
                             />
                         </div>
@@ -336,11 +334,10 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                     {val('btnType') === 'open_popup' && (
                         <div className="space-y-1 bg-neutral-50 p-2 rounded-lg border border-neutral-200">
                             <FieldLabel>Popup Modal ID</FieldLabel>
-                            <input
+                            <PanelInput
                                 type="text"
                                 value={val('targetPopupId', 'popup_main')}
                                 onChange={e => update('targetPopupId', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium"
                                 placeholder="popup_main"
                             />
                         </div>
@@ -349,11 +346,10 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                     {val('btnType') === 'call' && (
                         <div className="space-y-1 bg-neutral-50 p-2 rounded-lg border border-neutral-200">
                             <FieldLabel>Phone Number</FieldLabel>
-                            <input
+                            <PanelInput
                                 type="tel"
                                 value={val('phoneNumber', '')}
                                 onChange={e => update('phoneNumber', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium"
                                 placeholder="+1 (555) 000-0000"
                             />
                         </div>
@@ -362,11 +358,10 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                     {val('btnType') === 'email' && (
                         <div className="space-y-1 bg-neutral-50 p-2 rounded-lg border border-neutral-200">
                             <FieldLabel>Recipient Email Address</FieldLabel>
-                            <input
+                            <PanelInput
                                 type="email"
                                 value={val('emailAddress', '')}
                                 onChange={e => update('emailAddress', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-medium"
                                 placeholder="sales@company.com"
                             />
                         </div>
@@ -493,12 +488,11 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                         </div>
                         <div className="space-y-0.5">
                             <FieldLabel>Corner Radius (px)</FieldLabel>
-                            <input
+                            <PanelInput
                                 type="number" min="0" max="48"
                                 value={val('borderRadius', '')}
                                 placeholder="Brand default"
                                 onChange={e => update('borderRadius', e.target.value === '' ? undefined : Number(e.target.value))}
-                                className="w-full text-xs font-semibold px-2 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
                             />
                         </div>
                     </div>
@@ -532,12 +526,11 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                     </div>
                     <div className="space-y-0.5">
                         <FieldLabel>Corner Radius (px)</FieldLabel>
-                        <input
+                        <PanelInput
                             type="number" min="0" max="48"
                             value={val('borderRadius', '')}
                             placeholder="Brand default"
                             onChange={e => update('borderRadius', e.target.value === '' ? undefined : Number(e.target.value))}
-                            className="w-full text-xs font-semibold px-2 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
                         />
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import { useState, useRef, useCallback } from 'react';
 import { UserPlus, Upload, Search, Tag, Trash2, Eye, Users, Table2, Download, CheckSquare, Square, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input } from '@/Components/ui';
 
 function ContactAvatar({ contact, size = 8 }) {
     const { t } = useTranslation();
@@ -234,14 +235,13 @@ export default function ContactsIndex({ contacts, filters, segments = [] }) {
 
                 {/* Search */}
                 <form onSubmit={handleSearch} className="flex gap-2">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                        <input
+                    <div className="flex-1">
+                        <Input
                             type="text"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder={t('contacts_page.search_placeholder')}
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 pl-9 pr-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            leftIcon={<Search className="h-4 w-4 text-neutral-400" />}
                         />
                     </div>
                     <button type="submit" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition">{t('common.search')}</button>
@@ -327,23 +327,32 @@ export default function ContactsIndex({ contacts, filters, segments = [] }) {
                         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('contacts_page.add_contact')}</h3>
                         <form onSubmit={submitAdd} className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('contacts_page.first_name')}</label>
-                                    <input type="text" value={data.first_name} onChange={e => setData('first_name', e.target.value)} className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('contacts_page.last_name')}</label>
-                                    <input type="text" value={data.last_name} onChange={e => setData('last_name', e.target.value)} className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
-                                </div>
+                                <Input
+                                    label={t('contacts_page.first_name')}
+                                    type="text"
+                                    value={data.first_name}
+                                    onChange={e => setData('first_name', e.target.value)}
+                                />
+                                <Input
+                                    label={t('contacts_page.last_name')}
+                                    type="text"
+                                    value={data.last_name}
+                                    onChange={e => setData('last_name', e.target.value)}
+                                />
                             </div>
-                            <div>
-                                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('contacts_page.phone_e164')}</label>
-                                <input type="text" value={data.phone_e164} onChange={e => handlePhoneChange(e.target.value)} placeholder="+8801XXXXXXXXX" className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
-                            </div>
-                            <div>
-                                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('common.email')}</label>
-                                <input type="email" value={data.email} onChange={e => handleEmailChange(e.target.value)} className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
-                            </div>
+                            <Input
+                                label={t('contacts_page.phone_e164')}
+                                type="text"
+                                value={data.phone_e164}
+                                onChange={e => handlePhoneChange(e.target.value)}
+                                placeholder="+8801XXXXXXXXX"
+                            />
+                            <Input
+                                label={t('common.email')}
+                                type="email"
+                                value={data.email}
+                                onChange={e => handleEmailChange(e.target.value)}
+                            />
                             <div className="flex gap-4">
                                 {[['opt_in_whatsapp', 'WhatsApp', !data.phone_e164.trim()], ['opt_in_sms', t('contacts_page.channel_sms'), !data.phone_e164.trim()], ['opt_in_email', t('common.email'), !data.email.trim()]].map(([key, label, disabled]) => (
                                     <label key={key} className={`flex items-center gap-1.5 text-sm ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>

@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
 import { ArrowLeft, Save, FormInput, Eye, Undo2, Redo2 } from 'lucide-react';
+import { Input } from '@/Components/ui';
 import {
     DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter,
 } from '@dnd-kit/core';
@@ -323,14 +324,15 @@ export default function FormsCreate({ globalCustomFields = [], availableFolders 
                         <ArrowLeft className="w-4 h-4" />
                     </Link>
                     <FormInput className="w-4 h-4 text-brand-500" />
-                    <input
+                    <Input
+                        size="sm"
+                        wrapperClassName="w-56"
                         type="text"
                         value={formName}
                         onChange={e => { setFormName(e.target.value); setErrors({}); }}
                         placeholder="Untitled Form..."
-                        className={`text-sm font-semibold text-neutral-900 dark:text-white bg-transparent border-none outline-none focus:ring-0 w-52 placeholder-neutral-400 ${errors.name ? 'placeholder-red-400' : ''}`}
+                        error={errors.name}
                     />
-                    {errors.name && <span className="text-xs text-red-500">{errors.name}</span>}
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 border-r border-neutral-200 dark:border-neutral-700 pr-2 mr-1">

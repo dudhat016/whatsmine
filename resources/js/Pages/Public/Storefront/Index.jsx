@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { ShoppingBag, Search, Tag, RefreshCw, CreditCard, Gift, Check, X, ShieldCheck, ArrowRight, Package, Truck, Lock, Sun, Moon, Zap } from 'lucide-react';
+import { Input } from '@/Components/ui';
 import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function StorefrontIndex({ store, products = [] }) {
@@ -181,13 +182,12 @@ export default function StorefrontIndex({ store, products = [] }) {
                 {/* Search & Filter Bar */}
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                     <div className="relative flex-1 w-full">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                        <input
+                        <Input
                             type="text"
+                            leftIcon={Search}
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="Search catalog products..."
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm focus:ring-2 focus:ring-emerald-500"
                         />
                     </div>
                     <div className="flex gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
@@ -360,23 +360,23 @@ export default function StorefrontIndex({ store, products = [] }) {
                             <form onSubmit={handleCheckoutSubmit} className="p-5 space-y-4">
                                 <div>
                                     <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-400 mb-1">Full Name *</label>
-                                    <input required type="text" value={checkoutForm.customer_name} onChange={e => setCheckoutForm({...checkoutForm, customer_name: e.target.value})} className="w-full px-3 py-2 text-sm rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white" placeholder="John Doe" />
+                                    <Input required type="text" value={checkoutForm.customer_name} onChange={e => setCheckoutForm({...checkoutForm, customer_name: e.target.value})} placeholder="John Doe" />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-400 mb-1">Email Address *</label>
-                                        <input required type="email" value={checkoutForm.customer_email} onChange={e => setCheckoutForm({...checkoutForm, customer_email: e.target.value})} className="w-full px-3 py-2 text-sm rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white" placeholder="john@example.com" />
+                                        <Input required type="email" value={checkoutForm.customer_email} onChange={e => setCheckoutForm({...checkoutForm, customer_email: e.target.value})} placeholder="john@example.com" />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-400 mb-1">WhatsApp Phone *</label>
-                                        <input required type="text" value={checkoutForm.customer_phone} onChange={e => setCheckoutForm({...checkoutForm, customer_phone: e.target.value})} className="w-full px-3 py-2 text-sm rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white" placeholder="+1234567890" />
+                                        <Input required type="text" value={checkoutForm.customer_phone} onChange={e => setCheckoutForm({...checkoutForm, customer_phone: e.target.value})} placeholder="+1234567890" />
                                     </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-400 mb-1">Shipping Address (Optional)</label>
-                                    <input type="text" value={checkoutForm.shipping_address} onChange={e => setCheckoutForm({...checkoutForm, shipping_address: e.target.value})} className="w-full px-3 py-2 text-sm rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white" placeholder="123 Main St, City, Country" />
+                                    <Input type="text" value={checkoutForm.shipping_address} onChange={e => setCheckoutForm({...checkoutForm, shipping_address: e.target.value})} placeholder="123 Main St, City, Country" />
                                 </div>
 
                                 <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 flex justify-between items-center text-sm font-bold">

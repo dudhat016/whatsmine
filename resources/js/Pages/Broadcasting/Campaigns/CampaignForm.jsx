@@ -21,7 +21,7 @@ import { browserTz, formatInTz, tzLocalToUtcIso, utcToTzLocal } from '@/Utils/da
 import { ChannelBrandIcon } from '@/Components/BrandIcons';
 import EmailEditor from '@/Components/EmailEditor';
 import TimezonePicker from '@/Components/TimezonePicker';
-import { DatePicker } from '@/Components/ui';
+import { DatePicker, Input, Select } from '@/Components/ui';
 
 const STEPS = [
     { key: 'channel', labelKey: 'campaign.step_channel' },
@@ -689,18 +689,15 @@ function ChannelStep({ data, setData, errors, whatsappPhoneNumbers = [] }) {
     return (
         <>
             <h3 className="font-medium text-neutral-800 dark:text-neutral-200">{t('campaign.name_and_channel')}</h3>
-            <div>
-                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('common.name')}</label>
-                <input
-                    type="text"
-                    value={data.name}
-                    onChange={(e) => setData('name', e.target.value)}
-                    placeholder={t('campaign.name_placeholder')}
-                    required
-                    className={inputClass}
-                />
-                <FieldError message={errors.name} />
-            </div>
+            <Input
+                label={t('common.name')}
+                type="text"
+                value={data.name}
+                onChange={(e) => setData('name', e.target.value)}
+                placeholder={t('campaign.name_placeholder')}
+                error={errors.name}
+                required
+            />
             <div>
                 <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 block mb-2">
                     {t('campaign.channel')}
@@ -777,45 +774,30 @@ function ChannelStep({ data, setData, errors, whatsappPhoneNumbers = [] }) {
                 <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 p-4 space-y-4">
                     <div className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{t('campaign.sender')}</div>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div>
-                            <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                                {t('campaign.from_name')}
-                            </label>
-                            <input
-                                type="text"
-                                value={data.payload_json.from_name}
-                                onChange={(e) => setData('payload_json', { ...data.payload_json, from_name: e.target.value })}
-                                placeholder={t('campaign.from_name_placeholder')}
-                                className={inputClass}
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                                {t('campaign.from_email')}
-                            </label>
-                            <input
-                                type="email"
-                                value={data.payload_json.from_email}
-                                onChange={(e) => setData('payload_json', { ...data.payload_json, from_email: e.target.value })}
-                                placeholder={t('campaign.from_email_placeholder')}
-                                className={inputClass}
-                            />
-                            <FieldError message={errors['payload_json.from_email']} />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                            {t('campaign.reply_to')} <span className="font-normal text-neutral-400">({t('common.optional')})</span>
-                        </label>
-                        <input
-                            type="email"
-                            value={data.payload_json.reply_to}
-                            onChange={(e) => setData('payload_json', { ...data.payload_json, reply_to: e.target.value })}
-                            placeholder="support@acme.com"
-                            className={inputClass}
+                        <Input
+                            label={t('campaign.from_name')}
+                            type="text"
+                            value={data.payload_json.from_name}
+                            onChange={(e) => setData('payload_json', { ...data.payload_json, from_name: e.target.value })}
+                            placeholder={t('campaign.from_name_placeholder')}
                         />
-                        <FieldError message={errors['payload_json.reply_to']} />
+                        <Input
+                            label={t('campaign.from_email')}
+                            type="email"
+                            value={data.payload_json.from_email}
+                            onChange={(e) => setData('payload_json', { ...data.payload_json, from_email: e.target.value })}
+                            placeholder={t('campaign.from_email_placeholder')}
+                            error={errors['payload_json.from_email']}
+                        />
                     </div>
+                    <Input
+                        label={<>{t('campaign.reply_to')} <span className="font-normal text-neutral-400">({t('common.optional')})</span></>}
+                        type="email"
+                        value={data.payload_json.reply_to}
+                        onChange={(e) => setData('payload_json', { ...data.payload_json, reply_to: e.target.value })}
+                        placeholder="support@acme.com"
+                        error={errors['payload_json.reply_to']}
+                    />
                 </div>
             )}
 
@@ -912,15 +894,12 @@ function AudienceStep({ data, setData, segments, tags, preview, errors }) {
 
             {data.audience_type === 'csv' && (
                 <div>
-                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                        {t('campaign.csv_path')}
-                    </label>
-                    <input
+                    <Input
+                        label={t('campaign.csv_path')}
                         type="text"
                         value={data.audience_ref}
                         onChange={(e) => setData('audience_ref', e.target.value)}
                         placeholder="campaigns/imports/abc.csv"
-                        className={inputClass}
                     />
                     <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                         {t('campaign.csv_hint')}
@@ -990,7 +969,7 @@ function ContentStep({
                         <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                             {t('campaign.whatsapp_template')}
                         </label>
-                        <select
+                        <Select
                             value={
                                 whatsappTemplates.find(
                                     (tpl) =>
@@ -1013,7 +992,6 @@ function ContentStep({
                                     });
                                 }
                             }}
-                            className={inputClass}
                         >
                             <option value="">{t('campaign.select_template')}</option>
                             {whatsappTemplates.map((tpl) => (
@@ -1021,7 +999,7 @@ function ContentStep({
                                     {tpl.name} ({tpl.language}) — {tpl.status}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                         {whatsappTemplates.length === 0 && (
                             <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                                 {t('campaign.no_templates_synced')}
@@ -1270,12 +1248,11 @@ function ReviewStep({
                     </p>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                            <input
+                            <Input
                                 type="text"
                                 placeholder={t('campaign.phone_placeholder')}
                                 value={testTo.phone_e164}
                                 onChange={(e) => setTestTo((s) => ({ ...s, phone_e164: e.target.value }))}
-                                className={inputClass}
                             />
                             {testTo.phone_e164 && !testTo.phone_e164.startsWith('+') && !/^01[3-9]\d{8}$/.test(testTo.phone_e164) && (
                                 <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
@@ -1283,12 +1260,11 @@ function ReviewStep({
                                 </p>
                             )}
                         </div>
-                        <input
+                        <Input
                             type="email"
                             placeholder={t('common.email')}
                             value={testTo.email}
                             onChange={(e) => setTestTo((s) => ({ ...s, email: e.target.value }))}
-                            className={inputClass}
                         />
                     </div>
                     <button
@@ -1335,9 +1311,10 @@ function SearchableSelect({ label, items, value, onChange, placeholder, emptyHin
         <div className="relative">
             <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</label>
             <div className="mt-1 relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                <input
+                <Input
+                    size="sm"
                     type="text"
+                    leftIcon={Search}
                     value={open ? q : selected?.label ?? ''}
                     onChange={(e) => {
                         setQ(e.target.value);
@@ -1349,7 +1326,6 @@ function SearchableSelect({ label, items, value, onChange, placeholder, emptyHin
                     }}
                     onBlur={() => setTimeout(() => setOpen(false), 150)}
                     placeholder={placeholder}
-                    className={`${inputClass} pl-9`}
                 />
             </div>
             {open && (
@@ -1516,10 +1492,9 @@ function SlotInput({ slot, label, mediaKind, contactTokens, onChange }) {
                 )}
             </div>
             {slot.kind === 'variable' ? (
-                <select
+                <Select
                     value={slot.value}
                     onChange={(e) => onChange({ value: e.target.value })}
-                    className={inputClass}
                 >
                     <option value="">{t('campaign.select_contact_field')}</option>
                     {contactTokens.map((token) => (
@@ -1527,14 +1502,13 @@ function SlotInput({ slot, label, mediaKind, contactTokens, onChange }) {
                             {token.label}
                         </option>
                     ))}
-                </select>
+                </Select>
             ) : (
-                <input
+                <Input
                     type="text"
                     value={slot.value}
                     onChange={(e) => onChange({ value: e.target.value })}
                     placeholder={mediaKind ? `https://example.com/file.${mediaKind === 'image' ? 'jpg' : mediaKind === 'video' ? 'mp4' : 'pdf'}` : t('campaign.enter_value')}
-                    className={inputClass}
                 />
             )}
         </div>
@@ -1620,12 +1594,11 @@ function MediaSlotInput({ slot, label, mediaKind, onChange }) {
                     )}
                 </div>
             ) : (
-                <input
+                <Input
                     type="text"
                     value={slot.value}
                     onChange={(e) => onChange({ value: e.target.value })}
                     placeholder={`https://example.com/file.${ext}`}
-                    className={inputClass}
                 />
             )}
 

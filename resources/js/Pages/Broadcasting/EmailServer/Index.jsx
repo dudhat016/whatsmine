@@ -1,5 +1,6 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import { Input, Select } from '@/Components/ui';
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Send, Trash2, CheckCircle, AlertCircle, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
@@ -243,91 +244,92 @@ export default function EmailServerIndex({ config }) {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div className="sm:col-span-2">
-                                <FieldRow label={`${t('email_server.smtp_host')} *`} error={errors.host}>
-                                    <input
-                                        type="text"
-                                        value={data.host}
-                                        onChange={e => setData('host', e.target.value)}
-                                        placeholder="smtp.example.com"
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                    />
-                                </FieldRow>
+                                <Input
+                                    label={`${t('email_server.smtp_host')} *`}
+                                    error={errors.host}
+                                    type="text"
+                                    value={data.host}
+                                    onChange={e => setData('host', e.target.value)}
+                                    placeholder="smtp.example.com"
+                                />
                             </div>
                             <div>
-                                <FieldRow label={`${t('email_server.port')} *`} error={errors.port}>
-                                    <input
-                                        type="number"
-                                        value={data.port}
-                                        onChange={e => setData('port', parseInt(e.target.value, 10) || 587)}
-                                        placeholder="587"
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                    />
-                                </FieldRow>
+                                <Input
+                                    label={`${t('email_server.port')} *`}
+                                    error={errors.port}
+                                    type="number"
+                                    value={data.port}
+                                    onChange={e => setData('port', parseInt(e.target.value, 10) || 587)}
+                                    placeholder="587"
+                                />
                             </div>
                         </div>
 
                         <FieldRow label={`${t('email_server.encryption')} *`} error={errors.encryption}>
-                            <select
+                            <Select
                                 value={data.encryption}
                                 onChange={e => setData('encryption', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                             >
                                 {ENCRYPTION_OPTIONS.map(o => (
                                     <option key={o.value} value={o.value}>{o.label}</option>
                                 ))}
-                            </select>
+                            </Select>
                         </FieldRow>
 
-                        <FieldRow label={`${t('email_server.username')} *`} error={errors.username}>
-                            <input
+                        <div>
+                            <Input
+                                label={`${t('email_server.username')} *`}
+                                error={errors.username}
                                 type="text"
                                 value={data.username}
                                 onChange={e => setData('username', e.target.value)}
                                 placeholder="your@email.com"
                                 autoComplete="username"
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                             />
-                        </FieldRow>
+                        </div>
 
-                        <FieldRow label={hasConfig ? t('email_server.password_keep') : `${t('email_server.password')} *`} error={errors.password}>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={data.password}
-                                    onChange={e => setData('password', e.target.value)}
-                                    placeholder={hasConfig ? t('email_server.password_unchanged') : '••••••••'}
-                                    autoComplete="new-password"
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(s => !s)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-                                >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
-                            </div>
-                        </FieldRow>
+                        <div>
+                            <Input
+                                label={hasConfig ? t('email_server.password_keep') : `${t('email_server.password')} *`}
+                                error={errors.password}
+                                type={showPassword ? 'text' : 'password'}
+                                value={data.password}
+                                onChange={e => setData('password', e.target.value)}
+                                placeholder={hasConfig ? t('email_server.password_unchanged') : '••••••••'}
+                                autoComplete="new-password"
+                                rightIcon={
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(s => !s)}
+                                        className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                }
+                            />
+                        </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <FieldRow label={`${t('email_server.from_email')} *`} error={errors.from_email}>
-                                <input
+                            <div>
+                                <Input
+                                    label={`${t('email_server.from_email')} *`}
+                                    error={errors.from_email}
                                     type="email"
                                     value={data.from_email}
                                     onChange={e => setData('from_email', e.target.value)}
                                     placeholder="noreply@yourdomain.com"
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                 />
-                            </FieldRow>
-                            <FieldRow label={`${t('email_server.from_name')} *`} error={errors.from_name}>
-                                <input
+                            </div>
+                            <div>
+                                <Input
+                                    label={`${t('email_server.from_name')} *`}
+                                    error={errors.from_name}
                                     type="text"
                                     value={data.from_name}
                                     onChange={e => setData('from_name', e.target.value)}
                                     placeholder="Your Company"
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                 />
-                            </FieldRow>
+                            </div>
                         </div>
 
                         {hasConfig && (
@@ -393,12 +395,12 @@ export default function EmailServerIndex({ config }) {
                     )}
 
                     <div className="flex gap-3">
-                        <input
+                        <Input
                             type="email"
                             value={testEmail}
                             onChange={e => setTestEmail(e.target.value)}
                             placeholder="recipient@example.com"
-                            className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            className="flex-1"
                         />
                         <button
                             type="button"

@@ -1,6 +1,7 @@
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
+import { Input, Select } from '@/Components/ui';
 import { Plus, Bot, Trash2, Play, Settings, Send, X, BookOpen, Zap, MessageSquare, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -111,23 +112,25 @@ function PlaygroundPanel({ chatbot }) {
             </div>
 
             <div className="p-3 border-t border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
-                <div className="flex items-center gap-2 rounded-xl border border-neutral-200 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800 px-3 py-1.5">
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={e => setInput(e.target.value)}
-                        onKeyDown={handleKey}
-                        placeholder={t('ai.type_a_message')}
-                        className="flex-1 bg-transparent text-sm outline-none text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
-                    />
-                    <button
-                        onClick={send}
-                        disabled={loading || !input.trim()}
-                        className="shrink-0 w-7 h-7 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
-                    >
-                        <Send className="h-3.5 w-3.5 text-white" />
-                    </button>
-                </div>
+                <Input
+                    size="sm"
+                    type="text"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={handleKey}
+                    placeholder={t('ai.type_a_message')}
+                    rightElement={
+                        <button
+                            type="button"
+                            onClick={send}
+                            disabled={loading || !input.trim()}
+                            className="shrink-0 w-6 h-6 rounded-md bg-brand-600 hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition text-white"
+                        >
+                            <Send className="h-3.5 w-3.5" />
+                        </button>
+                    }
+                    wrapperClassName="w-full"
+                />
             </div>
         </div>
     );
@@ -233,38 +236,31 @@ function ChatbotCard({ chatbot, knowledgeBases }) {
                 <div className="border-t border-neutral-100 dark:border-neutral-800 px-5 pb-5 pt-4">
                     <form onSubmit={save} className="space-y-4">
                         <div className="grid sm:grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('common.name')}</label>
-                                <input
+                            <div>
+                                <Input
+                                    label={t('common.name')}
                                     type="text"
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('ai.tone')}</label>
-                                <select
-                                    value={data.tone}
-                                    onChange={e => setData('tone', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition"
-                                >
-                                    {TONE_OPTIONS.map(tone => <option key={tone} value={tone}>{t(`ai.tone_${tone}`)}</option>)}
-                                </select>
-                            </div>
+                            <Select
+                                label={t('ai.tone')}
+                                value={data.tone}
+                                onChange={e => setData('tone', e.target.value)}
+                            >
+                                {TONE_OPTIONS.map(tone => <option key={tone} value={tone}>{t(`ai.tone_${tone}`)}</option>)}
+                            </Select>
                         </div>
 
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('ai.knowledge_base')}</label>
-                            <select
-                                value={data.ai_kb_id}
-                                onChange={e => setData('ai_kb_id', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition"
-                            >
-                                <option value="">{t('ai.none')}</option>
-                                {knowledgeBases.map(kb => <option key={kb.id} value={kb.id}>{kb.name}</option>)}
-                            </select>
-                        </div>
+                        <Select
+                            label={t('ai.knowledge_base')}
+                            value={data.ai_kb_id}
+                            onChange={e => setData('ai_kb_id', e.target.value)}
+                        >
+                            <option value="">{t('ai.none')}</option>
+                            {knowledgeBases.map(kb => <option key={kb.id} value={kb.id}>{kb.name}</option>)}
+                        </Select>
 
                         <div className="space-y-1">
                             <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('ai.system_prompt')}</label>
@@ -277,28 +273,27 @@ function ChatbotCard({ chatbot, knowledgeBases }) {
                             />
                         </div>
 
-                        <div className="space-y-1">
-                            <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('ai.fallback_reply')}</label>
-                            <input
+                        <div>
+                            <Input
+                                label={t('ai.fallback_reply')}
                                 type="text"
                                 value={data.fallback_reply}
                                 onChange={e => setData('fallback_reply', e.target.value)}
                                 placeholder={t('ai.fallback_reply_placeholder')}
-                                className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition"
+                                hint={t('ai.fallback_reply_hint')}
                             />
-                            <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('ai.fallback_reply_hint')}</p>
                         </div>
 
                         <div className="flex items-center gap-6">
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">{t('ai.max_context_chunks')}</label>
-                                <input
+                            <div>
+                                <Input
+                                    label={t('ai.max_context_chunks')}
                                     type="number"
                                     min={1}
                                     max={20}
                                     value={data.max_context_chunks}
                                     onChange={e => setData('max_context_chunks', Number(e.target.value))}
-                                    className="w-20 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition"
+                                    className="w-20"
                                 />
                             </div>
                             <div className="flex items-center gap-3 pt-5">
@@ -424,18 +419,17 @@ export default function AiChatbotsIndex({ chatbots, knowledgeBases }) {
                         </div>
 
                         <form onSubmit={handleCreate} className="px-6 py-5 space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('ai.chatbot_name')}</label>
-                                <input
+                            <div>
+                                <Input
+                                    label={t('ai.chatbot_name')}
                                     type="text"
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
                                     required
                                     autoFocus
                                     placeholder={t('ai.chatbot_name_placeholder')}
-                                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 py-2.5 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition"
+                                    error={errors.name}
                                 />
-                                {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
                             </div>
 
                             <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('ai.chatbot_create_hint')}</p>

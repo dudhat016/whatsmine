@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input } from '@/Components/ui';
 
 const PRESET_COLORS = [
     '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e',
@@ -96,16 +97,13 @@ export default function LabelsIndex({ labels }) {
                             </button>
                         </div>
                         <form onSubmit={submit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('common.name')}</label>
-                                <input
-                                    value={form.name}
-                                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                                    placeholder={t('inbox.label_name_placeholder')}
-                                    className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                />
-                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-                            </div>
+                            <Input
+                                label={t('common.name')}
+                                value={form.name}
+                                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                placeholder={t('inbox.label_name_placeholder')}
+                                error={errors.name}
+                            />
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('inbox.color')}</label>
                                 <div className="flex items-center gap-2 flex-wrap">

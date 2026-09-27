@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Image as ImageIcon } from 'lucide-react';
 import InlineText from './InlineText';
+import { Input, Select } from '@/Components/ui';
 
 export default function BlockRenderer({
     block,
@@ -133,11 +134,12 @@ export default function BlockRenderer({
                     <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                         {block.label} {block.required && <span className="text-red-500">*</span>}
                     </label>
-                    <input
+                    <Input
                         type={block.type === 'form_email' ? 'email' : block.type === 'form_phone' ? 'tel' : 'text'}
                         placeholder={block.placeholder}
                         disabled
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm cursor-not-allowed opacity-80"
+                        className="cursor-not-allowed opacity-80"
+                        wrapperClassName="w-full"
                     />
                     {block.helpText && <p className="text-[11px] text-neutral-400">{block.helpText}</p>}
                 </div>
@@ -165,12 +167,12 @@ export default function BlockRenderer({
                     <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                         {block.label} {block.required && <span className="text-red-500">*</span>}
                     </label>
-                    <select disabled className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm cursor-not-allowed opacity-80">
+                    <Select disabled size="sm" className="opacity-80 cursor-not-allowed">
                         <option>{t('common.select_option', 'Select an option...')}</option>
                         {(block.options || []).map((opt, i) => (
                             <option key={i}>{opt}</option>
                         ))}
-                    </select>
+                    </Select>
                 </div>
             );
 

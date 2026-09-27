@@ -1,6 +1,8 @@
 import React from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
 import Toggle from '@/Components/ui/Toggle';
+import Input from '@/Components/ui/Input';
+import Select from '@/Components/ui/Select';
 
 const inputCls = 'w-full px-2.5 py-1.5 text-xs border border-neutral-300 dark:border-neutral-700 rounded-soft bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500';
 const labelCls = 'block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-1';
@@ -37,13 +39,14 @@ function TagInput({ tags, onChange }) {
     return (
         <div>
             <div className="flex gap-1 mb-2">
-                <input
+                <Input
+                    size="sm"
                     type="text"
                     value={val}
                     onChange={e => setVal(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), add())}
                     placeholder="Add tag & press Enter"
-                    className={inputCls + ' flex-1'}
+                    wrapperClassName="flex-1"
                 />
                 <button type="button" onClick={add} className="px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-xs rounded-lg hover:bg-neutral-200 transition">Add</button>
             </div>
@@ -79,14 +82,14 @@ export default function FormSettings({ formSettings, onChange, formName, onNameC
                 <div className="space-y-3">
                     <span className={labelCls}>📋 Form Identity</span>
                     <Row label="Internal Name *">
-                        <input type="text" value={formName} onChange={e => onNameChange(e.target.value)} className={inputCls} placeholder="e.g. Website Contact Form" />
+                        <Input size="sm" type="text" value={formName} onChange={e => onNameChange(e.target.value)} placeholder="e.g. Website Contact Form" />
                     </Row>
                     <Row label="Embed Type">
-                        <select value={formType} onChange={e => onTypeChange(e.target.value)} className={inputCls}>
+                        <Select size="sm" value={formType} onChange={e => onTypeChange(e.target.value)}>
                             <option value="embedded">Embedded (iFrame / HTML)</option>
                             <option value="popup">Popup / Modal</option>
                             <option value="api">API Only</option>
-                        </select>
+                        </Select>
                     </Row>
                 </div>
 
@@ -103,16 +106,18 @@ export default function FormSettings({ formSettings, onChange, formName, onNameC
                                 onChange={e => set('theme_color', e.target.value)}
                                 className="w-8 h-8 rounded cursor-pointer border-0 p-0"
                             />
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={formSettings.theme_color || '#25D366'}
                                 onChange={e => set('theme_color', e.target.value)}
-                                className={inputCls + ' flex-1 font-mono'}
+                                className="font-mono"
+                                wrapperClassName="flex-1"
                             />
                         </div>
                     </Row>
                     <Row label="Button Text">
-                        <input type="text" value={formSettings.button_text || ''} onChange={e => set('button_text', e.target.value)} className={inputCls} placeholder="Subscribe Now" />
+                        <Input size="sm" type="text" value={formSettings.button_text || ''} onChange={e => set('button_text', e.target.value)} placeholder="Subscribe Now" />
                     </Row>
                 </div>
 
@@ -122,14 +127,12 @@ export default function FormSettings({ formSettings, onChange, formName, onNameC
                 <div className="space-y-3">
                     <span className={labelCls}>✅ After Submit</span>
                     <Row label="Success Message">
-                        <input type="text" value={formSettings.success_message || ''} onChange={e => set('success_message', e.target.value)} className={inputCls} placeholder="Thank you for subscribing!" />
+                        <Input size="sm" type="text" value={formSettings.success_message || ''} onChange={e => set('success_message', e.target.value)} placeholder="Thank you for subscribing!" />
                     </Row>
                     <Row label="Redirect URL (optional)">
-                        <input type="url" value={formSettings.redirect_url || ''} onChange={e => set('redirect_url', e.target.value)} className={inputCls} placeholder="https://example.com/thank-you" />
+                        <Input size="sm" type="url" value={formSettings.redirect_url || ''} onChange={e => set('redirect_url', e.target.value)} placeholder="https://example.com/thank-you" />
                     </Row>
                 </div>
-
-                <hr className="border-neutral-100 dark:border-neutral-800" />
 
                 <hr className="border-neutral-100 dark:border-neutral-800" />
 
@@ -139,49 +142,49 @@ export default function FormSettings({ formSettings, onChange, formName, onNameC
                     <div className="grid grid-cols-2 gap-2">
                         <div>
                             <span className="text-[10px] text-neutral-400 block mb-0.5">Card Padding (px)</span>
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 min="0"
                                 max="100"
                                 value={formSettings.card_padding !== undefined ? formSettings.card_padding : 24}
                                 onChange={e => set('card_padding', e.target.value === '' ? '' : Number(e.target.value))}
-                                className={inputCls}
                                 placeholder="24"
                             />
                         </div>
                         <div>
                             <span className="text-[10px] text-neutral-400 block mb-0.5">Field Gap (px)</span>
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 min="0"
                                 max="80"
                                 value={formSettings.field_gap !== undefined ? formSettings.field_gap : 12}
                                 onChange={e => set('field_gap', e.target.value === '' ? '' : Number(e.target.value))}
-                                className={inputCls}
                                 placeholder="12"
                             />
                         </div>
                         <div>
                             <span className="text-[10px] text-neutral-400 block mb-0.5">Max Width (px)</span>
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 min="280"
                                 max="1200"
                                 value={formSettings.card_max_width !== undefined ? formSettings.card_max_width : 576}
                                 onChange={e => set('card_max_width', e.target.value === '' ? '' : Number(e.target.value))}
-                                className={inputCls}
                                 placeholder="576"
                             />
                         </div>
                         <div>
                             <span className="text-[10px] text-neutral-400 block mb-0.5">Corner Radius (px)</span>
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 min="0"
                                 max="48"
                                 value={formSettings.card_border_radius !== undefined ? formSettings.card_border_radius : 16}
                                 onChange={e => set('card_border_radius', e.target.value === '' ? '' : Number(e.target.value))}
-                                className={inputCls}
                                 placeholder="16"
                             />
                         </div>

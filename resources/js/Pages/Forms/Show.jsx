@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { ArrowLeft, Check, Code, Copy, ExternalLink, FormInput, ShieldCheck, Users, Globe } from 'lucide-react';
+import { Input } from '@/Components/ui';
 import { useState } from 'react';
 
 export default function FormsShow({ form, appUrl }) {
@@ -161,11 +162,10 @@ export default function FormsShow({ form, appUrl }) {
                                 {copiedField === 'url' ? 'Copied URL!' : 'Copy URL'}
                             </button>
                         </div>
-                        <input
-                            type="text"
+                        <Input
                             readOnly
                             value={publicUrl}
-                            className="w-full px-3 py-2 text-xs font-mono bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl dark:text-gray-200"
+                            className="font-mono text-xs"
                         />
                     </div>
 

@@ -1,8 +1,8 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Badge, Button, Card, Modal, Pagination } from '@/Components/ui';
+import { Badge, Button, Card, Input, Select, Modal, Pagination } from '@/Components/ui';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Pencil, Trash2, Lock, Unlock } from 'lucide-react';
+import { Pencil, Trash2, Lock, Unlock, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const STATUS_ACTIVE = 'ACTIVE';
@@ -96,13 +96,15 @@ export default function AdminAdminsIndex({ admins, roles, filters = {}, flash })
                     </Card.Body>
                 </Card>
 
-                <form onSubmit={submitSearch} className="flex flex-wrap gap-2">
-                    <input
+                <form onSubmit={submitSearch} className="flex flex-wrap items-center gap-2">
+                    <Input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder={t('admin.search_name_email')}
-                        className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                        leftIcon={<Search className="h-4 w-4" />}
+                        size="sm"
+                        wrapperClassName="w-64"
                     />
                     <Button type="submit" variant="outline" size="sm">{t('common.search')}</Button>
                 </form>
@@ -200,59 +202,45 @@ export default function AdminAdminsIndex({ admins, roles, filters = {}, flash })
                 >
                     <Modal.Body>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('common.name')}</label>
-                                <input
-                                    type="text"
-                                    value={addForm.data.name}
-                                    onChange={(e) => addForm.setData('name', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                    required
-                                />
-                                {addForm.errors.name && <p className="mt-1 text-sm text-red-500">{addForm.errors.name}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.email')}</label>
-                                <input
-                                    type="email"
-                                    value={addForm.data.email}
-                                    onChange={(e) => addForm.setData('email', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                    required
-                                />
-                                {addForm.errors.email && <p className="mt-1 text-sm text-red-500">{addForm.errors.email}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('client.password')}</label>
-                                <input
-                                    type="password"
-                                    value={addForm.data.password}
-                                    onChange={(e) => addForm.setData('password', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                    required
-                                />
-                                {addForm.errors.password && <p className="mt-1 text-sm text-red-500">{addForm.errors.password}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.confirm_password_label')}</label>
-                                <input
-                                    type="password"
-                                    value={addForm.data.password_confirmation}
-                                    onChange={(e) => addForm.setData('password_confirmation', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.col_status')}</label>
-                                <select
-                                    value={addForm.data.status}
-                                    onChange={(e) => addForm.setData('status', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                >
-                                    <option value={STATUS_ACTIVE}>{t('admin.status_active')}</option>
-                                    <option value={STATUS_INACTIVE}>{t('admin.status_inactive')}</option>
-                                </select>
-                            </div>
+                            <Input
+                                label={t('common.name')}
+                                type="text"
+                                value={addForm.data.name}
+                                onChange={(e) => addForm.setData('name', e.target.value)}
+                                error={addForm.errors.name}
+                                required
+                            />
+                            <Input
+                                label={t('admin.email')}
+                                type="email"
+                                value={addForm.data.email}
+                                onChange={(e) => addForm.setData('email', e.target.value)}
+                                error={addForm.errors.email}
+                                required
+                            />
+                            <Input
+                                label={t('client.password')}
+                                type="password"
+                                value={addForm.data.password}
+                                onChange={(e) => addForm.setData('password', e.target.value)}
+                                error={addForm.errors.password}
+                                required
+                            />
+                            <Input
+                                label={t('admin.confirm_password_label')}
+                                type="password"
+                                value={addForm.data.password_confirmation}
+                                onChange={(e) => addForm.setData('password_confirmation', e.target.value)}
+                            />
+                            <Select
+                                label={t('admin.col_status')}
+                                value={addForm.data.status}
+                                onChange={(e) => addForm.setData('status', e.target.value)}
+                                options={[
+                                    { value: STATUS_ACTIVE, label: t('admin.status_active') },
+                                    { value: STATUS_INACTIVE, label: t('admin.status_inactive') },
+                                ]}
+                            />
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('admin.col_roles')}</label>
                                 <div className="space-y-2">
@@ -300,39 +288,31 @@ export default function AdminAdminsIndex({ admins, roles, filters = {}, flash })
                 >
                     <Modal.Body>
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('common.name')}</label>
-                                <input
-                                    type="text"
-                                    value={editForm.data.name}
-                                    onChange={(e) => editForm.setData('name', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                    required
-                                />
-                                {editForm.errors.name && <p className="mt-1 text-sm text-red-500">{editForm.errors.name}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.email')}</label>
-                                <input
-                                    type="email"
-                                    value={editForm.data.email}
-                                    onChange={(e) => editForm.setData('email', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                    required
-                                />
-                                {editForm.errors.email && <p className="mt-1 text-sm text-red-500">{editForm.errors.email}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('admin.col_status')}</label>
-                                <select
-                                    value={editForm.data.status}
-                                    onChange={(e) => editForm.setData('status', e.target.value)}
-                                    className="w-full rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                >
-                                    <option value={STATUS_ACTIVE}>{t('admin.status_active')}</option>
-                                    <option value={STATUS_INACTIVE}>{t('admin.status_inactive')}</option>
-                                </select>
-                            </div>
+                            <Input
+                                label={t('common.name')}
+                                type="text"
+                                value={editForm.data.name}
+                                onChange={(e) => editForm.setData('name', e.target.value)}
+                                error={editForm.errors.name}
+                                required
+                            />
+                            <Input
+                                label={t('admin.email')}
+                                type="email"
+                                value={editForm.data.email}
+                                onChange={(e) => editForm.setData('email', e.target.value)}
+                                error={editForm.errors.email}
+                                required
+                            />
+                            <Select
+                                label={t('admin.col_status')}
+                                value={editForm.data.status}
+                                onChange={(e) => editForm.setData('status', e.target.value)}
+                                options={[
+                                    { value: STATUS_ACTIVE, label: t('admin.status_active') },
+                                    { value: STATUS_INACTIVE, label: t('admin.status_inactive') },
+                                ]}
+                            />
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('admin.col_roles')}</label>
                                 <div className="space-y-2">

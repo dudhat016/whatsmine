@@ -1,6 +1,7 @@
 import ClientLayout from '@/Layouts/ClientLayout';
+import { Input, Select } from '@/Components/ui';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { AlertTriangle, ArrowLeft, ChevronDown, LifeBuoy, Send } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, LifeBuoy, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const PRIORITY_OPTION_VALUES = ['low', 'normal', 'high', 'urgent'];
@@ -47,38 +48,27 @@ export default function SupportCreate() {
                     {/* Subject + Priority */}
                     <div className="bg-white dark:bg-neutral-800/70 rounded-xl border border-neutral-200 dark:border-neutral-700/50 p-5 space-y-4 shadow-soft">
                         <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                                {t('support_tickets.subject_label')} <span className="text-red-500">*</span>
-                            </label>
-                            <input
+                            <Input
                                 type="text"
+                                label={t('support_tickets.subject_label')}
                                 value={data.subject}
                                 onChange={e => setData('subject', e.target.value)}
                                 placeholder={t('support_tickets.subject_placeholder')}
-                                className={`w-full border rounded-soft-lg px-3 py-2.5 text-sm text-neutral-900 dark:text-white bg-white dark:bg-neutral-700 placeholder-neutral-400 dark:placeholder-neutral-500 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 ${errors.subject ? 'border-red-400 dark:border-red-500' : 'border-neutral-300 dark:border-neutral-600'}`}
+                                error={errors.subject}
                                 required
                             />
-                            {errors.subject && (
-                                <p className="flex items-center gap-1 text-red-500 text-xs mt-1.5">
-                                    <AlertTriangle className="h-3 w-3" /> {errors.subject}
-                                </p>
-                            )}
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">{t('support_tickets.priority_label')}</label>
-                            <div className="relative">
-                                <select
-                                    value={data.priority}
-                                    onChange={e => setData('priority', e.target.value)}
-                                    className="w-full appearance-none border border-neutral-300 dark:border-neutral-600 rounded-soft-lg px-3 py-2.5 text-sm text-neutral-900 dark:text-white bg-white dark:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-colors pr-8"
-                                >
-                                    {priorityOptions.map(p => (
-                                        <option key={p.value} value={p.value}>{p.label} — {p.desc}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
-                            </div>
+                            <Select
+                                value={data.priority}
+                                onChange={e => setData('priority', e.target.value)}
+                            >
+                                {priorityOptions.map(p => (
+                                    <option key={p.value} value={p.value}>{p.label} — {p.desc}</option>
+                                ))}
+                            </Select>
                             <div className="mt-2 grid grid-cols-4 gap-1.5">
                                 {priorityOptions.map(p => (
                                     <button

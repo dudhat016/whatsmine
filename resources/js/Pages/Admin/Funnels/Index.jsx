@@ -12,6 +12,7 @@ import {
 // Import path mirrors how other Admin pages import their layout
 import AdminLayout from '@/Layouts/AdminLayout';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Button, Input } from '@/Components/ui';
 
 const fmt = (n) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n ?? 0);
 const fmtCurrency = (n) => `$${fmt(n)}`;
@@ -130,24 +131,19 @@ export default function AdminFunnelsIndex({ funnels, filters }) {
                 )}
 
                 {/* ── Search bar ─────────────────────────────────────────── */}
-                <form onSubmit={handleSearch} className="flex gap-2" role="search" aria-label="Search funnels">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" aria-hidden="true" />
-                        <input
-                            id="admin-funnel-search"
-                            type="search"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Search funnel name…"
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    >
+                <form onSubmit={handleSearch} className="flex items-center gap-2" role="search" aria-label="Search funnels">
+                    <Input
+                        id="admin-funnel-search"
+                        type="search"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search funnel name…"
+                        leftIcon={<Search className="h-4 w-4" />}
+                        wrapperClassName="flex-1"
+                    />
+                    <Button type="submit">
                         Search
-                    </button>
+                    </Button>
                 </form>
 
                 {/* ── Funnels Table ─────────────────────────────────────── */}

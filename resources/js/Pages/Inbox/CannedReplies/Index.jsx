@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input } from '@/Components/ui';
 
 export default function CannedRepliesIndex({ cannedReplies }) {
     const { t } = useTranslation();
@@ -92,18 +93,14 @@ export default function CannedRepliesIndex({ cannedReplies }) {
                             </button>
                         </div>
                         <form onSubmit={submit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                    {t('inbox.shortcut')} <span className="text-neutral-400">{t('inbox.shortcut_hint')}</span>
-                                </label>
-                                <input
-                                    value={form.shortcut}
-                                    onChange={e => setForm(f => ({ ...f, shortcut: e.target.value }))}
-                                    placeholder={t('inbox.shortcut_placeholder')}
-                                    className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                />
-                                {errors.shortcut && <p className="text-red-500 text-xs mt-1">{errors.shortcut}</p>}
-                            </div>
+                            <Input
+                                label={t('inbox.shortcut')}
+                                hint={t('inbox.shortcut_hint')}
+                                value={form.shortcut}
+                                onChange={e => setForm(f => ({ ...f, shortcut: e.target.value }))}
+                                placeholder={t('inbox.shortcut_placeholder')}
+                                error={errors.shortcut}
+                            />
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                                     {t('inbox.body')} <span className="text-neutral-400">{t('inbox.body_hint', { token: '{{contact.first_name}}' })}</span>

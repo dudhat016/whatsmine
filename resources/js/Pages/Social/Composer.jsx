@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { SocialBrandIcon } from '@/Components/BrandIcons';
 import MediaUpload from '@/Components/MediaUpload';
 import TimezonePicker from '@/Components/TimezonePicker';
-import { DatePicker } from '@/Components/ui';
+import { DatePicker, Input } from '@/Components/ui';
 import { browserTz, tzLocalToUtcIso, formatInTz } from '@/Utils/datetime';
 
 const CHAR_LIMITS = { twitter: 280, tiktok: 2200, linkedin: 3000, facebook: 63206, instagram: 2200, youtube: 5000 };
@@ -320,7 +320,7 @@ export default function SocialComposer({ accounts }) {
                     <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 space-y-3">
                         <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase flex items-center gap-1"><Sparkles className="h-3.5 w-3.5 text-brand-500" /> {t('social.ai_post_planner')}</p>
                         <div className="flex gap-2">
-                            <input type="text" value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} placeholder={t('social.ai_prompt_placeholder')} className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm" />
+                            <Input value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} placeholder={t('social.ai_prompt_placeholder')} className="flex-1" />
                             <button type="button" onClick={generateWithAI} disabled={aiLoading || !aiPrompt.trim()} className="ai-glow flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition">
                                 <Sparkles className="h-4 w-4" /> {aiLoading ? t('social.generating') : t('social.generate')}
                             </button>
@@ -331,20 +331,14 @@ export default function SocialComposer({ accounts }) {
                     {/* Composer */}
                     <form onSubmit={handleSubmit} className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-4 space-y-4">
                         {/* Title */}
-                        <div>
-                            <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-1">
-                                {t('social.title_label')} <span className="text-neutral-400 font-normal">({t('common.optional')})</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={data.title}
-                                onChange={e => setData('title', e.target.value)}
-                                placeholder={t('social.title_placeholder')}
-                                maxLength={256}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                            />
-                            {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
-                        </div>
+                        <Input
+                            label={<>{t('social.title_label')} <span className="text-neutral-400 font-normal">({t('common.optional')})</span></>}
+                            value={data.title}
+                            onChange={e => setData('title', e.target.value)}
+                            placeholder={t('social.title_placeholder')}
+                            maxLength={256}
+                            error={errors.title}
+                        />
 
                         {/* Body */}
                         <div>

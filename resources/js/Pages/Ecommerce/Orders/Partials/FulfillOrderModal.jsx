@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
-import Modal from '@/Components/ui/Modal';
+import { Modal, Input, Select } from '@/Components/ui';
 import { Truck, Check, X } from 'lucide-react';
 
 export default function FulfillOrderModal({ isOpen, onClose, order = null }) {
@@ -41,43 +41,30 @@ export default function FulfillOrderModal({ isOpen, onClose, order = null }) {
                         <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
                             Fulfillment Status <span className="text-red-500">*</span>
                         </label>
-                        <select
+                        <Select
                             value={data.fulfillment_status}
                             onChange={(e) => setData('fulfillment_status', e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100"
                         >
                             <option value="processing">Processing / In Preparation</option>
                             <option value="shipped">Shipped / In Transit</option>
                             <option value="fulfilled">Fulfilled / Delivered</option>
                             <option value="cancelled">Cancelled</option>
-                        </select>
+                        </Select>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
-                            Tracking Number (Optional)
-                        </label>
-                        <input
-                            type="text"
-                            value={data.tracking_number}
-                            onChange={(e) => setData('tracking_number', e.target.value)}
-                            placeholder="e.g. TRACK981274"
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100"
-                        />
-                    </div>
+                    <Input
+                        label="Tracking Number (Optional)"
+                        value={data.tracking_number}
+                        onChange={(e) => setData('tracking_number', e.target.value)}
+                        placeholder="e.g. TRACK981274"
+                    />
 
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
-                            Tracking URL (Optional)
-                        </label>
-                        <input
-                            type="text"
-                            value={data.tracking_url}
-                            onChange={(e) => setData('tracking_url', e.target.value)}
-                            placeholder="https://courier.com/track/..."
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100"
-                        />
-                    </div>
+                    <Input
+                        label="Tracking URL (Optional)"
+                        value={data.tracking_url}
+                        onChange={(e) => setData('tracking_url', e.target.value)}
+                        placeholder="https://courier.com/track/..."
+                    />
 
                     <div className="flex justify-end gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-700">
                         <button

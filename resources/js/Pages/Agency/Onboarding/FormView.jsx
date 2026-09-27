@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import MediaUpload from '@/Components/MediaUpload';
+import { Input } from '@/Components/ui';
 import { 
     CheckCircle, Sparkles, Send, UploadCloud, FileText, 
     ShieldCheck, Building, Globe, Layers, ArrowRight
@@ -65,25 +66,25 @@ export default function OnboardingFormView({ onboarding = {} }) {
                         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
                             <div>
                                 <label className="block font-bold text-neutral-300 mb-1">Company / Brand Name *</label>
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     required
                                     value={data.brand_name}
                                     onChange={(e) => setData('brand_name', e.target.value)}
                                     placeholder="Acme Corp"
-                                    className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3.5 py-2 text-xs text-white"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block font-bold text-neutral-300 mb-1">Website URL</label>
-                                    <input
+                                    <Input
+                                        size="sm"
                                         type="url"
                                         value={data.website}
                                         onChange={(e) => setData('website', e.target.value)}
                                         placeholder="https://acme.com"
-                                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3.5 py-2 text-xs text-white"
                                     />
                                 </div>
                                 <div>
@@ -95,11 +96,13 @@ export default function OnboardingFormView({ onboarding = {} }) {
                                             onChange={(e) => setData('brand_color', e.target.value)}
                                             className="h-8 w-12 rounded-lg bg-neutral-950 border border-neutral-800 cursor-pointer"
                                         />
-                                        <input
+                                        <Input
+                                            size="sm"
+                                            wrapperClassName="flex-1"
                                             type="text"
                                             value={data.brand_color}
                                             onChange={(e) => setData('brand_color', e.target.value)}
-                                            className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-1.5 text-xs text-white font-mono"
+                                            className="font-mono"
                                         />
                                     </div>
                                 </div>

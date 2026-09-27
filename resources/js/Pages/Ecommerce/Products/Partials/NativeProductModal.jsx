@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
-import Modal from '@/Components/ui/Modal';
+import { Modal, Input, Select } from '@/Components/ui';
 import MediaUpload from '@/Components/MediaUpload';
 import { Tag, RefreshCw, CreditCard, Gift, Image, Package, FileText, Check } from 'lucide-react';
 
@@ -80,33 +80,21 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                 <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Basic Info */}
                 <div className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
-                            Product Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            placeholder="e.g. Premium Masterclass Pass"
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-brand-500"
-                        />
-                        {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
-                    </div>
+                    <Input
+                        label="Product Name"
+                        required
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
+                        placeholder="e.g. Premium Masterclass Pass"
+                        error={errors.name}
+                    />
 
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
-                            SKU / Identifier (Optional)
-                        </label>
-                        <input
-                            type="text"
-                            value={data.sku}
-                            onChange={(e) => setData('sku', e.target.value)}
-                            placeholder="DIGITAL-001"
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100"
-                        />
-                    </div>
+                    <Input
+                        label="SKU / Identifier (Optional)"
+                        value={data.sku}
+                        onChange={(e) => setData('sku', e.target.value)}
+                        placeholder="DIGITAL-001"
+                    />
 
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
@@ -185,19 +173,14 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                     {/* Pricing Inputs according to mode */}
                     <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-3">
                         {data.pricing_type !== 'free' && (
-                            <div>
-                                <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                    {data.pricing_type === 'installments' ? 'Price Per Installment ($)' : 'Price ($)'}
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={data.price}
-                                    onChange={(e) => setData('price', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-semibold"
-                                />
-                            </div>
+                            <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                label={data.pricing_type === 'installments' ? 'Price Per Installment ($)' : 'Price ($)'}
+                                value={data.price}
+                                onChange={(e) => setData('price', e.target.value)}
+                            />
                         )}
 
                         {data.pricing_type === 'recurring' && (
@@ -205,7 +188,7 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                                 <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300">
                                     Billing Frequency
                                 </label>
-                                <select
+                                <Select
                                     value={
                                         data.billing_interval === 'day' && Number(data.billing_interval_count) === 7 ? '7days' :
                                         data.billing_interval === 'month' && Number(data.billing_interval_count) === 3 ? '3months' :
@@ -221,44 +204,35 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                                         if (v === '1year')   setData({ ...data, billing_interval: 'year',  billing_interval_count: 1 });
                                         if (v === 'custom')  setData({ ...data, billing_interval: 'day',   billing_interval_count: '' });
                                     }}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                 >
                                     <option value="7days">Every 7 Days</option>
                                     <option value="3months">Every 3 Months (Quarterly)</option>
                                     <option value="6months">Every 6 Months (Bi-Annually)</option>
                                     <option value="1year">Every 1 Year (Annually)</option>
                                     <option value="custom">Custom (days)</option>
-                                </select>
+                                </Select>
                                 {/* Custom days input */}
                                 {data.billing_interval === 'day' && Number(data.billing_interval_count) !== 7 && (
                                     <div>
-                                        <label className="block text-[10px] font-medium text-neutral-500 mb-1">
-                                            Custom Interval (in days)
-                                        </label>
-                                        <input
+                                        <Input
                                             type="number"
                                             min="1"
+                                            label="Custom Interval (in days)"
                                             value={data.billing_interval_count || ''}
                                             onChange={(e) => setData('billing_interval_count', parseInt(e.target.value) || '')}
                                             placeholder="e.g. 210"
-                                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-semibold"
                                         />
                                         <p className="text-[10px] text-neutral-400 mt-1">Charge every <strong>{data.billing_interval_count || '?'}</strong> days</p>
                                     </div>
                                 )}
                                 {/* Free trial */}
-                                <div>
-                                    <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-                                        Free Trial Days <span className="font-normal">(0 = no trial)</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={data.trial_days}
-                                        onChange={(e) => setData('trial_days', e.target.value)}
-                                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                                    />
-                                </div>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    label="Free Trial Days (0 = no trial)"
+                                    value={data.trial_days}
+                                    onChange={(e) => setData('trial_days', e.target.value)}
+                                />
                             </div>
                         )}
 
@@ -266,16 +240,13 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
 
                         {data.pricing_type === 'installments' && (
                             <div>
-                                <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                    Number of Installments
-                                </label>
-                                <input
+                                <Input
                                     type="number"
                                     min="2"
                                     max="24"
+                                    label="Number of Installments"
                                     value={data.installment_count}
                                     onChange={(e) => setData('installment_count', e.target.value)}
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                                 />
                                 <p className="text-xs text-neutral-500 mt-1">
                                     Total Price: ${(parseFloat(data.price || '0') * parseInt(data.installment_count || '1')).toFixed(2)}
@@ -294,33 +265,27 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                 {/* Additional Settings */}
                 <div className="grid grid-cols-3 gap-3 border-t border-neutral-200 dark:border-neutral-700 pt-4">
                     {data.product_type === 'physical' && (
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
-                                Stock Quantity
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                value={data.inventory_quantity}
-                                onChange={(e) => setData('inventory_quantity', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                            />
-                        </div>
+                        <Input
+                            type="number"
+                            min="0"
+                            label="Stock Quantity"
+                            value={data.inventory_quantity}
+                            onChange={(e) => setData('inventory_quantity', e.target.value)}
+                        />
                     )}
 
                     <div className={data.product_type === 'digital' ? 'col-span-2' : ''}>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
                             Status
                         </label>
-                        <select
+                        <Select
                             value={data.status}
                             onChange={(e) => setData('status', e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                         >
                             <option value="active">Active</option>
                             <option value="draft">Draft</option>
                             <option value="archived">Archived</option>
-                        </select>
+                        </Select>
                     </div>
 
                     <div>
@@ -398,10 +363,9 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                             <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
                                 Link to Workspace Booking Calendar / Webinar <span className="text-red-500">*</span>
                             </label>
-                            <select
+                            <Select
                                 value={data.calendar_id || ''}
                                 onChange={(e) => setData('calendar_id', e.target.value)}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100"
                             >
                                 <option value="">-- Select Calendar (1:1 Session / Webinar) --</option>
                                 {calendars.map(c => (
@@ -409,7 +373,7 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                                         {c.name} ({c.type} • {c.duration_minutes}m)
                                     </option>
                                 ))}
-                            </select>
+                            </Select>
                         </div>
                     )}
 
@@ -428,18 +392,12 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                     )}
 
                     {data.digital_fulfillment_type === 'external_link' && (
-                        <div>
-                            <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
-                                Private External Link (Notion, Google Drive, Telegram, Discord)
-                            </label>
-                            <input
-                                type="text"
-                                value={data.digital_external_url || ''}
-                                onChange={(e) => setData('digital_external_url', e.target.value)}
-                                placeholder="https://notion.so/..."
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                            />
-                        </div>
+                        <Input
+                            label="Private External Link (Notion, Google Drive, Telegram, Discord)"
+                            value={data.digital_external_url || ''}
+                            onChange={(e) => setData('digital_external_url', e.target.value)}
+                            placeholder="https://notion.so/..."
+                        />
                     )}
 
                     {data.digital_fulfillment_type === 'license_key' && (

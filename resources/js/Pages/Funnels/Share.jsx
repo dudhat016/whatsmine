@@ -5,6 +5,7 @@ import {
     CheckCircle2, ArrowRight, ShieldCheck, Sparkles, LayoutTemplate,
     ShoppingCart, Zap, HeartHandshake, Eye
 } from 'lucide-react';
+import { Input } from '@/Components/ui';
 
 export default function ShareFunnel({ funnel, steps = [], previewUrl, shareToken, isAuthenticated }) {
     const [importing, setImporting] = useState(false);
@@ -165,11 +166,10 @@ export default function ShareFunnel({ funnel, steps = [], previewUrl, shareToken
                             <span className="text-[10px] text-neutral-500">Copy token for agency imports</span>
                         </label>
                         <div className="flex items-center gap-2">
-                            <input
-                                type="text"
+                            <Input
                                 readOnly
                                 value={cloneToken}
-                                className="flex-1 px-3.5 py-2 text-xs font-mono bg-neutral-950/80 border border-neutral-800 rounded-xl text-neutral-300"
+                                className="flex-1 font-mono text-xs"
                             />
                             <button
                                 type="button"

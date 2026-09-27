@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input } from '@/Components/ui';
 
 const STATUS_COLORS = {
     active: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
@@ -234,10 +235,14 @@ export default function AutomationIndex({ automations, flash: initialFlash }) {
                     <div className="w-full max-w-sm rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4">
                         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('automation.new_automation')}</h3>
                         <form onSubmit={handleCreate} className="space-y-3">
-                            <div>
-                                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('common.name')}</label>
-                                <input type="text" value={data.name} onChange={e => setData('name', e.target.value)} required placeholder={t('automation.name_placeholder')} className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-1.5 text-sm" />
-                            </div>
+                            <Input
+                                label={t('common.name')}
+                                value={data.name}
+                                onChange={e => setData('name', e.target.value)}
+                                required
+                                placeholder={t('automation.name_placeholder')}
+                                autoFocus
+                            />
                             <div className="flex gap-2 pt-2">
                                 <button type="submit" disabled={processing} className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition">
                                     {processing ? t('automation.creating') : t('common.create')}

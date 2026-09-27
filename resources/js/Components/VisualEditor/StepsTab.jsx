@@ -5,6 +5,7 @@ import {
     Sparkles, TrendingUp, Eye, CheckCircle2, DollarSign, 
     Award, Layers, Check, ArrowRight, XCircle
 } from 'lucide-react';
+import { Input, Select } from '@/Components/ui';
 
 export default function StepsTab({
     funnel,
@@ -138,18 +139,19 @@ export default function StepsTab({
             {showAddStep && (
                 <div className="rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50/40 dark:bg-brand-950/30 p-3 space-y-2">
                     <label className="block font-semibold text-neutral-700 dark:text-neutral-300">Step Name</label>
-                    <input
+                    <Input
+                        size="sm"
                         type="text"
                         value={newStep.name}
                         onChange={e => setNewStep(p => ({ ...p, name: e.target.value }))}
                         placeholder="e.g. Opt-in Page"
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 p-2 text-xs font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none dark:bg-neutral-800 dark:text-white"
+                        wrapperClassName="w-full"
                     />
-                    <label className="block font-semibold text-neutral-700 dark:text-neutral-300">Step Type</label>
-                    <select
+                    <Select
+                        label="Step Type"
+                        size="sm"
                         value={newStep.type}
                         onChange={e => setNewStep(p => ({ ...p, type: e.target.value }))}
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 p-2 text-xs font-medium dark:bg-neutral-800 dark:text-white"
                     >
                         <option value="optin">Opt-in Page</option>
                         <option value="sales">Sales Page</option>
@@ -159,7 +161,7 @@ export default function StepsTab({
                         <option value="thankyou">Thank You Page</option>
                         <option value="webinar">Webinar Registration</option>
                         <option value="content">Content Page</option>
-                    </select>
+                    </Select>
                     <div className="flex gap-2 pt-1">
                         <button
                             type="button"

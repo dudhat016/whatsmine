@@ -6,6 +6,7 @@ import {
     Eye, EyeOff, CheckCircle, AlertCircle, Clock, Trash2, RefreshCw,
     PlugZap, Copy, Check, ShoppingBag, Store, DollarSign, Globe,
 } from 'lucide-react';
+import { Input, Select } from '@/Components/ui';
 import { useConfirm } from '@/context/ConfirmationContext';
 
 const PLATFORM_META = {
@@ -199,11 +200,10 @@ function OAuthConnect({ platform, meta, oauthAvailable }) {
 
     return (
         <div className="space-y-2">
-            <input
+            <Input
                 value={domain}
                 onChange={e => setDomain(e.target.value)}
                 placeholder={meta.domainPlaceholder}
-                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
             />
             <button
                 type="button"
@@ -281,55 +281,39 @@ function ConnectForm({ platforms, oauth = {} }) {
             )}
 
             <form onSubmit={submit} className="space-y-3">
-                <div>
-                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('ecommerce.store_name') || 'Store name'}</label>
-                    <input
-                        type="text"
-                        value={data.name}
-                        onChange={e => setData('name', e.target.value)}
-                        placeholder={current?.label}
-                        className="mt-1 w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                    />
-                </div>
+                <Input
+                    label={t('ecommerce.store_name') || 'Store name'}
+                    value={data.name}
+                    onChange={e => setData('name', e.target.value)}
+                    placeholder={current?.label}
+                />
 
-                <div>
-                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{meta.domainLabel || 'Domain'} *</label>
-                    <input
-                        type="text"
-                        value={data.domain}
-                        onChange={e => setData('domain', e.target.value)}
-                        placeholder={meta.domainPlaceholder}
-                        className="mt-1 w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
-                    />
-                    {errors.domain && <p className="mt-1 text-xs text-red-500">{errors.domain}</p>}
-                </div>
+                <Input
+                    label={`${meta.domainLabel || 'Domain'} *`}
+                    value={data.domain}
+                    onChange={e => setData('domain', e.target.value)}
+                    placeholder={meta.domainPlaceholder}
+                    error={errors.domain}
+                />
 
                 {(current?.fields ?? []).map(field => (
-                    <div key={field.key}>
-                        <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                            {field.label}{field.required && ' *'}
-                        </label>
-                        <div className="relative mt-1">
-                            <input
-                                type={field.type === 'password' && !showSecrets[field.key] ? 'password' : 'text'}
-                                value={data.credentials[field.key] ?? ''}
-                                onChange={e => setData('credentials', { ...data.credentials, [field.key]: e.target.value })}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-sm"
-                            />
-                            {field.type === 'password' && (
-                                <button
-                                    type="button"
-                                    onClick={() => setShowSecrets(s => ({ ...s, [field.key]: !s[field.key] }))}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
-                                >
-                                    {showSecrets[field.key] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                </button>
-                            )}
-                        </div>
-                        {errors[`credentials.${field.key}`] && (
-                            <p className="mt-1 text-xs text-red-500">{errors[`credentials.${field.key}`]}</p>
-                        )}
-                    </div>
+                    <Input
+                        key={field.key}
+                        type={field.type === 'password' && !showSecrets[field.key] ? 'password' : 'text'}
+                        label={`${field.label}${field.required ? ' *' : ''}`}
+                        value={data.credentials[field.key] ?? ''}
+                        onChange={e => setData('credentials', { ...data.credentials, [field.key]: e.target.value })}
+                        error={errors[`credentials.${field.key}`]}
+                        rightIcon={field.type === 'password' ? (
+                            <button
+                                type="button"
+                                onClick={() => setShowSecrets(s => ({ ...s, [field.key]: !s[field.key] }))}
+                                className="text-neutral-400 hover:text-neutral-600 focus:outline-none"
+                            >
+                                {showSecrets[field.key] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        ) : null}
+                    />
                 ))}
 
                 <button
@@ -418,10 +402,9 @@ export default function EcommerceStoresIndex({ stores = [], platforms = [], oaut
                                         <label className="block text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-1.5">
                                             Select Currency
                                         </label>
-                                        <select
+                                        <Select
                                             value={currencyForm.data.currency_code}
                                             onChange={(e) => currencyForm.setData('currency_code', e.target.value)}
-                                            className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm font-semibold focus:ring-2 focus:ring-emerald-500"
                                         >
                                             {currencies.length > 0 ? currencies.map(c => (
                                                 <option key={c.code} value={c.code}>{c.code} — {c.symbol}</option>
@@ -438,7 +421,7 @@ export default function EcommerceStoresIndex({ stores = [], platforms = [], oaut
                                                     <option value="BRL">BRL — R$</option>
                                                 </>
                                             )}
-                                        </select>
+                                        </Select>
                                     </div>
 
                                     <div className="flex items-center justify-between pt-1">

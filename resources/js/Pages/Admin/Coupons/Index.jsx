@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { DatePicker } from '@/Components/ui';
+import { Button, Checkbox, DatePicker, Input, Select } from '@/Components/ui';
 import { Tag, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { formatDateTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
@@ -33,66 +33,69 @@ function CouponForm({ coupon = null, onClose }) {
         <form onSubmit={submit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('coupons.code_label')}</label>
-                    <input
+                    <Input
+                        label={t('coupons.code_label')}
                         type="text"
                         value={data.code}
                         onChange={e => setData('code', e.target.value.toUpperCase())}
-                        className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white font-mono"
+                        className="font-mono"
                         placeholder={t('coupons.code_placeholder')}
+                        error={errors.code}
                         required
                     />
-                    {errors.code && <p className="text-coral-600 text-xs mt-1">{errors.code}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('coupons.type_label')}</label>
-                    <select value={data.kind} onChange={e => setData('kind', e.target.value)} className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white">
-                        <option value="percent">{t('coupons.type_percent')}</option>
-                        <option value="fixed">{t('coupons.type_fixed')}</option>
-                    </select>
+                    <Select
+                        label={t('coupons.type_label')}
+                        value={data.kind}
+                        onChange={e => setData('kind', e.target.value)}
+                        options={[
+                            { value: 'percent', label: t('coupons.type_percent') },
+                            { value: 'fixed', label: t('coupons.type_fixed') },
+                        ]}
+                    />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                        {t('coupons.amount_label')} {data.kind === 'percent' ? t('coupons.amount_percent') : t('coupons.amount_cents')}
-                    </label>
-                    <input
+                    <Input
+                        label={`${t('coupons.amount_label')} ${data.kind === 'percent' ? t('coupons.amount_percent') : t('coupons.amount_cents')}`}
                         type="number"
                         value={data.amount}
                         onChange={e => setData('amount', e.target.value)}
-                        className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
                         min="0"
                         step={data.kind === 'percent' ? '0.01' : '1'}
+                        error={errors.amount}
                         required
                     />
-                    {errors.amount && <p className="text-coral-600 text-xs mt-1">{errors.amount}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('coupons.duration_label')}</label>
-                    <select value={data.duration} onChange={e => setData('duration', e.target.value)} className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white">
-                        <option value="once">{t('coupons.duration_once')}</option>
-                        <option value="repeating">{t('coupons.duration_repeating')}</option>
-                        <option value="forever">{t('coupons.duration_forever')}</option>
-                    </select>
+                    <Select
+                        label={t('coupons.duration_label')}
+                        value={data.duration}
+                        onChange={e => setData('duration', e.target.value)}
+                        options={[
+                            { value: 'once', label: t('coupons.duration_once') },
+                            { value: 'repeating', label: t('coupons.duration_repeating') },
+                            { value: 'forever', label: t('coupons.duration_forever') },
+                        ]}
+                    />
                 </div>
                 {data.duration === 'repeating' && (
                     <div>
-                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('coupons.months_label')}</label>
-                        <input
+                        <Input
+                            label={t('coupons.months_label')}
                             type="number"
                             value={data.duration_in_months}
                             onChange={e => setData('duration_in_months', e.target.value)}
-                            className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
                             min="1"
                         />
                     </div>
                 )}
                 <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('coupons.max_redemptions')}</label>
-                    <input
+                    <Input
+                        label={t('coupons.max_redemptions')}
                         type="number"
                         value={data.max_redemptions}
                         onChange={e => setData('max_redemptions', e.target.value)}
-                        className="w-full border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-2 text-sm dark:bg-neutral-700 dark:text-white"
                         placeholder={t('coupons.unlimited_placeholder')}
                         min="1"
                     />
@@ -105,23 +108,21 @@ function CouponForm({ coupon = null, onClose }) {
                     />
                 </div>
                 <div className="flex items-center gap-2 pt-6">
-                    <input
-                        type="checkbox"
+                    <Checkbox
                         id="enabled"
+                        label={t('coupons.enabled_label')}
                         checked={data.enabled}
                         onChange={e => setData('enabled', e.target.checked)}
-                        className="rounded"
                     />
-                    <label htmlFor="enabled" className="text-sm text-neutral-700 dark:text-neutral-300">{t('coupons.enabled_label')}</label>
                 </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                <Button type="button" variant="outline" onClick={onClose}>
                     {t('common.cancel')}
-                </button>
-                <button type="submit" disabled={processing} className="px-4 py-2 text-sm bg-brand-500 text-white rounded-soft hover:bg-brand-600 shadow-soft disabled:opacity-50 transition-all duration-150">
+                </Button>
+                <Button type="submit" disabled={processing}>
                     {coupon ? t('coupons.update_coupon') : t('coupons.create_coupon')}
-                </button>
+                </Button>
             </div>
         </form>
     );

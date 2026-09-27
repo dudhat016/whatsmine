@@ -1,5 +1,6 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import { Input, Select } from '@/Components/ui';
 import {
     ArrowLeft, MessageSquare, Phone, Mail, Globe, Camera, Trash2, Upload,
     ChevronDown, ChevronRight, Folder, FileText, CheckCircle2,
@@ -384,23 +385,22 @@ export default function ContactShow({
                                                                     className="w-full px-3 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:ring-2 focus:ring-brand-500"
                                                                 />
                                                             ) : field.type === 'select' && field.options?.length > 0 ? (
-                                                                <select
+                                                                <Select
                                                                     value={val}
                                                                     onChange={(e) => handleCustomFieldChange(field.key, e.target.value)}
-                                                                    className="w-full px-3 py-2 text-xs font-medium border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                                                                    size="sm"
                                                                 >
                                                                     <option value="">— Select —</option>
                                                                     {field.options.map(opt => (
                                                                         <option key={opt} value={opt}>{opt}</option>
                                                                     ))}
-                                                                </select>
+                                                                </Select>
                                                             ) : (
-                                                                <input
+                                                                <Input
                                                                     type="text"
                                                                     value={Array.isArray(val) ? val.join(', ') : val}
                                                                     onChange={(e) => handleCustomFieldChange(field.key, e.target.value)}
                                                                     placeholder="No value recorded"
-                                                                    className="w-full px-3 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:ring-2 focus:ring-brand-500 font-medium"
                                                                 />
                                                             )}
                                                         </div>
@@ -465,15 +465,13 @@ export default function ContactShow({
                             ['country', t('contacts_page.country_label')],
                             ['language', t('contacts_page.language_label')]
                         ].map(([k, l]) => (
-                            <div key={k} className="space-y-1">
-                                <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">{l}</label>
-                                <input
-                                    type="text"
-                                    value={data[k] ?? ''}
-                                    onChange={e => setData(k, e.target.value)}
-                                    className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500"
-                                />
-                            </div>
+                            <Input
+                                key={k}
+                                label={l}
+                                type="text"
+                                value={data[k] ?? ''}
+                                onChange={e => setData(k, e.target.value)}
+                            />
                         ))}
                     </div>
 

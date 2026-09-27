@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { PanelSelect, PanelToggle, PanelNumber, SectionTitle, FieldLabel, IconButtonGroup } from '../BuilderUI';
+import { PanelSelect, PanelToggle, PanelNumber, PanelInput, SectionTitle, FieldLabel, IconButtonGroup } from '../BuilderUI';
+import { Select } from '@/Components/ui';
 import { Monitor, Tablet, Smartphone } from 'lucide-react';
 import ColorPickerInput from '../ColorPicker';
 import GapControl from './GapControl';
@@ -722,24 +723,20 @@ export default function LayoutPanel({ element, val, viewport, handleUpdateElemen
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-0.5">
                                                 <FieldLabel>Padding (px)</FieldLabel>
-                                                <input
-                                                    type="number"
+                                                <PanelNumber
                                                     min="0"
                                                     max="80"
                                                     value={activeColStyle.padding ?? 0}
                                                     onChange={e => updateColumnStyle(selectedColIndex, 'padding', Number(e.target.value))}
-                                                    className="w-full text-xs font-semibold px-2 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
                                                 />
                                             </div>
                                             <div className="space-y-0.5">
                                                 <FieldLabel>Corner Radius (px)</FieldLabel>
-                                                <input
-                                                    type="number"
+                                                <PanelNumber
                                                     min="0"
                                                     max="48"
                                                     value={activeColStyle.borderRadius ?? 0}
                                                     onChange={e => updateColumnStyle(selectedColIndex, 'borderRadius', Number(e.target.value))}
-                                                    className="w-full text-xs font-semibold px-2 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
                                                 />
                                             </div>
                                         </div>
@@ -748,13 +745,11 @@ export default function LayoutPanel({ element, val, viewport, handleUpdateElemen
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-0.5">
                                                 <FieldLabel>Border Width (px)</FieldLabel>
-                                                <input
-                                                    type="number"
+                                                <PanelNumber
                                                     min="0"
                                                     max="12"
                                                     value={activeColStyle.borderWidth ?? 0}
                                                     onChange={e => updateColumnStyle(selectedColIndex, 'borderWidth', Number(e.target.value))}
-                                                    className="w-full text-xs font-semibold px-2 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
                                                 />
                                             </div>
                                             <div className="space-y-0.5">
@@ -800,12 +795,11 @@ export default function LayoutPanel({ element, val, viewport, handleUpdateElemen
                                                 <div className="space-y-2 p-2 rounded-lg bg-white/80 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700">
                                                     <div className="space-y-0.5">
                                                         <FieldLabel>Badge Text</FieldLabel>
-                                                        <input
+                                                        <PanelInput
                                                             type="text"
                                                             value={activeColStyle.badgeText || 'MOST POPULAR'}
                                                             onChange={e => updateColumnStyle(selectedColIndex, 'badgeText', e.target.value)}
                                                             placeholder="MOST POPULAR"
-                                                            className="w-full text-xs font-bold px-2 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
                                                         />
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
@@ -835,12 +829,11 @@ export default function LayoutPanel({ element, val, viewport, handleUpdateElemen
                                         {/* Whole Column Click Target */}
                                         <div className="pt-2 border-t border-amber-200/60 dark:border-amber-900/40 space-y-1.5">
                                             <FieldLabel>Column Link URL (Clickable Card)</FieldLabel>
-                                            <input
+                                            <PanelInput
                                                 type="text"
                                                 value={activeColStyle.linkUrl || ''}
                                                 onChange={e => updateColumnStyle(selectedColIndex, 'linkUrl', e.target.value)}
                                                 placeholder="https://... or #checkout"
-                                                className="w-full text-xs px-2 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200"
                                             />
                                             {activeColStyle.linkUrl && (
                                                 <label className="flex items-center gap-1.5 text-[11px] text-neutral-600 dark:text-neutral-400 cursor-pointer">
@@ -872,13 +865,15 @@ function SliderWithInput({ label, unitKey, unitDefault, unitOptions, valueKey, v
         <div className="space-y-1">
             <div className="flex items-center justify-between">
                 <FieldLabel>{label}</FieldLabel>
-                <select
-                    value={val(unitKey, unitDefault)}
-                    onChange={e => update(unitKey, e.target.value)}
-                    className="text-[10px] font-bold text-neutral-500 bg-transparent border-0 py-0 pr-1 focus:ring-0 cursor-pointer"
-                >
-                    {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
+                <div className="w-16">
+                    <Select
+                        size="sm"
+                        value={val(unitKey, unitDefault)}
+                        onChange={e => update(unitKey, e.target.value)}
+                    >
+                        {unitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+                    </Select>
+                </div>
             </div>
             <div className="flex items-center gap-2">
                 <input type="range" min="0" max={max} step={step} value={val(valueKey, valueDefault)}
@@ -898,10 +893,15 @@ function GridSlider({ label, valueKey, unitKey, unitDefault, unitOptions, defaul
         <div className="space-y-1">
             <div className="flex items-center justify-between">
                 <FieldLabel>{label}</FieldLabel>
-                <select value={val(unitKey, unitDefault)} onChange={e => update(unitKey, e.target.value)}
-                    className="text-[10px] font-bold text-neutral-500 bg-transparent border-0 py-0 pr-1 focus:ring-0 cursor-pointer">
-                    {unitOptions.map(u => <option key={u.v} value={u.v}>{u.l}</option>)}
-                </select>
+                <div className="w-20">
+                    <Select
+                        size="sm"
+                        value={val(unitKey, unitDefault)}
+                        onChange={e => update(unitKey, e.target.value)}
+                    >
+                        {unitOptions.map(u => <option key={u.v} value={u.v}>{u.l}</option>)}
+                    </Select>
+                </div>
             </div>
             <div className="flex items-center gap-2">
                 <input type="range" min="1" max="12" value={val(valueKey, defaultCount)}

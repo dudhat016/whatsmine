@@ -3,6 +3,7 @@ import ClientLayout from '@/Layouts/ClientLayout';
 import { ChevronLeft, Clock, Globe, Palette, MessageSquare, Eye, Smartphone } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Input } from '@/Components/ui';
 import {
     DEFAULT_FORM, inputCls, Field,
     WidgetPreview, WorkingHoursEditor, DomainEditor,
@@ -68,18 +69,30 @@ export default function CreateWidget() {
                                 {tab === 'basic' && (
                                     <>
                                         <SectionHeader title={t('whatsapp.widget_basic_info')} description={t('whatsapp.widget_create_basic_desc')} />
-                                        <Field label={t('whatsapp.widget_field_name')} hint={t('whatsapp.widget_field_name_hint')}>
-                                            <input type="text" value={data.name} onChange={e => setData('name', e.target.value)}
-                                                placeholder={t('whatsapp.widget_field_name_placeholder')} className={inputCls()} />
-                                        </Field>
-                                        <Field label={t('whatsapp.widget_field_phone')} error={errors.display_phone} hint={t('whatsapp.widget_field_phone_hint')}>
-                                            <input type="tel" value={data.display_phone} onChange={e => setData('display_phone', e.target.value)}
-                                                placeholder="+8801XXXXXXXXX" required className={inputCls(errors.display_phone)} />
-                                        </Field>
-                                        <Field label={t('whatsapp.widget_field_prefilled')} hint={t('whatsapp.widget_field_prefilled_hint')}>
-                                            <input type="text" value={data.prefilled_message} onChange={e => setData('prefilled_message', e.target.value)}
-                                                placeholder={t('whatsapp.widget_field_prefilled_placeholder')} className={inputCls()} />
-                                        </Field>
+                                        <Input
+                                            label={t('whatsapp.widget_field_name')}
+                                            hint={t('whatsapp.widget_field_name_hint')}
+                                            value={data.name}
+                                            onChange={e => setData('name', e.target.value)}
+                                            placeholder={t('whatsapp.widget_field_name_placeholder')}
+                                        />
+                                        <Input
+                                            type="tel"
+                                            label={t('whatsapp.widget_field_phone')}
+                                            error={errors.display_phone}
+                                            hint={t('whatsapp.widget_field_phone_hint')}
+                                            value={data.display_phone}
+                                            onChange={e => setData('display_phone', e.target.value)}
+                                            placeholder="+8801XXXXXXXXX"
+                                            required
+                                        />
+                                        <Input
+                                            label={t('whatsapp.widget_field_prefilled')}
+                                            hint={t('whatsapp.widget_field_prefilled_hint')}
+                                            value={data.prefilled_message}
+                                            onChange={e => setData('prefilled_message', e.target.value)}
+                                            placeholder={t('whatsapp.widget_field_prefilled_placeholder')}
+                                        />
                                         <Field label={t('whatsapp.widget_field_greeting')} hint={t('whatsapp.widget_field_greeting_hint')}>
                                             <textarea rows={3} value={data.greeting_message} onChange={e => setData('greeting_message', e.target.value)}
                                                 placeholder={t('whatsapp.widget_field_greeting_placeholder')} className={inputCls() + ' resize-none'} />
@@ -90,25 +103,28 @@ export default function CreateWidget() {
                                 {tab === 'appearance' && (
                                     <>
                                         <SectionHeader title={t('whatsapp.widget_tab_appearance')} description={t('whatsapp.widget_appearance_desc')} />
-                                        <Field label={t('whatsapp.widget_field_agent_name')} hint={t('whatsapp.widget_field_agent_name_hint')}>
-                                            <input type="text" value={data.agent_name} onChange={e => setData('agent_name', e.target.value)}
-                                                placeholder={t('whatsapp.widget_default_agent_name')} className={inputCls()} />
-                                        </Field>
+                                        <Input
+                                            label={t('whatsapp.widget_field_agent_name')}
+                                            hint={t('whatsapp.widget_field_agent_name_hint')}
+                                            value={data.agent_name}
+                                            onChange={e => setData('agent_name', e.target.value)}
+                                            placeholder={t('whatsapp.widget_default_agent_name')}
+                                        />
                                         <div className="grid grid-cols-2 gap-4">
                                             <Field label={t('whatsapp.widget_field_button_color')}>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <input type="color" value={data.button_color} onChange={e => setData('button_color', e.target.value)}
                                                         className="h-10 w-12 rounded-lg border border-neutral-300 dark:border-neutral-600 cursor-pointer p-0.5 flex-shrink-0" />
-                                                    <input type="text" value={data.button_color} onChange={e => setData('button_color', e.target.value)}
-                                                        className={inputCls() + ' font-mono'} maxLength={9} />
+                                                    <Input type="text" value={data.button_color} onChange={e => setData('button_color', e.target.value)}
+                                                        className="font-mono flex-1" maxLength={9} />
                                                 </div>
                                             </Field>
                                             <Field label={t('whatsapp.widget_field_avatar_color')}>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <input type="color" value={data.agent_avatar_color} onChange={e => setData('agent_avatar_color', e.target.value)}
                                                         className="h-10 w-12 rounded-lg border border-neutral-300 dark:border-neutral-600 cursor-pointer p-0.5 flex-shrink-0" />
-                                                    <input type="text" value={data.agent_avatar_color} onChange={e => setData('agent_avatar_color', e.target.value)}
-                                                        className={inputCls() + ' font-mono'} maxLength={9} />
+                                                    <Input type="text" value={data.agent_avatar_color} onChange={e => setData('agent_avatar_color', e.target.value)}
+                                                        className="font-mono flex-1" maxLength={9} />
                                                 </div>
                                             </Field>
                                         </div>

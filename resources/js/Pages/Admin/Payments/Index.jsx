@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Pagination } from '@/Components/ui';
+import { Button, Card, Pagination, Select } from '@/Components/ui';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { formatInTz } from '@/Utils/datetime';
@@ -20,19 +20,19 @@ export default function AdminPaymentsIndex({ payments, filters = {} }) {
                         {t('admin.view_subscriptions')}
                     </Link>
                 </div>
-                <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); const f = e.target; router.get(route('admin.payments.index'), { status: f.status?.value, gateway: f.gateway?.value }, { preserveState: true }); }}>
-                    <select name="status" className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20" defaultValue={filters.status}>
+                <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); const f = e.target; router.get(route('admin.payments.index'), { status: f.status?.value, gateway: f.gateway?.value }, { preserveState: true }); }}>
+                    <Select name="status" size="sm" defaultValue={filters.status} className="w-44">
                         <option value="">{t('admin.all_statuses')}</option>
                         <option value="succeeded">{t('admin.status_succeeded')}</option>
                         <option value="pending">{t('admin.status_pending')}</option>
                         <option value="failed">{t('admin.status_failed')}</option>
-                    </select>
-                    <select name="gateway" className="rounded-soft border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20" defaultValue={filters.gateway}>
+                    </Select>
+                    <Select name="gateway" size="sm" defaultValue={filters.gateway} className="w-44">
                         <option value="">{t('admin.all_gateways')}</option>
                         <option value="stripe">Stripe</option>
                         <option value="paypal">PayPal</option>
                         <option value="paddle">Paddle</option>
-                    </select>
+                    </Select>
                     <Button type="submit" variant="outline" size="sm">{t('common.filter')}</Button>
                 </form>
                 <Card>

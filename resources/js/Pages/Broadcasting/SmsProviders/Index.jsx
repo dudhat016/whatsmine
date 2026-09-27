@@ -1,6 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
+import { Input } from '@/Components/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, CheckCircle, Trash2, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
@@ -262,7 +263,7 @@ function ProviderCard({ provider }) {
     const { t } = useTranslation();
     const { confirm } = useConfirm();
     const [showGuide, setShowGuide] = useState(false);
-    const [showPassword, setShowPassword] = useState({});
+    const [showSecrets, setShowSecrets] = useState({});
 
     const fields = provider.fields ?? [];
     const guide  = SETUP_GUIDES[provider.provider];
@@ -321,41 +322,33 @@ function ProviderCard({ provider }) {
             <form onSubmit={handleSubmit} className="space-y-3">
                 {(provider.fields ?? []).map(field => (
                     <div key={field.key}>
-                        <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                            {field.label}{field.required && ' *'}
-                        </label>
-                        <div className="relative mt-1">
-                            <input
-                                type={field.type === 'password' && !showSecrets[field.key] ? 'password' : 'text'}
-                                value={data.credentials[field.key] ?? ''}
-                                onChange={e => setData('credentials', { ...data.credentials, [field.key]: e.target.value })}
-                                placeholder={provider.configured ? t('sms.encrypted_placeholder') : ''}
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 pr-10 text-sm"
-                            />
-                            {field.type === 'password' && (
+                        <Input
+                            label={`${field.label}${field.required ? ' *' : ''}`}
+                            type={field.type === 'password' && !showSecrets[field.key] ? 'password' : 'text'}
+                            value={data.credentials[field.key] ?? ''}
+                            onChange={e => setData('credentials', { ...data.credentials, [field.key]: e.target.value })}
+                            placeholder={provider.configured ? t('sms.encrypted_placeholder') : ''}
+                            error={errors[`credentials.${field.key}`]}
+                            rightIcon={field.type === 'password' ? (
                                 <button
                                     type="button"
                                     onClick={() => setShowSecrets(s => ({ ...s, [field.key]: !s[field.key] }))}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                                    className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
                                 >
                                     {showSecrets[field.key] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
-                            )}
-                        </div>
-                        {errors[`credentials.${field.key}`] && (
-                            <p className="mt-1 text-xs text-red-500">{errors[`credentials.${field.key}`]}</p>
-                        )}
+                            ) : null}
+                        />
                     </div>
                 ))}
 
                 <div>
-                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('sms.sender_id')}</label>
-                    <input
+                    <Input
+                        label={t('sms.sender_id')}
                         type="text"
                         value={data.sender_id}
                         onChange={e => setData('sender_id', e.target.value)}
                         placeholder={t('sms.sender_id_placeholder')}
-                        className="mt-1 w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm"
                     />
                 </div>
 

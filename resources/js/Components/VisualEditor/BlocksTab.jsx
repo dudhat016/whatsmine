@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { GripVertical, Plus, Bookmark, RefreshCw, Search, LayoutGrid, Box, Type, Image, MousePointerClick, ShoppingBag, Sliders, X, Sparkles, SlidersHorizontal, Filter } from 'lucide-react';
+import { Input } from '@/Components/ui';
 import { 
     ELEMENT_CATEGORIES, 
     ADMIN_BLOCK_TEMPLATES, 
@@ -142,16 +143,15 @@ export default function BlocksTab({
 
 
             {/* Quick Search Bar */}
-            <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search widgets & elements..."
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-            </div>
+            <Input
+                size="sm"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search widgets & elements..."
+                leftIcon={Search}
+                wrapperClassName="w-full"
+            />
 
             {/* Step Contextual Filter Indicator & Toggle */}
             {activeStep?.type && !searchQuery.trim() && (

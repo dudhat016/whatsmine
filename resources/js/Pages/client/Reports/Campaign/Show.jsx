@@ -5,6 +5,7 @@ import { Download, ArrowLeft, Filter, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { formatInTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { Select } from '@/Components/ui';
 
 const STATUS_COLORS = {
     queued: 'bg-gray-100 text-gray-700',
@@ -151,10 +152,11 @@ export default function CampaignReportShow({
                             </h3>
                             <div className="flex items-center gap-2">
                                 <Filter className="h-4 w-4 text-gray-400" />
-                                <select
+                                <Select
                                     value={statusFilter}
                                     onChange={(e) => applyFilter(e.target.value)}
-                                    className="text-xs rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                                    size="sm"
+                                    className="w-36"
                                 >
                                     <option value="">{t('reports.all_statuses')}</option>
                                     {['queued', 'sent', 'delivered', 'read', 'failed'].map((s) => (
@@ -162,7 +164,7 @@ export default function CampaignReportShow({
                                             {s}
                                         </option>
                                     ))}
-                                </select>
+                                </Select>
                             </div>
                         </div>
                         <div className="overflow-x-auto">

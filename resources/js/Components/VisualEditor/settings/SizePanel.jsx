@@ -1,5 +1,5 @@
 import React from 'react';
-import { PanelSelect, FieldLabel } from '../BuilderUI';
+import { PanelSelect, PanelNumber, FieldLabel } from '../BuilderUI';
 import { FourSideInput } from '../StyleControls';
 import { CONTENT_WIDTH_PRESETS } from '../utils/treeUtils';
 
@@ -120,20 +120,16 @@ export default function SizePanel({ element, val, viewport, handleUpdateElementS
                     <div className="grid grid-cols-2 gap-2 bg-neutral-50 p-2 rounded-lg border border-neutral-200">
                         <div className="space-y-0.5">
                             <FieldLabel>Offset (px)</FieldLabel>
-                            <input
-                                type="number"
+                            <PanelNumber
                                 value={val('stickyOffset', 0)}
                                 onChange={e => handleUpdateElementSetting(element.id, 'stickyOffset', parseFloat(e.target.value) || 0)}
-                                className="w-full text-xs rounded border border-neutral-200 px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
                             />
                         </div>
                         <div className="space-y-0.5">
                             <FieldLabel>Z-Index</FieldLabel>
-                            <input
-                                type="number"
+                            <PanelNumber
                                 value={val('zIndex', 40)}
                                 onChange={e => handleUpdateElementSetting(element.id, 'zIndex', parseInt(e.target.value, 10) || 1)}
-                                className="w-full text-xs rounded border border-neutral-200 px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
                             />
                         </div>
                     </div>

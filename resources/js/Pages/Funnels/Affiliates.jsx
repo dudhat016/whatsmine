@@ -9,6 +9,7 @@ import {
     Coins, BarChart2, ExternalLink, AlertTriangle,
 } from 'lucide-react';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { Input, Select } from '@/Components/ui';
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 const STATUS_COLORS = {
@@ -244,73 +245,50 @@ export default function FunnelAffiliates({ affiliates, funnels }) {
                         </h2>
                         <form onSubmit={handleAdd} className="space-y-3" noValidate>
                             {/* Funnel select */}
-                            <div>
-                                <label htmlFor="affiliate-funnel" className="block text-xs font-medium text-neutral-500 mb-1">
-                                    Funnel
-                                </label>
-                                <select
-                                    id="affiliate-funnel"
-                                    value={data.funnel_id}
-                                    onChange={e => setData('funnel_id', e.target.value)}
-                                    required
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                >
-                                    {funnels.map(f => (
-                                        <option key={f.id} value={f.id}>{f.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                id="affiliate-funnel"
+                                label="Funnel"
+                                value={data.funnel_id}
+                                onChange={e => setData('funnel_id', e.target.value)}
+                                required
+                            >
+                                {funnels.map(f => (
+                                    <option key={f.id} value={f.id}>{f.name}</option>
+                                ))}
+                            </Select>
                             {/* Name */}
-                            <div>
-                                <label htmlFor="affiliate-name" className="block text-xs font-medium text-neutral-500 mb-1">
-                                    {t('funnel.affiliate_name')}
-                                </label>
-                                <input
-                                    id="affiliate-name"
-                                    type="text"
-                                    value={data.name}
-                                    onChange={e => setData('name', e.target.value)}
-                                    required autoFocus
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                    aria-describedby={errors.name ? 'aff-name-error' : undefined}
-                                />
-                                {errors.name && <p id="aff-name-error" role="alert" className="mt-1 text-xs text-red-600">{errors.name}</p>}
-                            </div>
+                            <Input
+                                id="affiliate-name"
+                                label={t('funnel.affiliate_name')}
+                                value={data.name}
+                                onChange={e => setData('name', e.target.value)}
+                                required
+                                autoFocus
+                                error={errors.name}
+                            />
                             {/* Email */}
-                            <div>
-                                <label htmlFor="affiliate-email" className="block text-xs font-medium text-neutral-500 mb-1">
-                                    {t('funnel.affiliate_email')}
-                                </label>
-                                <input
-                                    id="affiliate-email"
-                                    type="email"
-                                    value={data.email}
-                                    onChange={e => setData('email', e.target.value)}
-                                    required
-                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                    aria-describedby={errors.email ? 'aff-email-error' : undefined}
-                                />
-                                {errors.email && <p id="aff-email-error" role="alert" className="mt-1 text-xs text-red-600">{errors.email}</p>}
-                            </div>
+                            <Input
+                                id="affiliate-email"
+                                type="email"
+                                label={t('funnel.affiliate_email')}
+                                value={data.email}
+                                onChange={e => setData('email', e.target.value)}
+                                required
+                                error={errors.email}
+                            />
                             {/* Commission rate */}
-                            <div>
-                                <label htmlFor="affiliate-rate" className="block text-xs font-medium text-neutral-500 mb-1">
-                                    {t('funnel.affiliate_commission_rate')}
-                                </label>
-                                <div className="flex items-center">
-                                    <input
-                                        id="affiliate-rate"
-                                        type="number"
-                                        min="1"
-                                        max="100"
-                                        value={data.commission_rate}
-                                        onChange={e => setData('commission_rate', e.target.value)}
-                                        required
-                                        className="w-full rounded-l-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                    />
-                                    <span className="rounded-r-lg border border-l-0 border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-700 px-3 py-2 text-sm text-neutral-500">%</span>
-                                </div>
-                            </div>
+                            <Input
+                                id="affiliate-rate"
+                                type="number"
+                                min={1}
+                                max={100}
+                                label={t('funnel.affiliate_commission_rate')}
+                                value={data.commission_rate}
+                                onChange={e => setData('commission_rate', e.target.value)}
+                                required
+                                error={errors.commission_rate}
+                                rightIcon={<span className="text-xs text-neutral-400 font-bold">%</span>}
+                            />
                             {/* Actions */}
                             <div className="flex gap-2 pt-1">
                                 <button

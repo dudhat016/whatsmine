@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Palette, Type, Box, FormInput, LayoutTemplate, Sliders, Tablet, Smartphone, Trash2, Plus } from 'lucide-react';
+import { Input, Select } from '@/Components/ui';
 import ColorPickerInput from './ColorPicker';
 import {
     TypographyControl,
@@ -103,7 +104,8 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                         <p className="text-[11px] text-neutral-400 italic">No custom colors added yet.</p>
                     ) : customColors.map((c, idx) => (
                         <div key={c.id || idx} className="flex items-center gap-2 p-1.5 bg-neutral-50 rounded-lg border border-neutral-200">
-                            <input
+                            <Input
+                                size="sm"
                                 type="text"
                                 value={c.name}
                                 onChange={e => {
@@ -111,8 +113,8 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                                     updated[idx] = { ...updated[idx], name: e.target.value };
                                     handleStyleChange('customColors', updated);
                                 }}
-                                className="flex-1 rounded border border-neutral-300 p-1 text-xs font-medium bg-white"
                                 placeholder="Color Name"
+                                wrapperClassName="flex-1"
                             />
                             <ColorPickerInput
                                 value={c.value}
@@ -152,19 +154,21 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                     <div className="grid grid-cols-2 gap-1.5">
                         <div>
                             <span className="text-[9px] text-neutral-400 block mb-0.5">Base (px)</span>
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 value={scaleBase}
                                 onChange={e => setScaleBase(e.target.value)}
-                                className="w-full rounded bg-neutral-800 border border-neutral-700 px-2 py-1 text-xs text-white"
+                                className="bg-neutral-800 border-neutral-700 text-white"
                             />
                         </div>
                         <div>
                             <span className="text-[9px] text-neutral-400 block mb-0.5">Ratio Scale</span>
-                            <select
+                            <Select
+                                size="sm"
                                 value={scaleRatio}
                                 onChange={e => setScaleRatio(parseFloat(e.target.value))}
-                                className="w-full rounded bg-neutral-800 border border-neutral-700 px-1 py-1 text-[11px] text-white"
+                                className="bg-neutral-800 border-neutral-700 text-white text-[11px]"
                             >
                                 <option value={1.125}>1.125 Major Second</option>
                                 <option value={1.200}>1.200 Minor Third</option>
@@ -173,7 +177,7 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                                 <option value={1.414}>1.414 Aug Fourth</option>
                                 <option value={1.500}>1.500 Perfect Fifth</option>
                                 <option value={1.618}>1.618 Golden Ratio</option>
-                            </select>
+                            </Select>
                         </div>
                     </div>
                     <button
@@ -690,23 +694,26 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                     <div className="space-y-1">
                         <label className="block font-semibold text-neutral-700">Default Container Width</label>
                         <div className="flex items-center gap-2">
-                            <input
+                            <Input
+                                size="sm"
                                 type="number"
                                 value={styleGuide.containerWidth ?? 1200}
                                 onChange={e => handleStyleChange('containerWidth', parseInt(e.target.value) || 1200)}
-                                className="w-full rounded border border-neutral-300 p-1.5 text-xs bg-white font-medium focus:ring-1 focus:ring-brand-500"
                                 placeholder="1200"
+                                wrapperClassName="flex-1"
                             />
-                            <select
-                                value={styleGuide.containerWidthUnit || 'px'}
-                                onChange={e => handleStyleChange('containerWidthUnit', e.target.value)}
-                                className="rounded border border-neutral-300 p-1.5 text-xs bg-white font-semibold text-neutral-600 focus:ring-1 focus:ring-brand-500"
-                            >
-                                <option value="px">px</option>
-                                <option value="%">%</option>
-                                <option value="rem">rem</option>
-                                <option value="vw">vw</option>
-                            </select>
+                            <div className="w-20">
+                                <Select
+                                    size="sm"
+                                    value={styleGuide.containerWidthUnit || 'px'}
+                                    onChange={e => handleStyleChange('containerWidthUnit', e.target.value)}
+                                >
+                                    <option value="px">px</option>
+                                    <option value="%">%</option>
+                                    <option value="rem">rem</option>
+                                    <option value="vw">vw</option>
+                                </Select>
+                            </div>
                         </div>
                     </div>
 
@@ -755,8 +762,9 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                         {/* Horizontal Gap (X) */}
                         <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-neutral-50 border border-neutral-200">
                             <span className="font-semibold text-neutral-600 text-xs">Horizontal Gap (X)</span>
-                            <div className="flex items-center gap-1.5 w-32">
-                                <input
+                            <div className="flex items-center gap-1.5 w-36">
+                                <Input
+                                    size="sm"
                                     type="number"
                                     value={styleGuide.elementGapX ?? styleGuide.elementGap ?? 24}
                                     onChange={e => {
@@ -764,41 +772,48 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                                         handleStyleChange('elementGapX', v);
                                         handleStyleChange('elementGap', v);
                                     }}
-                                    className="w-full rounded border border-neutral-300 p-1 text-xs bg-white text-right font-medium"
+                                    className="text-right font-medium"
+                                    wrapperClassName="w-full"
                                 />
-                                <select
-                                    value={styleGuide.elementGapXUnit || 'px'}
-                                    onChange={e => handleStyleChange('elementGapXUnit', e.target.value)}
-                                    className="rounded border border-neutral-300 p-1 text-[11px] bg-white font-semibold text-neutral-600"
-                                >
-                                    <option value="px">px</option>
-                                    <option value="rem">rem</option>
-                                    <option value="em">em</option>
-                                    <option value="vw">vw</option>
-                                </select>
+                                <div className="w-18">
+                                    <Select
+                                        size="sm"
+                                        value={styleGuide.elementGapXUnit || 'px'}
+                                        onChange={e => handleStyleChange('elementGapXUnit', e.target.value)}
+                                    >
+                                        <option value="px">px</option>
+                                        <option value="rem">rem</option>
+                                        <option value="em">em</option>
+                                        <option value="vw">vw</option>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
 
                         {/* Vertical Gap (Y) */}
                         <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-neutral-50 border border-neutral-200">
                             <span className="font-semibold text-neutral-600 text-xs">Vertical Gap (Y)</span>
-                            <div className="flex items-center gap-1.5 w-32">
-                                <input
+                            <div className="flex items-center gap-1.5 w-36">
+                                <Input
+                                    size="sm"
                                     type="number"
                                     value={styleGuide.elementGapY ?? styleGuide.elementGap ?? 24}
                                     onChange={e => handleStyleChange('elementGapY', parseInt(e.target.value) || 0)}
-                                    className="w-full rounded border border-neutral-300 p-1 text-xs bg-white text-right font-medium"
+                                    className="text-right font-medium"
+                                    wrapperClassName="w-full"
                                 />
-                                <select
-                                    value={styleGuide.elementGapYUnit || 'px'}
-                                    onChange={e => handleStyleChange('elementGapYUnit', e.target.value)}
-                                    className="rounded border border-neutral-300 p-1 text-[11px] bg-white font-semibold text-neutral-600"
-                                >
-                                    <option value="px">px</option>
-                                    <option value="rem">rem</option>
-                                    <option value="em">em</option>
-                                    <option value="vh">vh</option>
-                                </select>
+                                <div className="w-18">
+                                    <Select
+                                        size="sm"
+                                        value={styleGuide.elementGapYUnit || 'px'}
+                                        onChange={e => handleStyleChange('elementGapYUnit', e.target.value)}
+                                    >
+                                        <option value="px">px</option>
+                                        <option value="rem">rem</option>
+                                        <option value="em">em</option>
+                                        <option value="vh">vh</option>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -831,11 +846,13 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                                 <span className="font-semibold text-neutral-700 text-xs">Tablet Breakpoint</span>
                             </div>
                             <div className="flex items-center gap-1 w-24">
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     value={styleGuide.tabletBreakpoint ?? 1024}
                                     onChange={e => handleStyleChange('tabletBreakpoint', parseInt(e.target.value) || 1024)}
-                                    className="w-full rounded border border-neutral-300 p-1 text-xs bg-white text-right font-medium"
+                                    className="text-right font-medium"
+                                    wrapperClassName="w-full"
                                 />
                                 <span className="text-[10px] text-neutral-400 font-bold">px</span>
                             </div>
@@ -848,11 +865,13 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                                 <span className="font-semibold text-neutral-700 text-xs">Mobile Breakpoint</span>
                             </div>
                             <div className="flex items-center gap-1 w-24">
-                                <input
+                                <Input
+                                    size="sm"
                                     type="number"
                                     value={styleGuide.mobileBreakpoint ?? 768}
                                     onChange={e => handleStyleChange('mobileBreakpoint', parseInt(e.target.value) || 768)}
-                                    className="w-full rounded border border-neutral-300 p-1 text-xs bg-white text-right font-medium"
+                                    className="text-right font-medium"
+                                    wrapperClassName="w-full"
                                 />
                                 <span className="text-[10px] text-neutral-400 font-bold">px</span>
                             </div>
@@ -861,7 +880,8 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                         {/* User-defined Custom Breakpoints */}
                         {(styleGuide.customBreakpoints || []).map((bp, idx) => (
                             <div key={bp.id || idx} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-brand-50/50 border border-brand-200/60">
-                                <input
+                                <Input
+                                    size="sm"
                                     type="text"
                                     value={bp.name || ''}
                                     onChange={e => {
@@ -869,11 +889,12 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                                         list[idx] = { ...list[idx], name: e.target.value };
                                         handleStyleChange('customBreakpoints', list);
                                     }}
-                                    className="w-full rounded border border-neutral-300 p-1 text-xs bg-white font-medium"
                                     placeholder="Breakpoint Name"
+                                    wrapperClassName="w-full"
                                 />
                                 <div className="flex items-center gap-1 w-28 shrink-0">
-                                    <input
+                                    <Input
+                                        size="sm"
                                         type="number"
                                         value={bp.width || 1280}
                                         onChange={e => {
@@ -881,7 +902,8 @@ export default function BrandTab({ styleGuide = {}, handleStyleChange }) {
                                             list[idx] = { ...list[idx], width: parseInt(e.target.value) || 1280 };
                                             handleStyleChange('customBreakpoints', list);
                                         }}
-                                        className="w-full rounded border border-neutral-300 p-1 text-xs bg-white text-right font-medium"
+                                        className="text-right font-medium"
+                                        wrapperClassName="w-full"
                                     />
                                     <span className="text-[10px] text-neutral-400 font-bold">px</span>
                                     <button

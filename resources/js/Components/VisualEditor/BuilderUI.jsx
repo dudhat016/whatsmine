@@ -7,7 +7,7 @@
  */
 import React from 'react';
 import { RotateCcw } from 'lucide-react';
-import { Toggle } from '@/Components/ui';
+import { Toggle, Input, Select } from '@/Components/ui';
 
 // ─── Shared token classes ────────────────────────────────────────────────────
 const BASE =
@@ -19,8 +19,10 @@ const BASE =
 // ─── Text Input ──────────────────────────────────────────────────────────────
 export function PanelInput({ className = '', ...props }) {
     return (
-        <input
-            className={`${BASE} px-2.5 py-1.5 text-xs font-medium ${className}`}
+        <Input
+            size="sm"
+            className={`font-medium ${className}`}
+            wrapperClassName="w-full"
             {...props}
         />
     );
@@ -39,25 +41,25 @@ export function PanelTextarea({ className = '', ...props }) {
 // ─── Select / Dropdown ───────────────────────────────────────────────────────
 export function PanelSelect({ className = '', children, ...props }) {
     return (
-        <select
-            className={`${BASE} px-2.5 py-1.5 text-xs font-medium cursor-pointer ${className}`}
+        <Select
+            size="sm"
+            className={`font-medium ${className}`}
+            wrapperClassName="w-full"
             {...props}
         >
             {children}
-        </select>
+        </Select>
     );
 }
 
 // ─── Number input (no spinner, centered) ─────────────────────────────────────
 export function PanelNumber({ className = '', ...props }) {
     return (
-        <input
+        <Input
             type="number"
-            className={`w-full rounded-soft border border-soft border-neutral-300 bg-white
-                        text-neutral-900 shadow-inner text-xs font-bold text-center
-                        px-1.5 py-1.5 transition duration-150
-                        focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500
-                        dark:bg-neutral-800 dark:border-neutral-600 dark:text-neutral-100 ${className}`}
+            size="sm"
+            className={`font-bold text-center ${className}`}
+            wrapperClassName="w-full"
             {...props}
         />
     );
