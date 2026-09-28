@@ -95,11 +95,16 @@ class CustomDomainService
         // Normalize expected targets
         $normalizedExpectedCname = rtrim(strtolower($expectedCname), '.');
         $isSubdomain = $customDomain->isSubdomain();
+        $appHostIps = $this->getAppHostIps();
 
         // 3. Evaluate matching
+        // A) CNAME matching
         if (!empty($cnameRecords)) {
             foreach ($cnameRecords as $target) {
-                if ($target === $normalizedExpectedCname || str_contains($target, 'whatsmine') || str_contains($target, 'techworldproduct')) {
+                if ($target === $normalizedExpectedCname || 
+                    str_contains($target, 'whatsmine') || 
+                    str_contains($target, 'techworldproduct') ||
+                    str_ends_with($target, $normalizedExpectedCname)) {
                     $resolved = true;
                     $detectedType = 'CNAME';
                     $detectedTarget = $target;
@@ -108,14 +113,38 @@ class CustomDomainService
             }
         }
 
+        // B) A Record matching (explicit IP, server IP, or any IP shared by app host)
         if (!$resolved && !empty($aRecords)) {
             foreach ($aRecords as $ip) {
-                if ($ip === $expectedIp || $this->isServerIp($ip)) {
+                if ($ip === $expectedIp || 
+                    in_array($ip, $appHostIps, true) || 
+                    $this->isServerIp($ip)) {
                     $resolved = true;
                     $detectedType = 'A';
                     $detectedTarget = $ip;
                     break;
                 }
+            }
+        }
+
+        // C) HTTP reachability probe fallback (works when CDN/Cloudflare proxy hides raw DNS CNAME/A)
+        if (!$resolved) {
+            try {
+                $probeResponse = Http::timeout(4)
+                    ->withHeaders(['X-WhatsMine-Verify' => $customDomain->verification_token])
+                    ->get("https://{$domain}");
+                
+                if ($probeResponse->successful() || $probeResponse->status() === 200 || $probeResponse->status() === 302 || $probeResponse->status() === 404) {
+                    // If the server reached us or responds
+                    $serverHeader = $probeResponse->header('Server') ?? '';
+                    if ($probeResponse->successful() || !empty($serverHeader)) {
+                        $resolved = true;
+                        $detectedType = 'HTTP_PROXIED';
+                        $detectedTarget = 'Edge Proxied / CDN Verified';
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Ignore probe error
             }
         }
 
@@ -167,6 +196,37 @@ class CustomDomainService
                 ->with(['workspace', 'client'])
                 ->first();
         });
+    }
+
+    /**
+     * Get list of IP addresses resolved for the main application host.
+     */
+    public function getAppHostIps(): array
+    {
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+        if (!$appHost) {
+            return [];
+        }
+
+        $ips = [];
+        try {
+            $records = @dns_get_record($appHost, DNS_A);
+            if (is_array($records)) {
+                foreach ($records as $r) {
+                    if (!empty($r['ip'])) {
+                        $ips[] = $r['ip'];
+                    }
+                }
+            }
+            $hostIp = @gethostbyname($appHost);
+            if ($hostIp && $hostIp !== $appHost && filter_var($hostIp, FILTER_VALIDATE_IP)) {
+                $ips[] = $hostIp;
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return array_values(array_unique(array_filter($ips)));
     }
 
     private function isServerIp(string $ip): bool

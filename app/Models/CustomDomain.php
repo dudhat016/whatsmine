@@ -82,7 +82,24 @@ class CustomDomain extends Model
 
     public function getExpectedIpTarget(): string
     {
-        return config('domains.a_record_target', '162.159.137.91');
+        if (config('domains.a_record_target')) {
+            return config('domains.a_record_target');
+        }
+
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+        if ($appHost) {
+            $ip = @gethostbyname($appHost);
+            if ($ip && $ip !== $appHost && filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+
+        $serverIp = $_SERVER['SERVER_ADDR'] ?? null;
+        if ($serverIp && filter_var($serverIp, FILTER_VALIDATE_IP)) {
+            return $serverIp;
+        }
+
+        return '162.159.137.91';
     }
 
     public function getResolvedTargetNameAttribute(): ?string
