@@ -55,6 +55,12 @@ export default function MediaIndex({ files, usedBytes, quotaBytes }) {
     const [inspectedFile, setInspectedFile] = useState(files.data?.[0] || null);
     const [copied, setCopied] = useState(false);
 
+    const [failedImages, setFailedImages] = useState({});
+
+    const handleImageError = (id) => {
+        setFailedImages((prev) => ({ ...prev, [id]: true }));
+    };
+
     const isImageMime = (mime) => mime?.startsWith('image/') || false;
     const isVideoMime = (mime) => mime?.startsWith('video/') || false;
     const isAudioMime = (mime) => mime?.startsWith('audio/') || false;
@@ -404,12 +410,13 @@ export default function MediaIndex({ files, usedBytes, quotaBytes }) {
                                         >
                                             {/* Thumbnail Container */}
                                             <div className="aspect-square w-full bg-neutral-100 dark:bg-neutral-800/80 relative overflow-hidden flex items-center justify-center">
-                                                {isImg ? (
+                                                {isImg && !failedImages[file.id] ? (
                                                     <img
                                                         src={file.url}
                                                         alt={file.filename}
                                                         className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
                                                         loading="lazy"
+                                                        onError={() => handleImageError(file.id)}
                                                     />
                                                 ) : (
                                                     <div className="flex flex-col items-center justify-center p-2 text-center">
@@ -417,6 +424,11 @@ export default function MediaIndex({ files, usedBytes, quotaBytes }) {
                                                         <span className="text-[10px] font-mono text-neutral-500 uppercase mt-1">
                                                             {file.filename.split('.').pop()}
                                                         </span>
+                                                        {failedImages[file.id] && (
+                                                            <span className="text-[9px] text-amber-500 font-semibold mt-0.5">
+                                                                File not on disk
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 )}
 
@@ -496,11 +508,12 @@ export default function MediaIndex({ files, usedBytes, quotaBytes }) {
 
                                 {/* Big Preview Box */}
                                 <div className="aspect-video w-full rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 overflow-hidden flex items-center justify-center shadow-inner relative">
-                                    {isImageMime(inspectedFile.mime_type) ? (
+                                    {isImageMime(inspectedFile.mime_type) && !failedImages[inspectedFile.id] ? (
                                         <img
                                             src={inspectedFile.url}
                                             alt={inspectedFile.filename}
                                             className="w-full h-full object-contain p-1"
+                                            onError={() => handleImageError(inspectedFile.id)}
                                         />
                                     ) : (
                                         <div className="flex flex-col items-center justify-center p-4 text-center">
@@ -508,6 +521,11 @@ export default function MediaIndex({ files, usedBytes, quotaBytes }) {
                                             <span className="text-xs font-mono text-neutral-500 uppercase mt-2">
                                                 {inspectedFile.filename.split('.').pop()}
                                             </span>
+                                            {failedImages[inspectedFile.id] && (
+                                                <span className="text-[10px] text-amber-500 font-semibold mt-1">
+                                                    File missing from server disk (404)
+                                                </span>
+                                            )}
                                         </div>
                                     )}
                                 </div>
