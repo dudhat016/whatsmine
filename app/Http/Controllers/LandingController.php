@@ -44,8 +44,48 @@ class LandingController extends Controller
         }
     }
 
-    public function index(): Response|RedirectResponse
+    public function index(): mixed
     {
+        $customDomain = request()->attributes->get('custom_domain');
+        if ($customDomain && $customDomain->is_verified) {
+            // 1. Whitelabel agency app portal -> redirect to login
+            if ($customDomain->type === 'app_whitelabel') {
+                return redirect()->route('login');
+            }
+
+            // 2. Sales Funnel -> Render funnel root step
+            if ($customDomain->type === 'funnel' && $customDomain->target_id) {
+                $funnel = \App\Modules\Funnels\Models\Funnel::find($customDomain->target_id);
+                if ($funnel) {
+                    return app(\App\Modules\Funnels\Http\Controllers\FunnelRenderController::class)
+                        ->show(request(), (string)$funnel->workspace_id, $funnel->slug);
+                }
+            }
+
+            // 3. E-Commerce Storefront -> Render store
+            if ($customDomain->type === 'ecommerce' && $customDomain->target_id) {
+                $store = \App\Modules\Ecommerce\Models\EcommerceStore::find($customDomain->target_id);
+                if ($store && $store->slug) {
+                    return app(\App\Modules\Ecommerce\Http\Controllers\PublicStorefrontController::class)
+                        ->index(request(), $store->slug);
+                }
+            }
+
+            // 4. Booking Calendar -> Render calendar
+            if ($customDomain->type === 'booking' && $customDomain->target_id) {
+                $calendar = \App\Modules\Calendars\Models\BookingCalendar::find($customDomain->target_id);
+                if ($calendar && $calendar->slug && class_exists(\App\Modules\Calendars\Http\Controllers\PublicBookingController::class)) {
+                    return app(\App\Modules\Calendars\Http\Controllers\PublicBookingController::class)
+                        ->show(request(), $calendar->slug);
+                }
+            }
+
+            // 5. Fallback URL redirect if configured
+            if (!empty($customDomain->fallback_url)) {
+                return redirect()->away($customDomain->fallback_url);
+            }
+        }
+
         if ($redirect = $this->landingDisabledRedirect()) {
             return $redirect;
         }

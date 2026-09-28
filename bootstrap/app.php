@@ -15,6 +15,7 @@ use App\Http\Middleware\EnsureNotDemoMode;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureUserRole;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\IdentifyCustomDomain;
 use App\Http\Middleware\RedirectIfAdminAuthenticated;
 use App\Http\Middleware\RequestIdMiddleware;
 use App\Http\Middleware\RequirePermission;
@@ -111,6 +112,7 @@ return Application::configure(basePath: dirname(__DIR__))
             EnsureInstalled::class,
             AddLinkHeadersForPreloadedAssets::class,
             SetLocale::class,
+            IdentifyCustomDomain::class,
             HandleInertiaRequests::class,
             SecureHeaders::class,
             RequestIdMiddleware::class,

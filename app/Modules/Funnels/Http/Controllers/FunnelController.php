@@ -291,13 +291,21 @@ class FunnelController extends Controller
             ->limit(50)
             ->get();
 
-        $automations = \App\Modules\Automation\Models\Automation::where('workspace_id', $wid)
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get(['id', 'uuid', 'name', 'trigger_type', 'trigger_config', 'nodes']);
+        $customDomains = \App\Models\CustomDomain::where('workspace_id', $wid)
+            ->where('is_verified', true)
+            ->select('id', 'domain', 'type', 'target_id')
+            ->get();
+
+        $automations = class_exists(\App\Modules\Automation\Models\Automation::class)
+            ? \App\Modules\Automation\Models\Automation::where('workspace_id', $wid)
+                ->select('id', 'name', 'status')
+                ->orderBy('name')
+                ->get()
+            : [];
 
         return Inertia::render('Funnels/Show', [
             'funnel'            => $funnel,
+            'customDomains'     => $customDomains,
             'availableProducts' => $availableProducts,
             'automations'       => $automations,
             'leads'             => $leads,
@@ -807,6 +815,7 @@ class FunnelController extends Controller
         $validated = $request->validate([
             'name'             => ['required', 'string', 'max:128'],
             'slug'             => ['required', 'string', 'max:128', Rule::unique('funnels', 'slug')->where('workspace_id', $this->workspaceId($request))->ignore($funnel->id)],
+            'custom_domain_id' => ['nullable', 'integer', 'exists:custom_domains,id'],
             'theme_color'      => ['nullable', 'string', 'max:32'],
             'meta_title'       => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string'],
@@ -814,6 +823,13 @@ class FunnelController extends Controller
         ]);
 
         $funnel->update($validated);
+
+        if ($funnel->custom_domain_id) {
+            \App\Models\CustomDomain::where('id', $funnel->custom_domain_id)->update([
+                'target_id' => $funnel->id,
+                'type'      => 'funnel',
+            ]);
+        }
 
         return back()->with('success', 'Funnel settings updated.');
     }

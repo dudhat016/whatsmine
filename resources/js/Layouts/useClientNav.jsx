@@ -5,7 +5,7 @@ import {
     LayoutDashboard, CreditCard, Package, FileText, Users, Settings,
     Layers, Webhook, Key, BookOpen, Image, Radio, Inbox, Bot, Database,
     Zap, Share2, MapPin, Tag, LifeBuoy, ExternalLink, Mail, MessageSquare,
-    ShoppingBag, Funnel, Users2, GitBranch, Calendar, Sliders,
+    ShoppingBag, Funnel, Users2, GitBranch, Calendar, Sliders, Globe,
 } from 'lucide-react';
 
 const iconClass = 'h-4 w-4';
@@ -36,6 +36,7 @@ export default function useClientNav() {
 
     const accountSettingsItems = [
         { label: t('nav.workspaces'), href: safeRoute('client.workspaces.index'), icon: <Layers className={iconClass} />,   activePattern: 'client.workspaces.*' },
+        { label: 'Custom Domains',    href: safeRoute('client.settings.domains.index'), icon: <Globe className={iconClass} />,    activePattern: 'client.settings.domains.*' },
         { label: t('nav.settings'),   href: safeRoute('client.settings.index'),   icon: <Settings className={iconClass} />, activePattern: 'client.settings.*' },
     ];
 

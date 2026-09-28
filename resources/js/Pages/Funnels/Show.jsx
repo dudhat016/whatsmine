@@ -51,6 +51,7 @@ const fmtDate = (iso) => {
 
 export default function FunnelShow({
     funnel,
+    customDomains = [],
     availableProducts = [],
     automations = [],
     leads = [],
@@ -430,11 +431,23 @@ export default function FunnelShow({
     const settingsForm = useForm({
         name: funnel.name || '',
         slug: funnel.slug || '',
+        custom_domain_id: funnel.custom_domain_id || '',
         theme_color: funnel.theme_color || '#16a34a',
         meta_title: funnel.meta_title || '',
         meta_description: funnel.meta_description || '',
         no_index: funnel.no_index || false,
     });
+
+    const assignedDomain = useMemo(() => {
+        return customDomains.find(d => String(d.id) === String(settingsForm.data.custom_domain_id || funnel.custom_domain_id));
+    }, [customDomains, settingsForm.data.custom_domain_id, funnel.custom_domain_id]);
+
+    const liveFunnelUrl = useMemo(() => {
+        if (assignedDomain) {
+            return `https://${assignedDomain.domain}/${settingsForm.data.slug || funnel.slug}`;
+        }
+        return `/f/${settingsForm.data.slug || funnel.slug}`;
+    }, [assignedDomain, settingsForm.data.slug, funnel.slug]);
 
     // ─── Step Actions ─────────────────────────────────────────────────────────
 
@@ -581,7 +594,14 @@ export default function FunnelShow({
                                 </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-neutral-400 mt-1">
-                                <span>/f/{funnel.slug}</span>
+                                {assignedDomain ? (
+                                    <span className="inline-flex items-center gap-1 font-medium text-brand-600 dark:text-brand-400">
+                                        <Globe className="w-3 h-3" />
+                                        {assignedDomain.domain}/{funnel.slug}
+                                    </span>
+                                ) : (
+                                    <span>/f/{funnel.slug}</span>
+                                )}
                                 {funnel.folder && (
                                     <span className="inline-flex items-center gap-1 font-medium px-1.5 py-0.2 rounded" style={{ backgroundColor: `${funnel.folder.color || '#16a34a'}20`, color: funnel.folder.color || '#16a34a' }}>
                                         <Folder className="w-2.5 h-2.5" />
@@ -595,7 +615,7 @@ export default function FunnelShow({
                     <div className="flex items-center gap-2.5">
                         {funnel.status === 'published' && (
                             <a
-                                href={`/f/${funnel.slug}`}
+                                href={liveFunnelUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition"
@@ -1669,11 +1689,32 @@ export default function FunnelShow({
 
                             <div>
                                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                    Custom Domain
+                                </label>
+                                <Select
+                                    value={settingsForm.data.custom_domain_id || ''}
+                                    onChange={(val) => settingsForm.setData('custom_domain_id', val || '')}
+                                    options={[
+                                        { value: '', label: 'Default Subdomain (e.g. /f/slug)' },
+                                        ...customDomains.map(d => ({
+                                            value: String(d.id),
+                                            label: `${d.domain} ${d.is_verified ? '✓ (Verified)' : '(Pending Verification)'}`
+                                        }))
+                                    ]}
+                                    placeholder="Select a custom domain"
+                                />
+                                <p className="text-[11px] text-neutral-500 mt-1">
+                                    Map this sales funnel to your own branded custom domain configured under Settings → Custom Domains.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
                                     Funnel Slug Path *
                                 </label>
                                 <div className="flex items-center gap-2">
-                                    <span className="bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-neutral-500 border border-neutral-300 dark:border-neutral-700 rounded-md text-xs">
-                                        /f/
+                                    <span className="bg-neutral-100 dark:bg-neutral-800 px-3 py-2 text-neutral-500 border border-neutral-300 dark:border-neutral-700 rounded-md text-xs font-mono">
+                                        {assignedDomain ? `${assignedDomain.domain}/` : '/f/'}
                                     </span>
                                     <Input
                                         size="sm"
@@ -1683,6 +1724,12 @@ export default function FunnelShow({
                                         onChange={(e) => settingsForm.setData('slug', e.target.value)}
                                         required
                                     />
+                                </div>
+                                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-neutral-500">
+                                    <span>Public URL preview:</span>
+                                    <code className="text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 px-1.5 py-0.5 rounded">
+                                        {liveFunnelUrl}
+                                    </code>
                                 </div>
                             </div>
 

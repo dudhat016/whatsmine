@@ -10,12 +10,17 @@ import {
  * Modal with soft overlay and rounded panel. Use Modal.Panel for content.
  */
 export default function Modal({
-    show = false,
+    show,
+    isOpen,
     onClose,
     closeable = true,
-    maxWidth = '2xl',
+    maxWidth,
+    size,
     children,
 }) {
+    const isVisible = show !== undefined ? Boolean(show) : Boolean(isOpen);
+    const resolvedWidth = maxWidth || size || '2xl';
+
     const maxWidthClass = {
         sm: 'sm:max-w-sm',
         md: 'sm:max-w-md',
@@ -27,14 +32,14 @@ export default function Modal({
         '5xl': 'sm:max-w-5xl',
         '6xl': 'sm:max-w-6xl',
         '7xl': 'sm:max-w-7xl',
-    }[maxWidth] || 'sm:max-w-2xl';
+    }[resolvedWidth] || 'sm:max-w-2xl';
 
     return (
-        <Transition show={show} leave="duration-200">
+        <Transition show={isVisible} leave="duration-200">
             <Dialog
                 as="div"
                 className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6"
-                onClose={closeable ? onClose : () => {}}
+                onClose={closeable ? (onClose || (() => {})) : () => {}}
             >
                 <TransitionChild
                     enter="ease-out duration-200"
@@ -66,16 +71,20 @@ export default function Modal({
     );
 }
 
-Modal.Header = function ModalHeader({ title, onClose, showClose = true }) {
+Modal.Header = function ModalHeader({ title, onClose, showClose = true, children }) {
     const { t } = useTranslation();
     return (
         <div className="flex items-center justify-between border-b border-soft border-neutral-200 dark:border-neutral-800 px-5 py-4">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{title}</h3>
+            {children ? (
+                <div className="flex-1">{children}</div>
+            ) : (
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{title}</h3>
+            )}
             {showClose && onClose && (
                 <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-soft p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300 transition duration-150"
+                    className="rounded-soft p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 dark:hover:bg-neutral-800 dark:hover:text-neutral-300 transition duration-150 ml-auto"
                     aria-label={t('common.close')}
                 >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

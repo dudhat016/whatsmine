@@ -6,6 +6,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Client\ApiTokenController;
 use App\Http\Controllers\Client\AuditLogController as ClientAuditLogController;
 use App\Http\Controllers\Client\BillingController;
+use App\Http\Controllers\Client\CustomDomainController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\InvitationController;
 use App\Http\Controllers\Client\MediaController;
@@ -65,6 +66,13 @@ Route::middleware(['verified'])->group(function () {
     Route::get('/settings/notifications', [ClientSettingsController::class, 'notifications'])->name('settings.notifications');
     Route::get('/settings/data-export', [DataExportController::class, 'index'])->name('settings.data-export');
     Route::post('/settings/data-export', [DataExportController::class, 'store'])->name('settings.data-export.store');
+
+    // Custom Domains & Whitelabel
+    Route::get('/settings/domains', [CustomDomainController::class, 'index'])->name('settings.domains.index');
+    Route::post('/settings/domains', [CustomDomainController::class, 'store'])->name('settings.domains.store');
+    Route::post('/settings/domains/{customDomain}/verify', [CustomDomainController::class, 'verify'])->name('settings.domains.verify');
+    Route::put('/settings/domains/{customDomain}', [CustomDomainController::class, 'update'])->name('settings.domains.update');
+    Route::delete('/settings/domains/{customDomain}', [CustomDomainController::class, 'destroy'])->name('settings.domains.destroy');
 
     // Workspaces (switcher)
     Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces.index');

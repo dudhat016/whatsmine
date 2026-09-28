@@ -35,6 +35,7 @@ class Funnel extends Model
         'folder_id',
         'name',
         'slug',
+        'custom_domain_id',
         'theme_color',
         'meta_title',
         'meta_description',
@@ -50,6 +51,11 @@ class Funnel extends Model
         'conversions_count',
         'total_revenue',
     ];
+
+    public function customDomain(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\CustomDomain::class, 'custom_domain_id');
+    }
 
     protected function casts(): array
     {
