@@ -15,15 +15,41 @@ class MediaController extends Controller
 {
     public function __construct(private MediaService $mediaService) {}
 
-    public function index(Request $request): Response
+    public function index(Request $request): Response|JsonResponse
     {
         $user = $request->user();
         $usedBytes = $this->mediaService->usedBytes($user);
         $quotaBytes = $this->mediaService->quotaBytes($user);
 
-        $files = Media::where('mediable_type', get_class($user))
-            ->where('mediable_id', $user->id)
-            ->latest()
+        $query = Media::where('mediable_type', get_class($user))
+            ->where('mediable_id', $user->id);
+
+        if ($search = $request->input('search')) {
+            $query->where('filename', 'like', "%{$search}%");
+        }
+
+        if ($type = $request->input('type')) {
+            if ($type === 'images') {
+                $query->where('mime_type', 'like', 'image/%');
+            } elseif ($type === 'documents') {
+                $query->where(function ($q) {
+                    $q->where('mime_type', 'like', '%pdf%')
+                      ->orWhere('mime_type', 'like', '%document%')
+                      ->orWhere('mime_type', 'like', '%word%')
+                      ->orWhere('mime_type', 'like', '%sheet%')
+                      ->orWhere('mime_type', 'like', '%excel%')
+                      ->orWhere('mime_type', 'like', '%text%')
+                      ->orWhere('mime_type', 'like', '%zip%');
+                });
+            } elseif ($type === 'audio_video') {
+                $query->where(function ($q) {
+                    $q->where('mime_type', 'like', 'audio/%')
+                      ->orWhere('mime_type', 'like', 'video/%');
+                });
+            }
+        }
+
+        $files = $query->latest()
             ->paginate(24)
             ->through(fn ($m) => [
                 'id' => $m->id,
@@ -33,13 +59,80 @@ class MediaController extends Controller
                 'url' => $m->url(),
                 'collection' => $m->collection,
                 'created_at' => $m->created_at->toIso8601String(),
+                'usages' => $this->getMediaUsages($m, $user),
             ]);
+
+        if ($request->wantsJson() && ! $request->header('X-Inertia')) {
+            return response()->json([
+                'files' => $files,
+                'usedBytes' => $usedBytes,
+                'quotaBytes' => $quotaBytes,
+            ]);
+        }
 
         return Inertia::render('client/Media/Index', [
             'files' => $files,
             'usedBytes' => $usedBytes,
             'quotaBytes' => $quotaBytes,
         ]);
+    }
+
+    private function getMediaUsages(Media $media, $user): array
+    {
+        $usages = [];
+        $url = $media->url();
+        $path = $media->path;
+        $filename = basename($path);
+
+        try {
+            // 1. Check Ecommerce Products
+            if (class_exists(\App\Modules\Ecommerce\Models\EcommerceProduct::class)) {
+                $products = \App\Modules\Ecommerce\Models\EcommerceProduct::where(function ($q) use ($url, $path, $filename) {
+                    $q->where('image_url', $url)
+                      ->orWhere('image_url', 'like', "%{$filename}%")
+                      ->orWhere('digital_file_url', $url)
+                      ->orWhere('digital_file_url', 'like', "%{$filename}%")
+                      ->orWhere('raw', 'like', "%{$filename}%");
+                })->limit(5)->get(['id', 'name']);
+
+                foreach ($products as $p) {
+                    $usages[] = [
+                        'type' => 'Product',
+                        'title' => $p->name,
+                        'context' => 'Product Cover / Asset',
+                    ];
+                }
+            }
+
+            // 2. Check Social Posts
+            if (class_exists(\App\Modules\Social\Models\SocialPost::class)) {
+                $posts = \App\Modules\Social\Models\SocialPost::where('user_id', $user->id)
+                    ->where('media', 'like', "%{$filename}%")
+                    ->limit(3)
+                    ->get(['id', 'content']);
+
+                foreach ($posts as $post) {
+                    $usages[] = [
+                        'type' => 'Social Post',
+                        'title' => \Illuminate\Support\Str::limit($post->content ?: 'Social Campaign Post', 28),
+                        'context' => 'Post Attachment',
+                    ];
+                }
+            }
+
+            // 3. Check Funnels or Direct Relations
+            if ($media->mediable_type && $media->mediable_type !== get_class($user)) {
+                $usages[] = [
+                    'type' => class_basename($media->mediable_type),
+                    'title' => 'Linked Item #' . $media->mediable_id,
+                    'context' => 'Direct Attachment',
+                ];
+            }
+        } catch (\Throwable $e) {
+            // Gracefully ignore query issues if table missing
+        }
+
+        return $usages;
     }
 
     public function store(Request $request): JsonResponse|RedirectResponse
@@ -79,5 +172,30 @@ class MediaController extends Controller
         $medium->delete();
 
         return response()->json(['ok' => true]);
+    }
+
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'integer'],
+        ]);
+
+        $user = $request->user();
+        $mediaItems = Media::where('mediable_type', get_class($user))
+            ->where('mediable_id', $user->id)
+            ->whereIn('id', $validated['ids'])
+            ->get();
+
+        $deletedCount = 0;
+        foreach ($mediaItems as $media) {
+            $media->delete();
+            $deletedCount++;
+        }
+
+        return response()->json([
+            'ok' => true,
+            'deleted_count' => $deletedCount,
+        ]);
     }
 }

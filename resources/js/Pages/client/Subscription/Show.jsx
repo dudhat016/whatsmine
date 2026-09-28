@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Modal, Button } from '@/Components/ui';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
@@ -38,10 +38,10 @@ function ChangePlanModal({ subscription, plans, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 w-full max-w-md shadow-xl">
-                <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">{t('subscription.change_plan')}</h2>
-                <form onSubmit={submit} className="space-y-4">
+        <Modal show={true} onClose={onClose} maxWidth="md">
+            <Modal.Header title={t('subscription.change_plan')} onClose={onClose} />
+            <form onSubmit={submit}>
+                <Modal.Body className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('subscription.plan_label')}</label>
                         <Select
@@ -62,7 +62,7 @@ function ChangePlanModal({ subscription, plans, onClose }) {
                                     key={cycle}
                                     type="button"
                                     onClick={() => setData('billing_cycle', cycle)}
-                                    className={`flex-1 py-2 px-3 text-sm rounded-soft border ${data.billing_cycle === cycle ? 'border-brand-600 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300' : 'border-neutral-300 dark:border-neutral-600'}`}
+                                    className={`flex-1 py-2 px-3 text-sm rounded-soft border transition ${data.billing_cycle === cycle ? 'border-brand-600 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium' : 'border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
                                 >
                                     {cycle === 'month' ? t('subscription.cycle_monthly') : t('subscription.cycle_annual')}
                                 </button>
@@ -79,9 +79,9 @@ function ChangePlanModal({ subscription, plans, onClose }) {
                                 className="flex-1 font-mono"
                                 placeholder="SAVE20"
                             />
-                            <button type="button" onClick={checkCoupon} className="px-3 py-2 text-sm bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600">
+                            <Button type="button" variant="secondary" onClick={checkCoupon}>
                                 {t('subscription.apply')}
-                            </button>
+                            </Button>
                         </div>
                         {couponStatus && (
                             <p className={`text-xs mt-1 ${couponStatus.valid ? 'text-green-600 dark:text-green-400' : 'text-coral-600'}`}>
@@ -92,17 +92,17 @@ function ChangePlanModal({ subscription, plans, onClose }) {
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         {t('subscription.proration_note')}
                     </p>
-                    <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700">
-                            {t('common.cancel')}
-                        </button>
-                        <button type="submit" disabled={processing} className="px-4 py-2 text-sm bg-brand-500 text-white rounded-soft hover:bg-brand-600 shadow-soft disabled:opacity-50 transition-all duration-150">
-                            {t('subscription.confirm_change')}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button type="button" variant="secondary" onClick={onClose}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button type="submit" disabled={processing}>
+                        {t('subscription.confirm_change')}
+                    </Button>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }
 

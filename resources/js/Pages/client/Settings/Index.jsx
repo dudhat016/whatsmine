@@ -1,5 +1,5 @@
 import ClientLayout from '@/Layouts/ClientLayout';
-import { Button, Input, Select } from '@/Components/ui';
+import { Button, Input, Select, Checkbox } from '@/Components/ui';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Settings as SettingsIcon, Bell, Download } from 'lucide-react';
@@ -160,17 +160,11 @@ export default function ClientSettingsIndex({
                     {/* Email Digest */}
                     <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 sm:p-5">
                         <h3 className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wide mb-3">{t('settings.email_reports')}</h3>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={!!form.data.weekly_digest_enabled}
-                                onChange={e => form.setData('weekly_digest_enabled', e.target.checked)}
-                                className="h-4 w-4 rounded border-gray-300 text-indigo-600"
-                            />
-                            <span className="text-sm text-neutral-700 dark:text-neutral-300">
-                                {t('settings.weekly_digest_label')}
-                            </span>
-                        </label>
+                        <Checkbox
+                            label={t('settings.weekly_digest_label')}
+                            checked={!!form.data.weekly_digest_enabled}
+                            onChange={e => form.setData('weekly_digest_enabled', e.target.checked)}
+                        />
                     </div>
 
                     {(

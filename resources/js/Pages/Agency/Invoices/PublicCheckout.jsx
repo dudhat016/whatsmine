@@ -1,18 +1,60 @@
-import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head } from '@inertiajs/react';
 import { 
     CreditCard, ShieldCheck, Lock, Sparkles, Check, DollarSign, 
-    ChevronRight, Zap, CheckCircle, Download
+    ChevronRight, Zap, CheckCircle, Download, AlertCircle
 } from 'lucide-react';
 
 export default function InvoicePublicCheckout({ invoice = {} }) {
-    const { post, processing } = useForm({});
+    const [processing, setProcessing] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [statusNotice, setStatusNotice] = useState('');
 
     const isPaid = invoice.status === 'paid';
 
-    const handlePaySubmit = (e) => {
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('payment_status') === 'cancelled') {
+            setStatusNotice('Payment was cancelled. You have not been charged.');
+        }
+    }, []);
+
+    const handlePaySubmit = async (e) => {
         e.preventDefault();
-        post(route('agency.invoices.pay', invoice.uuid));
+        setErrorMsg('');
+        setStatusNotice('');
+        setProcessing(true);
+
+        try {
+            const res = await fetch(route('agency.invoices.pay', invoice.uuid), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({
+                    payment_method: 'stripe',
+                    amount: invoice.balance_due || invoice.total,
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || 'Failed to initialize payment.');
+            }
+
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+                return;
+            }
+
+            // Fallback for direct completion
+            window.location.reload();
+        } catch (err) {
+            setErrorMsg(err.message || 'Payment could not be started.');
+            setProcessing(false);
+        }
     };
 
     return (
@@ -38,6 +80,24 @@ export default function InvoicePublicCheckout({ invoice = {} }) {
                     </span>
                 </div>
             </div>
+
+            {/* Cancellation Notice */}
+            {statusNotice && (
+                <div className="max-w-xl w-full mb-4">
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0" /> {statusNotice}
+                    </div>
+                </div>
+            )}
+
+            {/* Error Message */}
+            {errorMsg && (
+                <div className="max-w-xl w-full mb-4">
+                    <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0" /> {errorMsg}
+                    </div>
+                </div>
+            )}
 
             {/* Main Checkout Container */}
             <div className="max-w-xl w-full space-y-6">
@@ -87,7 +147,7 @@ export default function InvoicePublicCheckout({ invoice = {} }) {
                         )}
                         <div className="flex justify-between items-center pt-2 text-base font-black text-white border-t border-neutral-800">
                             <span>Total Due:</span>
-                            <span className="text-2xl font-mono text-emerald-400">${(invoice.total || 0).toFixed(2)}</span>
+                            <span className="text-2xl font-mono text-emerald-400">${(invoice.balance_due ?? invoice.total ?? 0).toFixed(2)}</span>
                         </div>
                     </div>
 
@@ -96,7 +156,7 @@ export default function InvoicePublicCheckout({ invoice = {} }) {
                         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-1.5">
                             <CheckCircle className="h-8 w-8 text-emerald-400 mx-auto" />
                             <div className="text-sm font-bold text-emerald-400">Payment Complete</div>
-                            <p className="text-xs text-neutral-400">Paid on {new Date(invoice.paid_at).toLocaleDateString()}</p>
+                            <p className="text-xs text-neutral-400">Paid on {new Date(invoice.paid_at || Date.now()).toLocaleDateString()}</p>
                         </div>
                     ) : (
                         <form onSubmit={handlePaySubmit} className="space-y-3 pt-2">
@@ -107,9 +167,9 @@ export default function InvoicePublicCheckout({ invoice = {} }) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-extrabold text-sm shadow-xl shadow-emerald-500/20 transition flex items-center justify-center gap-2"
+                                className="w-full py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-extrabold text-sm shadow-xl shadow-emerald-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                             >
-                                <Zap className="h-4 w-4 fill-current" /> Pay ${(invoice.total || 0).toFixed(2)} Now
+                                <Zap className="h-4 w-4 fill-current" /> {processing ? 'Connecting to Payment Gateway...' : `Pay $${(invoice.balance_due ?? invoice.total ?? 0).toFixed(2)} Now`}
                             </button>
                         </form>
                     )}

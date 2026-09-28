@@ -11,16 +11,15 @@ import {
 // We use the Admin layout that already exists in the project
 // Import path mirrors how other Admin pages import their layout
 import AdminLayout from '@/Layouts/AdminLayout';
-import { useConfirm } from '@/context/ConfirmationContext';
-import { Button, Input } from '@/Components/ui';
+import { Button, Input, Modal, Pagination, Badge } from '@/Components/ui';
 
 const fmt = (n) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n ?? 0);
 const fmtCurrency = (n) => `$${fmt(n)}`;
 
-const STATUS_COLORS = {
-    draft:     'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
-    published: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-    suspended: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+const STATUS_VARIANTS = {
+    draft: 'default',
+    published: 'success',
+    suspended: 'danger',
 };
 
 export default function AdminFunnelsIndex({ funnels, filters }) {
@@ -176,9 +175,9 @@ export default function AdminFunnelsIndex({ funnels, filters }) {
                                             WS #{f.workspace_id}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[f.status] ?? ''}`}>
+                                            <Badge variant={STATUS_VARIANTS[f.status] || 'default'}>
                                                 {f.status}
-                                            </span>
+                                            </Badge>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-neutral-600 dark:text-neutral-300">{fmt(f.views_count)}</td>
                                         <td className="px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">{fmtCurrency(f.total_revenue)}</td>
@@ -233,81 +232,51 @@ export default function AdminFunnelsIndex({ funnels, filters }) {
                     </div>
 
                     {/* Pagination */}
-                    {funnels?.links && (
-                        <div className="flex items-center justify-between border-t border-neutral-200 dark:border-neutral-700 px-4 py-3">
-                            <p className="text-xs text-neutral-500">
-                                Showing {funnels.from}–{funnels.to} of {funnels.total} funnels
-                            </p>
-                            <div className="flex gap-1">
-                                {funnels.links.map((link, i) => (
-                                    <Link
-                                        key={i}
-                                        href={link.url ?? '#'}
-                                        preserveScroll
-                                        className={`rounded px-2.5 py-1 text-xs transition focus:outline-none focus:ring-2 focus:ring-brand-500 ${
-                                            link.active
-                                                ? 'bg-brand-600 text-white'
-                                                : link.url
-                                                    ? 'text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                                    : 'cursor-not-allowed text-neutral-300 dark:text-neutral-600'
-                                        }`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    <div className="border-t border-neutral-200 dark:border-neutral-700 px-4 py-3">
+                        <Pagination data={funnels} />
+                    </div>
                 </div>
             </div>
 
             {/* ── Suspend Modal ─────────────────────────────────────────────── */}
-            {suspendModal && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="modal-suspend-title"
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                >
-                    <div className="w-full max-w-sm rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4">
-                        <h2 id="modal-suspend-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                            Suspend Funnel
-                        </h2>
-                        <p className="text-sm text-neutral-500">
-                            This will unpublish <strong>{suspendModal.funnel.name}</strong> and prevent re-publishing until restored.
-                        </p>
-                        <div>
-                            <label htmlFor="suspend-reason" className="block text-xs font-medium text-neutral-500 mb-1">
-                                Reason (optional)
-                            </label>
-                            <textarea
-                                id="suspend-reason"
-                                rows={3}
-                                value={reason}
-                                onChange={e => setReason(e.target.value)}
-                                placeholder="Policy violation, spam, etc."
-                                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                type="button"
-                                onClick={handleSuspend}
-                                disabled={submitting}
-                                className="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60 transition focus:outline-none focus:ring-2 focus:ring-red-500"
-                            >
-                                {submitting ? 'Suspending…' : 'Suspend Funnel'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => { setSuspendModal(null); setReason(''); }}
-                                className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition focus:outline-none focus:ring-2 focus:ring-brand-500"
-                            >
-                                Cancel
-                            </button>
-                        </div>
+            <Modal show={!!suspendModal} onClose={() => { setSuspendModal(null); setReason(''); }} maxWidth="sm">
+                <Modal.Header title="Suspend Funnel" onClose={() => { setSuspendModal(null); setReason(''); }} />
+                <Modal.Body className="space-y-4">
+                    <p className="text-sm text-neutral-500">
+                        This will unpublish <strong>{suspendModal?.funnel?.name}</strong> and prevent re-publishing until restored.
+                    </p>
+                    <div>
+                        <label htmlFor="suspend-reason" className="block text-xs font-medium text-neutral-500 mb-1">
+                            Reason (optional)
+                        </label>
+                        <textarea
+                            id="suspend-reason"
+                            rows={3}
+                            value={reason}
+                            onChange={e => setReason(e.target.value)}
+                            placeholder="Policy violation, spam, etc."
+                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+                        />
                     </div>
-                </div>
-            )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => { setSuspendModal(null); setReason(''); }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="danger"
+                        onClick={handleSuspend}
+                        disabled={submitting}
+                    >
+                        {submitting ? 'Suspending…' : 'Suspend Funnel'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             {/* ── Toast ────────────────────────────────────────────────────── */}
             {toast && (

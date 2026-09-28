@@ -173,6 +173,19 @@ class StripeGateway implements BillingGatewayInterface
 
     private function handleCheckoutCompleted(Session $session): void
     {
+        // Handle native ecommerce order payment
+        if (!empty($session->metadata->order_id) || ($session->metadata->type ?? '') === 'ecommerce_order') {
+            $orderId = (int) ($session->metadata->order_id ?? 0);
+            $order = \App\Modules\Ecommerce\Models\EcommerceOrder::find($orderId);
+            if ($order && $order->financial_status !== 'paid') {
+                $order->update([
+                    'financial_status' => 'paid',
+                    'fulfillment_status' => 'fulfilled',
+                ]);
+            }
+            return;
+        }
+
         $userId = (int) ($session->metadata->user_id ?? 0);
         $planId = (int) ($session->metadata->plan_id ?? 0);
         $billingCycle = $session->metadata->billing_cycle ?? 'month';

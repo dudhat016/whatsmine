@@ -1,7 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
-import { Input, Button, Select } from '@/Components/ui';
+import { Input, Button, Select, Checkbox } from '@/Components/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, CheckCircle, Bot, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
@@ -154,15 +154,14 @@ function ProviderCard({ provider }) {
                         {info.models?.map(m => <option key={m} value={m}>{m}</option>)}
                     </Select>
                 </div>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" checked={data.enabled} onChange={e => setData('enabled', e.target.checked)} className="rounded" />
-                    {t('common.enabled')}
-                </label>
-                {(
-                    <button type="submit" disabled={processing} className="w-full rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition">
-                        {processing ? t('ai.saving') : t('common.save')}
-                    </button>
-                )}
+                <Checkbox
+                    checked={data.enabled}
+                    onChange={e => setData('enabled', e.target.checked)}
+                    label={t('common.enabled')}
+                />
+                <Button type="submit" loading={processing} className="w-full">
+                    {t('common.save')}
+                </Button>
             </form>
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800">
                 <SetupGuide providerKey={provider.provider} />

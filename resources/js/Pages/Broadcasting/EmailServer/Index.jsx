@@ -1,6 +1,6 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Button, Checkbox } from '@/Components/ui';
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Send, Trash2, CheckCircle, AlertCircle, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import axios from 'axios';
@@ -333,34 +333,30 @@ export default function EmailServerIndex({ config }) {
                         </div>
 
                         {hasConfig && (
-                            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    checked={data.is_active}
-                                    onChange={e => setData('is_active', e.target.checked)}
-                                    className="rounded"
-                                />
-                                <span className="text-neutral-700 dark:text-neutral-300">{t('email_server.enable_smtp')}</span>
-                            </label>
+                            <Checkbox
+                                checked={data.is_active}
+                                onChange={e => setData('is_active', e.target.checked)}
+                                label={t('email_server.enable_smtp')}
+                            />
                         )}
 
                         <div className="flex items-center gap-3 pt-2">
-                            <button
+                            <Button
                                 type="submit"
-                                disabled={processing}
-                                className="rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-60 px-5 py-2 text-sm font-medium text-white transition"
+                                loading={processing}
                             >
-                                {processing ? t('email_server.saving') : (hasConfig ? t('email_server.update_config') : t('email_server.save_config'))}
-                            </button>
+                                {hasConfig ? t('email_server.update_config') : t('email_server.save_config')}
+                            </Button>
                             {hasConfig && (
-                                <button
+                                <Button
                                     type="button"
+                                    variant="secondary"
                                     onClick={handleDelete}
-                                    className="flex items-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-2 text-sm text-neutral-500 hover:text-red-500 hover:border-red-300 dark:hover:border-red-700 transition"
+                                    className="text-neutral-500 hover:text-red-500 hover:border-red-300 dark:hover:border-red-700"
                                 >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-4 w-4 mr-1.5" />
                                     {t('email_server.remove')}
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </form>

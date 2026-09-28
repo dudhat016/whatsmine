@@ -4,7 +4,7 @@ import EmailEditor from '@/Components/EmailEditor';
 import InlineTokenInput from '@/Components/InlineTokenInput';
 import InlineTokenTextarea from '@/Components/InlineTokenTextarea';
 import MediaUpload from '@/Components/MediaUpload';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Checkbox } from '@/Components/ui';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
@@ -2376,12 +2376,11 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                 {/* 2d. Stop on Customer Response Safeguard */}
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                        <input
-                            type="checkbox"
+                        <Checkbox
                             id="stopOnResponseCheckbox"
                             checked={stopOnResponse}
                             onChange={e => setStopOnResponse(e.target.checked)}
-                            style={{ marginTop: 3, accentColor: '#4f46e5', width: 16, height: 16, cursor: 'pointer' }}
+                            className="mt-0.5"
                         />
                         <label htmlFor="stopOnResponseCheckbox" style={{ cursor: 'pointer', userSelect: 'none' }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -2401,12 +2400,11 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                 {['opportunity.stage_changed', 'opportunity.won', 'opportunity.lost', 'opportunity.abandoned'].includes(triggerType) && (
                     <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                            <input
-                                type="checkbox"
+                            <Checkbox
                                 id="cancelPreviousStageRunsCheckbox"
                                 checked={cancelPreviousStageRuns}
                                 onChange={e => setCancelPreviousStageRuns(e.target.checked)}
-                                style={{ marginTop: 3, accentColor: '#4f46e5', width: 16, height: 16, cursor: 'pointer' }}
+                                className="mt-0.5"
                             />
                             <label htmlFor="cancelPreviousStageRunsCheckbox" style={{ cursor: 'pointer', userSelect: 'none' }}>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -2474,16 +2472,12 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
                         </div>
                     )}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                        <input
-                            type="checkbox"
+                        <Checkbox
                             id="preventParallelRuns"
                             checked={preventParallelRuns}
                             onChange={e => setPreventParallelRuns(e.target.checked)}
-                            style={{ accentColor: '#4f46e5', width: 14, height: 14, cursor: 'pointer' }}
+                            label="Prevent duplicate parallel runs if contact is already active"
                         />
-                        <label htmlFor="preventParallelRuns" style={{ fontSize: 11, color: '#475569', cursor: 'pointer', userSelect: 'none' }}>
-                            Prevent duplicate parallel runs if contact is already active
-                        </label>
                     </div>
                 </div>
 
@@ -2862,10 +2856,7 @@ function TriggerConfigPanel({ node, automation, onSave, webhookUrl, copied, onCo
 
 function CheckField({ label, checked, onChange }) {
     return (
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#374151', cursor: 'pointer' }}>
-            <input type="checkbox" checked={!!checked} onChange={e => onChange(e.target.checked)} style={{ width: 14, height: 14 }} />
-            {label}
-        </label>
+        <Checkbox label={label} checked={!!checked} onChange={e => onChange(e.target.checked)} />
     );
 }
 
@@ -3162,12 +3153,11 @@ function EmailFields({ d, set }) {
                 {showAdditional && (
                     <div className="p-3 space-y-3 bg-white dark:bg-neutral-900">
                         {/* Track Clicks */}
-                        <label className="flex items-start gap-2.5 cursor-pointer">
-                            <input
-                                type="checkbox"
+                        <div className="flex items-start gap-2.5">
+                            <Checkbox
                                 checked={d.track_clicks ?? true}
                                 onChange={(e) => set('track_clicks', e.target.checked)}
-                                className="w-4 h-4 rounded border-neutral-300 text-emerald-600 focus:ring-emerald-500 mt-0.5 cursor-pointer"
+                                className="mt-0.5"
                             />
                             <div>
                                 <div className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
@@ -3177,15 +3167,14 @@ function EmailFields({ d, set }) {
                                     Discover which links were clicked, how many times each link was clicked, and who clicked.
                                 </div>
                             </div>
-                        </label>
+                        </div>
 
                         {/* UTM Tracking */}
-                        <label className="flex items-start gap-2.5 cursor-pointer">
-                            <input
-                                type="checkbox"
+                        <div className="flex items-start gap-2.5">
+                            <Checkbox
                                 checked={d.utm_tracking ?? false}
                                 onChange={(e) => set('utm_tracking', e.target.checked)}
-                                className="w-4 h-4 rounded border-neutral-300 text-emerald-600 focus:ring-emerald-500 mt-0.5 cursor-pointer"
+                                className="mt-0.5"
                             />
                             <div>
                                 <div className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
@@ -3195,7 +3184,7 @@ function EmailFields({ d, set }) {
                                     Automatically append default UTM tracking parameters (utm_source, utm_medium, utm_campaign) to every link in the email.
                                 </div>
                             </div>
-                        </label>
+                        </div>
                     </div>
                 )}
             </div>
@@ -3889,12 +3878,11 @@ function WaitFields({ d, set }) {
                     {/* Advance Window (Delivery Business Hours) */}
                     <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                            <input
-                                type="checkbox"
+                            <Checkbox
                                 id="advanceWindowCheckbox"
                                 checked={Boolean(d.advance_window_enabled)}
                                 onChange={e => set('advance_window_enabled', e.target.checked)}
-                                style={{ marginTop: 3, accentColor: '#4f46e5', width: 15, height: 15, cursor: 'pointer' }}
+                                className="mt-0.5"
                             />
                             <label htmlFor="advanceWindowCheckbox" style={{ cursor: 'pointer', userSelect: 'none', flex: 1 }}>
                                 <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1e293b' }}>
@@ -5004,15 +4992,11 @@ function SubflowFields({ d, set }) {
 
             {/* Pass Context */}
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, fontWeight: 600, color: '#334155', cursor: 'pointer' }}>
-                    <input
-                        type="checkbox"
-                        checked={Boolean(passContext)}
-                        onChange={e => set('pass_context', e.target.checked)}
-                        style={{ accentColor: '#6366f1', width: 15, height: 15 }}
-                    />
-                    Inherit Context & Contact Data
-                </label>
+                <Checkbox
+                    checked={Boolean(passContext)}
+                    onChange={e => set('pass_context', e.target.checked)}
+                    label="Inherit Context & Contact Data"
+                />
                 <div style={{ fontSize: 10, color: '#64748b', marginTop: 3, marginLeft: 23 }}>
                     Carries active session variables and contact metadata into the sub-workflow run.
                 </div>

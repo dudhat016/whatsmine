@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Tabs, Input } from '@/Components/ui';
+import { Button, Card, Tabs, Input, Checkbox, Toggle } from '@/Components/ui';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import { Upload, X, Image, Globe, Palette, Settings2, Code2, Flame } from 'lucide-react';
@@ -333,19 +333,15 @@ function AdvancedTab({ settingsByGroup, flash }) {
                                         placeholder={s.is_secret ? t('admin.secret_value') : t('admin.value_label')}
                                         wrapperClassName="flex-1 min-w-[180px]"
                                     />
-                                    <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400">
-                                        <input
-                                            type="checkbox"
-                                            checked={s.is_secret}
-                                            onChange={(e) => {
-                                                const n = [...data.settings];
-                                                n[i] = { ...n[i], is_secret: e.target.checked };
-                                                setData('settings', n);
-                                            }}
-                                            className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500"
-                                        />
-                                        {t('settings.secret')}
-                                    </label>
+                                    <Checkbox
+                                        label={t('settings.secret')}
+                                        checked={s.is_secret}
+                                        onChange={(e) => {
+                                            const n = [...data.settings];
+                                            n[i] = { ...n[i], is_secret: e.target.checked };
+                                            setData('settings', n);
+                                        }}
+                                    />
                                     <Input
                                         size="sm"
                                         type="text"
@@ -430,21 +426,10 @@ function FirebaseTab({ firebase, flash }) {
                             <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('settings.enable_firebase')}</p>
                             <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">{t('settings.enable_firebase_desc')}</p>
                         </div>
-                        <button
-                            type="button"
-                            role="switch"
-                            aria-checked={data.firebase_enabled === 'true'}
-                            onClick={() => setData('firebase_enabled', data.firebase_enabled === 'true' ? 'false' : 'true')}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${
-                                data.firebase_enabled === 'true' ? 'bg-brand-500' : 'bg-neutral-300 dark:bg-neutral-600'
-                            }`}
-                        >
-                            <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                                    data.firebase_enabled === 'true' ? 'translate-x-6' : 'translate-x-1'
-                                }`}
-                            />
-                        </button>
+                        <Toggle
+                            checked={data.firebase_enabled === 'true'}
+                            onChange={(checked) => setData('firebase_enabled', checked ? 'true' : 'false')}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

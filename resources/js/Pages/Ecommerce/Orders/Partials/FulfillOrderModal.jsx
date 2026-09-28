@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
-import { Modal, Input, Select } from '@/Components/ui';
-import { Truck, Check, X } from 'lucide-react';
+import { Modal, Input, Select, Button } from '@/Components/ui';
+import { Truck } from 'lucide-react';
 
 export default function FulfillOrderModal({ isOpen, onClose, order = null }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -35,8 +35,8 @@ export default function FulfillOrderModal({ isOpen, onClose, order = null }) {
     return (
         <Modal show={isOpen} onClose={onClose} maxWidth="md">
             <Modal.Header title={`Update Fulfillment — Order #${order?.number || ''}`} onClose={onClose} />
-            <Modal.Body>
-                <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-4">
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">
                             Fulfillment Status <span className="text-red-500">*</span>
@@ -65,25 +65,28 @@ export default function FulfillOrderModal({ isOpen, onClose, order = null }) {
                         onChange={(e) => setData('tracking_url', e.target.value)}
                         placeholder="https://courier.com/track/..."
                     />
+                </Modal.Body>
 
-                    <div className="flex justify-end gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-700">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg disabled:opacity-50 flex items-center gap-1.5"
-                        >
-                            <Truck className="h-4 w-4" /> Save Status
-                        </button>
-                    </div>
-                </form>
-            </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={onClose}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        size="sm"
+                        loading={processing}
+                        leftIcon={<Truck className="h-4 w-4" />}
+                    >
+                        Save Status
+                    </Button>
+                </Modal.Footer>
+            </form>
         </Modal>
     );
 }

@@ -3,11 +3,11 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
-import Select from '@/Components/ui/Select';
+import { Select, Modal, Button, Pagination } from '@/Components/ui';
 import { SocialBrandIcon } from '@/Components/BrandIcons';
 import {
     Plus, Trash2, ExternalLink, Share2, Clock, CheckCircle2, XCircle,
-    Pencil, Send, Sparkles, Eye, Image, X, Calendar, Zap, Ban,
+    Pencil, Send, Sparkles, Eye, Image, Calendar, Zap, Ban,
 } from 'lucide-react';
 import { browserTz, formatInTz } from '@/Utils/datetime';
 import AiPlannerModal from './AiPlannerModal';
@@ -64,10 +64,9 @@ function PostDetailModal({ post, accountMap, userTz, onClose }) {
     const canEdit = ['draft', 'scheduled', 'failed'].includes(post.status);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800">
+        <Modal show={!!post} onClose={onClose} maxWidth="lg">
+            <Modal.Header
+                title={
                     <div className="flex items-center gap-2 flex-wrap">
                         <StatusBadge status={post.status} />
                         {dateField && (
@@ -76,84 +75,81 @@ function PostDetailModal({ post, accountMap, userTz, onClose }) {
                             </span>
                         )}
                     </div>
-                    <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
+                }
+                onClose={onClose}
+            />
 
-                <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-                    {post.title && <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{post.title}</h3>}
-                    <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">{post.body}</p>
+            <Modal.Body className="max-h-[60vh] overflow-y-auto space-y-4">
+                {post.title && <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{post.title}</h3>}
+                <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">{post.body}</p>
 
-                    {mediaUrls.length > 0 && (
-                        <div className={`grid gap-2 ${mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                            {mediaUrls.map((url, i) => (
-                                <img key={i} src={url} alt="" className="w-full rounded-lg object-cover max-h-48" />
-                            ))}
-                        </div>
-                    )}
-
-                    {targets.length > 0 && (
-                        <div>
-                            <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">{t('social.posted_to')}</p>
-                            <div className="flex flex-wrap gap-2">
-                                {targets.map((id) => {
-                                    const acct = accountMap[id];
-                                    if (!acct) return null;
-                                    return (
-                                        <div key={id} className="flex items-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 px-2.5 py-1">
-                                            <AccountPill acct={acct} />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {post.publish_results && Object.keys(post.publish_results).length > 0 && (
-                        <div>
-                            <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">{t('social.publish_results')}</p>
-                            <div className="space-y-1.5">
-                                {Object.entries(post.publish_results).map(([accountId, result]) => {
-                                    const acct = accountMap[accountId];
-                                    return (
-                                        <div key={accountId} className="flex items-center justify-between text-xs rounded-lg bg-neutral-50 dark:bg-neutral-800 px-3 py-2">
-                                            <span className="text-neutral-600 dark:text-neutral-400">{acct?.name ?? t('social.account_number', { id: accountId })}</span>
-                                            <span className={result.status === 'published' ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
-                                                {result.status === 'published' ? t('social.result_published') : t('social.result_failed')}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex items-center justify-between px-5 py-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                        {post.post_url && (
-                            <a href={post.post_url} target="_blank" rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition">
-                                <ExternalLink className="h-4 w-4" /> {t('social.view_on_platform')}
-                            </a>
-                        )}
+                {mediaUrls.length > 0 && (
+                    <div className={`grid gap-2 ${mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                        {mediaUrls.map((url, i) => (
+                            <img key={i} src={url} alt="" className="w-full rounded-lg object-cover max-h-48" />
+                        ))}
                     </div>
-                    <div className="flex items-center gap-2">
-                        {canEdit && (
-                            <Link href={route('client.social.posts.edit', post.id)}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 px-3 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition">
-                                <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
-                            </Link>
-                        )}
-                        <button onClick={onClose}
-                            className="rounded-lg bg-neutral-200 dark:bg-neutral-700 px-4 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition">
-                            {t('common.close')}
-                        </button>
+                )}
+
+                {targets.length > 0 && (
+                    <div>
+                        <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">{t('social.posted_to')}</p>
+                        <div className="flex flex-wrap gap-2">
+                            {targets.map((id) => {
+                                const acct = accountMap[id];
+                                if (!acct) return null;
+                                return (
+                                    <div key={id} className="flex items-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 px-2.5 py-1">
+                                        <AccountPill acct={acct} />
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
+                )}
+
+                {post.publish_results && Object.keys(post.publish_results).length > 0 && (
+                    <div>
+                        <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">{t('social.publish_results')}</p>
+                        <div className="space-y-1.5">
+                            {Object.entries(post.publish_results).map(([accountId, result]) => {
+                                const acct = accountMap[accountId];
+                                return (
+                                    <div key={accountId} className="flex items-center justify-between text-xs rounded-lg bg-neutral-50 dark:bg-neutral-800 px-3 py-2">
+                                        <span className="text-neutral-600 dark:text-neutral-400">{acct?.name ?? t('social.account_number', { id: accountId })}</span>
+                                        <span className={result.status === 'published' ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
+                                            {result.status === 'published' ? t('social.result_published') : t('social.result_failed')}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </Modal.Body>
+
+            <Modal.Footer className="justify-between">
+                <div>
+                    {post.post_url && (
+                        <a href={post.post_url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition">
+                            <ExternalLink className="h-4 w-4" /> {t('social.view_on_platform')}
+                        </a>
+                    )}
                 </div>
-            </div>
-        </div>
+                <div className="flex items-center gap-2">
+                    {canEdit && (
+                        <Link href={route('client.social.posts.edit', post.id)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 px-3 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition">
+                            <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
+                        </Link>
+                    )}
+                    <Button variant="secondary" onClick={onClose}>
+                        {t('common.close')}
+                    </Button>
+                </div>
+            </Modal.Footer>
+        </Modal>
     );
 }
 
@@ -413,20 +409,7 @@ export default function SocialPostsIndex({ posts, accounts, filters }) {
                 )}
 
                 {/* Pagination */}
-                {posts.last_page > 1 && (
-                    <div className="flex gap-1 flex-wrap">
-                        {posts.links.map((link, i) => (
-                            link.url ? (
-                                <Link key={i} href={link.url}
-                                    className={`px-3 py-1.5 rounded text-sm border ${link.active ? 'bg-brand-600 text-white border-brand-600' : 'border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }} />
-                            ) : (
-                                <span key={i} className="px-3 py-1.5 rounded text-sm border border-neutral-200 dark:border-neutral-700 text-neutral-300 dark:text-neutral-600 opacity-40 cursor-not-allowed"
-                                    dangerouslySetInnerHTML={{ __html: link.label }} />
-                            )
-                        ))}
-                    </div>
-                )}
+                <Pagination data={posts} />
             </div>
 
             <PostDetailModal post={detailPost} accountMap={accountMap} userTz={userTz} onClose={() => setDetailPost(null)} />

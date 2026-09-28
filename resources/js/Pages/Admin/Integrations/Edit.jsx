@@ -6,7 +6,7 @@ import axios from 'axios';
 import { formatInTz } from '@/Utils/datetime';
 import { useTranslation, Trans } from 'react-i18next';
 import { useConfirm } from '@/context/ConfirmationContext';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Checkbox } from '@/Components/ui';
 
 const SETUP_GUIDES = {
     storage_s3: {
@@ -680,15 +680,11 @@ export default function IntegrationsEdit({ provider, label, category, fields, co
                     <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5 space-y-4">
                         <h3 className="font-medium text-neutral-800 dark:text-neutral-200">{t('integrations.status')}</h3>
                         <div className="flex flex-wrap gap-6">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={data.enabled}
-                                    onChange={e => setData('enabled', e.target.checked)}
-                                    className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                                />
-                                <span className="text-sm text-neutral-700 dark:text-neutral-300">{t('common.enabled')}</span>
-                            </label>
+                            <Checkbox
+                                label={t('common.enabled')}
+                                checked={data.enabled}
+                                onChange={e => setData('enabled', e.target.checked)}
+                            />
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-neutral-500 dark:text-neutral-400">{t('integrations.mode_label')}</span>
                                 <Select

@@ -9,7 +9,7 @@ import {
     Coins, BarChart2, ExternalLink, AlertTriangle,
 } from 'lucide-react';
 import { useConfirm } from '@/context/ConfirmationContext';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Modal, Button } from '@/Components/ui';
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 const STATUS_COLORS = {
@@ -86,15 +86,14 @@ export default function FunnelAffiliates({ affiliates, funnels }) {
                             Manage your affiliate partners and commission payouts.
                         </p>
                     </div>
-                    <button
+                    <Button
                         id="btn-add-affiliate"
                         type="button"
                         onClick={() => setShowAdd(true)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 transition focus:outline-none focus:ring-2 focus:ring-brand-500"
                     >
-                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        <Plus className="h-4 w-4 mr-1.5" aria-hidden="true" />
                         {t('funnel.affiliate_add')}
-                    </button>
+                    </Button>
                 </div>
 
                 {/* ── Flash ──────────────────────────────────────────────── */}
@@ -232,84 +231,73 @@ export default function FunnelAffiliates({ affiliates, funnels }) {
             </div>
 
             {/* ── Add Affiliate Modal ───────────────────────────────────────── */}
-            {showAdd && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="modal-add-affiliate-title"
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                >
-                    <div className="w-full max-w-md rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4">
-                        <h2 id="modal-add-affiliate-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                            {t('funnel.affiliate_add')}
-                        </h2>
-                        <form onSubmit={handleAdd} className="space-y-3" noValidate>
-                            {/* Funnel select */}
-                            <Select
-                                id="affiliate-funnel"
-                                label="Funnel"
-                                value={data.funnel_id}
-                                onChange={e => setData('funnel_id', e.target.value)}
-                                required
-                            >
-                                {funnels.map(f => (
-                                    <option key={f.id} value={f.id}>{f.name}</option>
-                                ))}
-                            </Select>
-                            {/* Name */}
-                            <Input
-                                id="affiliate-name"
-                                label={t('funnel.affiliate_name')}
-                                value={data.name}
-                                onChange={e => setData('name', e.target.value)}
-                                required
-                                autoFocus
-                                error={errors.name}
-                            />
-                            {/* Email */}
-                            <Input
-                                id="affiliate-email"
-                                type="email"
-                                label={t('funnel.affiliate_email')}
-                                value={data.email}
-                                onChange={e => setData('email', e.target.value)}
-                                required
-                                error={errors.email}
-                            />
-                            {/* Commission rate */}
-                            <Input
-                                id="affiliate-rate"
-                                type="number"
-                                min={1}
-                                max={100}
-                                label={t('funnel.affiliate_commission_rate')}
-                                value={data.commission_rate}
-                                onChange={e => setData('commission_rate', e.target.value)}
-                                required
-                                error={errors.commission_rate}
-                                rightIcon={<span className="text-xs text-neutral-400 font-bold">%</span>}
-                            />
-                            {/* Actions */}
-                            <div className="flex gap-2 pt-1">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                >
-                                    {processing ? t('common.saving') : t('common.create')}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => { setShowAdd(false); reset(); }}
-                                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                >
-                                    {t('common.cancel')}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <Modal show={showAdd} onClose={() => { setShowAdd(false); reset(); }} maxWidth="md">
+                <Modal.Header title={t('funnel.affiliate_add')} onClose={() => { setShowAdd(false); reset(); }} />
+                <form onSubmit={handleAdd} noValidate>
+                    <Modal.Body className="space-y-3">
+                        {/* Funnel select */}
+                        <Select
+                            id="affiliate-funnel"
+                            label="Funnel"
+                            value={data.funnel_id}
+                            onChange={e => setData('funnel_id', e.target.value)}
+                            required
+                        >
+                            {funnels.map(f => (
+                                <option key={f.id} value={f.id}>{f.name}</option>
+                            ))}
+                        </Select>
+                        {/* Name */}
+                        <Input
+                            id="affiliate-name"
+                            label={t('funnel.affiliate_name')}
+                            value={data.name}
+                            onChange={e => setData('name', e.target.value)}
+                            required
+                            autoFocus
+                            error={errors.name}
+                        />
+                        {/* Email */}
+                        <Input
+                            id="affiliate-email"
+                            type="email"
+                            label={t('funnel.affiliate_email')}
+                            value={data.email}
+                            onChange={e => setData('email', e.target.value)}
+                            required
+                            error={errors.email}
+                        />
+                        {/* Commission rate */}
+                        <Input
+                            id="affiliate-rate"
+                            type="number"
+                            min={1}
+                            max={100}
+                            label={t('funnel.affiliate_commission_rate')}
+                            value={data.commission_rate}
+                            onChange={e => setData('commission_rate', e.target.value)}
+                            required
+                            error={errors.commission_rate}
+                            rightIcon={<span className="text-xs text-neutral-400 font-bold">%</span>}
+                        />
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => { setShowAdd(false); reset(); }}
+                        >
+                            {t('common.cancel')}
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={processing}
+                        >
+                            {processing ? t('common.saving') : t('common.create')}
+                        </Button>
+                    </Modal.Footer>
+                </form>
+            </Modal>
 
             {/* ── Toast ────────────────────────────────────────────────────── */}
             {toast && (

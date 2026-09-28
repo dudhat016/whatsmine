@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { X, Folder, FolderOpen, Home, Check } from 'lucide-react';
-import Button from '@/Components/ui/Button';
+import { FolderOpen, Home, Check } from 'lucide-react';
+import { Modal, Button } from '@/Components/ui';
 
 export default function MoveToFolderModal({ isOpen, forms = [], folders = [], onClose, onMove }) {
     const [selectedFolderId, setSelectedFolderId] = useState(null);
-
-    if (!isOpen || !forms.length) return null;
 
     const formCount = forms.length;
     const formNames = forms.map((f) => f.name).join(', ');
@@ -19,10 +17,9 @@ export default function MoveToFolderModal({ isOpen, forms = [], folders = [], on
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-soft-lg shadow-soft-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800">
+        <Modal show={isOpen && forms.length > 0} onClose={onClose} maxWidth="md">
+            <Modal.Header
+                title={
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 rounded-soft">
                             <FolderOpen className="w-4 h-4" />
@@ -36,23 +33,18 @@ export default function MoveToFolderModal({ isOpen, forms = [], folders = [], on
                             </p>
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-soft transition"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
+                }
+                onClose={onClose}
+            />
 
-                {/* Folder Selection List */}
-                <form onSubmit={handleSubmit} className="p-5 space-y-4">
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-4">
                     <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
                         {/* Root Option */}
                         <button
                             type="button"
                             onClick={() => setSelectedFolderId(null)}
-                            className={`w-full flex items-center justify-between p-3 rounded-soft border text-left transition ${
+                            className={`w-full flex items-center justify-between p-3 rounded-soft border text-left transition cursor-pointer ${
                                 selectedFolderId === null
                                     ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 font-medium'
                                     : 'border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
@@ -76,7 +68,7 @@ export default function MoveToFolderModal({ isOpen, forms = [], folders = [], on
                                     key={folder.id}
                                     type="button"
                                     onClick={() => setSelectedFolderId(folder.id)}
-                                    className={`w-full flex items-center justify-between p-3 rounded-soft border text-left transition ${
+                                    className={`w-full flex items-center justify-between p-3 rounded-soft border text-left transition cursor-pointer ${
                                         isSelected
                                             ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 font-medium'
                                             : 'border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
@@ -99,18 +91,17 @@ export default function MoveToFolderModal({ isOpen, forms = [], folders = [], on
                             );
                         })}
                     </div>
+                </Modal.Body>
 
-                    {/* Footer */}
-                    <div className="pt-3 flex items-center justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
-                        <Button variant="secondary" size="sm" type="button" onClick={onClose}>
-                            Cancel
-                        </Button>
-                        <Button variant="primary" size="sm" type="submit">
-                            Move Here
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <Modal.Footer>
+                    <Button variant="secondary" size="sm" type="button" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" size="sm" type="submit">
+                        Move Here
+                    </Button>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }

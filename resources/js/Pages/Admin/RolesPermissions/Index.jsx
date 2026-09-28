@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Badge, Button, Card, Modal, Tabs, Input } from '@/Components/ui';
+import { Badge, Button, Card, Modal, Tabs, Input, Checkbox } from '@/Components/ui';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -244,10 +244,18 @@ export default function AdminRolesPermissionsIndex({ roles = [], permissions = [
                                         <div key={cat}>
                                             <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">{cat}</p>
                                             {permissions.filter((p) => p.category === cat).map((p) => (
-                                                <label key={p.id} className="flex items-center gap-2 ml-2">
-                                                    <input type="checkbox" checked={roleForm.data.permission_ids.includes(p.id)} onChange={(e) => { const ids = e.target.checked ? [...roleForm.data.permission_ids, p.id] : roleForm.data.permission_ids.filter((id) => id !== p.id); roleForm.setData('permission_ids', ids); }} className="rounded" />
-                                                    <span className="text-sm">{p.key}</span>
-                                                </label>
+                                                <div key={p.id} className="ml-2">
+                                                    <Checkbox
+                                                        label={p.key}
+                                                        checked={roleForm.data.permission_ids.includes(p.id)}
+                                                        onChange={(e) => {
+                                                            const ids = e.target.checked
+                                                                ? [...roleForm.data.permission_ids, p.id]
+                                                                : roleForm.data.permission_ids.filter((id) => id !== p.id);
+                                                            roleForm.setData('permission_ids', ids);
+                                                        }}
+                                                    />
+                                                </div>
                                             ))}
                                         </div>
                                     ))}
@@ -300,10 +308,18 @@ export default function AdminRolesPermissionsIndex({ roles = [], permissions = [
                                             <div key={cat}>
                                                 <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">{cat}</p>
                                                 {permissions.filter((p) => p.category === cat).map((p) => (
-                                                    <label key={p.id} className="flex items-center gap-2 ml-2">
-                                                        <input type="checkbox" checked={editRoleForm.data.permission_ids.includes(p.id)} onChange={(e) => { const ids = e.target.checked ? [...editRoleForm.data.permission_ids, p.id] : editRoleForm.data.permission_ids.filter((id) => id !== p.id); editRoleForm.setData('permission_ids', ids); }} className="rounded" />
-                                                        <span className="text-sm">{p.key}</span>
-                                                    </label>
+                                                    <div key={p.id} className="ml-2">
+                                                        <Checkbox
+                                                            label={p.key}
+                                                            checked={editRoleForm.data.permission_ids.includes(p.id)}
+                                                            onChange={(e) => {
+                                                                const ids = e.target.checked
+                                                                    ? [...editRoleForm.data.permission_ids, p.id]
+                                                                    : editRoleForm.data.permission_ids.filter((id) => id !== p.id);
+                                                                editRoleForm.setData('permission_ids', ids);
+                                                            }}
+                                                        />
+                                                    </div>
                                                 ))}
                                             </div>
                                         ))}

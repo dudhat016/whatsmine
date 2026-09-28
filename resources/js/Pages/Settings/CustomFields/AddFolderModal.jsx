@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { X, FolderPlus, Folder, User, Target, Building2 } from 'lucide-react';
-import { Input } from '@/Components/ui';
+import { FolderPlus, User, Target, Building2 } from 'lucide-react';
+import { Modal, Button, Input } from '@/Components/ui';
 
 export default function AddFolderModal({ isOpen, onClose, onCreateFolder }) {
     const [name, setName] = useState('');
     const [objectTarget, setObjectTarget] = useState('contact');
-
-    if (!isOpen) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -25,10 +23,9 @@ export default function AddFolderModal({ isOpen, onClose, onCreateFolder }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-150">
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50 dark:bg-neutral-900/50">
+        <Modal show={isOpen} onClose={onClose} maxWidth="md">
+            <Modal.Header
+                title={
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 rounded-xl border border-brand-200/50 dark:border-brand-800/40">
                             <FolderPlus className="w-5 h-5" />
@@ -42,16 +39,12 @@ export default function AddFolderModal({ isOpen, onClose, onCreateFolder }) {
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+                }
+                onClose={onClose}
+            />
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-4">
                     <Input
                         label="Folder Name *"
                         type="text"
@@ -88,25 +81,23 @@ export default function AddFolderModal({ isOpen, onClose, onCreateFolder }) {
                             ))}
                         </div>
                     </div>
+                </Modal.Body>
 
-                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl hover:bg-neutral-100 transition"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-5 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                        >
-                            <FolderPlus className="w-3.5 h-3.5" />
-                            Create Folder
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <Modal.Footer>
+                    <Button variant="secondary" size="sm" type="button" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        type="submit"
+                        disabled={!name.trim()}
+                        leftIcon={<FolderPlus className="w-3.5 h-3.5" />}
+                    >
+                        Create Folder
+                    </Button>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }

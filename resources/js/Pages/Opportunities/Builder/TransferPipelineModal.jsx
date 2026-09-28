@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, GitBranch, ArrowRight, UserCheck, AlertCircle } from 'lucide-react';
+import { GitBranch, ArrowRight, AlertCircle } from 'lucide-react';
 import axios from 'axios';
-import { Button, Select } from '@/Components/ui';
+import { Modal, Button, Select } from '@/Components/ui';
 
 export default function TransferPipelineModal({
     isOpen,
@@ -11,12 +11,10 @@ export default function TransferPipelineModal({
     users = [],
     onSuccess,
 }) {
-    if (!isOpen || !deal) return null;
-
     // Current pipeline of the deal
-    const currentPipelineId = deal.pipeline_id;
+    const currentPipelineId = deal?.pipeline_id;
     const currentPipeline = pipelines.find((p) => p.id === currentPipelineId) || pipelines[0];
-    const currentStage = currentPipeline?.stages?.find((s) => s.id === deal.stage_id);
+    const currentStage = currentPipeline?.stages?.find((s) => s.id === deal?.stage_id);
 
     // Filter pipelines or default target pipeline to another pipeline if available
     const otherPipelines = pipelines.filter((p) => p.id !== currentPipelineId);
@@ -24,7 +22,7 @@ export default function TransferPipelineModal({
 
     const [targetPipelineId, setTargetPipelineId] = useState(defaultTargetPipeline?.id || '');
     const [targetStageId, setTargetStageId] = useState(defaultTargetPipeline?.stages?.[0]?.id || '');
-    const [assignedUserId, setAssignedUserId] = useState(deal.assigned_user_id ?? '');
+    const [assignedUserId, setAssignedUserId] = useState(deal?.assigned_user_id ?? '');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -50,6 +48,7 @@ export default function TransferPipelineModal({
 
     const handleSubmit = async (e) => {
         if (e) e.preventDefault();
+        if (!deal) return;
         if (!targetPipelineId || !targetStageId) {
             setError('Please select both a destination pipeline and stage.');
             return;
@@ -79,10 +78,9 @@ export default function TransferPipelineModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                {/* Header */}
-                <div className="flex items-start justify-between p-5 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
+        <Modal show={isOpen && !!deal} onClose={onClose} maxWidth="md">
+            <Modal.Header
+                title={
                     <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
                             <GitBranch className="h-5 w-5" />
@@ -92,21 +90,16 @@ export default function TransferPipelineModal({
                                 Transfer to Pipeline
                             </h3>
                             <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate max-w-[260px]">
-                                {deal.name}
+                                {deal?.name}
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        disabled={submitting}
-                        className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
+                }
+                onClose={onClose}
+            />
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-5 space-y-4">
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-4">
                     {error && (
                         <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
                             <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
@@ -178,7 +171,7 @@ export default function TransferPipelineModal({
                             onChange={(e) => setAssignedUserId(e.target.value)}
                             size="sm"
                         >
-                            <option value="">Keep current rep ({deal.assigned_user?.name || 'Unassigned'})</option>
+                            <option value="">Keep current rep ({deal?.assigned_user?.name || 'Unassigned'})</option>
                             {users.map((u) => (
                                 <option key={u.id} value={u.id}>
                                     {u.name} ({u.email})
@@ -191,31 +184,29 @@ export default function TransferPipelineModal({
                     <p className="text-[11px] text-neutral-400 dark:text-neutral-500 leading-relaxed">
                         Moving this deal to a new pipeline will automatically log a transfer event in deal history, trigger any stage-entry automations in the new pipeline, and fire "Pipeline Changed" automations.
                     </p>
+                </Modal.Body>
 
-                    {/* Actions */}
-                    <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={onClose}
-                            disabled={submitting}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="brand"
-                            size="sm"
-                            isLoading={submitting}
-                            className="gap-1.5"
-                        >
-                            <GitBranch className="h-3.5 w-3.5" />
-                            <span>Confirm Transfer</span>
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <Modal.Footer>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={onClose}
+                        disabled={submitting}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        size="sm"
+                        loading={submitting}
+                        leftIcon={<GitBranch className="h-3.5 w-3.5" />}
+                    >
+                        Confirm Transfer
+                    </Button>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }

@@ -1,24 +1,21 @@
 import React, { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import axios from 'axios';
-import Select from '@/Components/ui/Select';
-import Button from '@/Components/ui/Button';
+import { Modal, Select, Button } from '@/Components/ui';
 
 export default function StageDeleteModal({
     isOpen,
     onClose,
     stage,
-    otherStages,
+    otherStages = [],
     onSuccess,
 }) {
-    if (!isOpen || !stage) return null;
-
     const [targetStageId, setTargetStageId] = useState(otherStages[0]?.id || '');
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
     const handleConfirmDelete = async () => {
-        if (!targetStageId) return;
+        if (!stage || !targetStageId) return;
         setSubmitting(true);
         setError('');
 
@@ -26,7 +23,7 @@ export default function StageDeleteModal({
             await axios.post(route('client.opportunities.stages.safe-delete', stage.id), {
                 target_stage_id: targetStageId,
             });
-            onSuccess();
+            if (onSuccess) onSuccess();
             onClose();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to delete stage.');
@@ -41,20 +38,27 @@ export default function StageDeleteModal({
     }));
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-soft-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-soft-lg overflow-hidden p-6 space-y-4">
-                <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
-                    <div className="p-2 rounded-soft bg-amber-50 dark:bg-amber-950/40">
-                        <AlertTriangle className="h-6 w-6" />
+        <Modal show={isOpen && !!stage} onClose={onClose} maxWidth="md">
+            <Modal.Header
+                title={
+                    <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
+                        <div className="p-2 rounded-soft bg-amber-50 dark:bg-amber-950/40">
+                            <AlertTriangle className="h-6 w-6" />
+                        </div>
+                        <span className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">
+                            Delete Stage & Migrate Opportunities
+                        </span>
                     </div>
-                    <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">
-                        Delete Stage & Migrate Opportunities
-                    </h3>
-                </div>
+                }
+                onClose={onClose}
+            />
 
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    You are deleting stage <strong className="text-neutral-900 dark:text-neutral-200">{stage.name}</strong>. Select a destination stage to transfer all active opportunities:
-                </p>
+            <Modal.Body className="space-y-4">
+                {stage && (
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        You are deleting stage <strong className="text-neutral-900 dark:text-neutral-200">{stage.name}</strong>. Select a destination stage to transfer all active opportunities:
+                    </p>
+                )}
 
                 {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -65,27 +69,28 @@ export default function StageDeleteModal({
                     options={stageOptions}
                     placeholder="Select Stage..."
                 />
+            </Modal.Body>
 
-                <div className="pt-3 flex items-center justify-end gap-2">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={onClose}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="danger"
-                        size="sm"
-                        disabled={submitting}
-                        onClick={handleConfirmDelete}
-                    >
-                        {submitting ? 'Migrating...' : 'Migrate & Delete'}
-                    </Button>
-                </div>
-            </div>
-        </div>
+            <Modal.Footer>
+                <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={onClose}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    disabled={submitting}
+                    onClick={handleConfirmDelete}
+                    loading={submitting}
+                >
+                    Migrate & Delete
+                </Button>
+            </Modal.Footer>
+        </Modal>
     );
 }

@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Input, Select, Tabs } from '@/Components/ui';
+import { Button, Card, Input, Select, Tabs, Checkbox } from '@/Components/ui';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -111,14 +111,20 @@ export default function AdminLocalesIndex({
                                                     size="sm"
                                                     wrapperClassName="w-20"
                                                 />
-                                                <label className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 pb-2">
-                                                    <input type="checkbox" checked={newLocale.enabled} onChange={(e) => setNewLocale('enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" />
-                                                    {t('common.enabled')}
-                                                </label>
-                                                <label className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 pb-2">
-                                                    <input type="checkbox" checked={newLocale.is_rtl} onChange={(e) => setNewLocale('is_rtl', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" />
-                                                    {t('locales.rtl')}
-                                                </label>
+                                                <div className="pb-2">
+                                                    <Checkbox
+                                                        label={t('common.enabled')}
+                                                        checked={newLocale.enabled}
+                                                        onChange={(e) => setNewLocale('enabled', e.target.checked)}
+                                                    />
+                                                </div>
+                                                <div className="pb-2">
+                                                    <Checkbox
+                                                        label={t('locales.rtl')}
+                                                        checked={newLocale.is_rtl}
+                                                        onChange={(e) => setNewLocale('is_rtl', e.target.checked)}
+                                                    />
+                                                </div>
                                                 <Input
                                                     label={t('locales.sort')}
                                                     type="number"
@@ -234,8 +240,8 @@ function LocaleRow({ locale, locales }) {
                     >
                         <Input value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder={t('common.name')} size="sm" wrapperClassName="w-28" />
                         <Input value={data.native_name} onChange={(e) => setData('native_name', e.target.value)} placeholder={t('locales.native_name')} size="sm" wrapperClassName="w-28" />
-                        <label className="text-neutral-900 dark:text-neutral-100 text-sm"><input type="checkbox" checked={data.enabled} onChange={(e) => setData('enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /> {t('common.enabled')}</label>
-                        <label className="text-neutral-900 dark:text-neutral-100 text-sm"><input type="checkbox" checked={data.is_rtl} onChange={(e) => setData('is_rtl', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /> {t('locales.rtl')}</label>
+                        <Checkbox label={t('common.enabled')} checked={data.enabled} onChange={(e) => setData('enabled', e.target.checked)} />
+                        <Checkbox label={t('locales.rtl')} checked={data.is_rtl} onChange={(e) => setData('is_rtl', e.target.checked)} />
                         <Button type="submit" size="sm" disabled={processing}>{t('common.save')}</Button>
                     </form>
                 )}
@@ -311,10 +317,11 @@ function TranslationsTab({
                     size="sm"
                     wrapperClassName="w-48"
                 />
-                <label className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 text-sm">
-                    <input type="checkbox" checked={filters.missingOnly} onChange={(e) => setFilters((f) => ({ ...f, missingOnly: e.target.checked }))} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" />
-                    {t('locales.missing_only')}
-                </label>
+                <Checkbox
+                    label={t('locales.missing_only')}
+                    checked={filters.missingOnly}
+                    onChange={(e) => setFilters((f) => ({ ...f, missingOnly: e.target.checked }))}
+                />
                 <Button size="sm" variant="secondary" onClick={applyFilters}>{t('locales.apply_filters')}</Button>
                 {filters.locale !== 'en' && (
                     <Button size="sm" variant="primary" onClick={handleAutoTranslate}>{t('locales.auto_translate_missing')}</Button>

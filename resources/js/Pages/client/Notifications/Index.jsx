@@ -4,6 +4,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Bell, Check, CheckCheck, Trash2, Settings } from 'lucide-react';
 import { formatInTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
+import { Checkbox, Button } from '@/Components/ui';
 
 const KNOWN_EVENTS = [
     { key: 'subscription.created', labelKey: 'notifications_page.event_subscription_created' },
@@ -53,29 +54,29 @@ function PreferencesPanel({ preferences }) {
                         <tr key={key}>
                             <td className="py-3 text-neutral-700 dark:text-neutral-300">{t(labelKey)}</td>
                             <td className="py-3 text-center">
-                                <input
-                                    type="checkbox"
-                                    checked={prefs[key]?.database ?? true}
-                                    onChange={e => setPrefs(p => ({ ...p, [key]: { ...p[key], database: e.target.checked } }))}
-                                    className="rounded"
-                                />
+                                <div className="flex justify-center">
+                                    <Checkbox
+                                        checked={prefs[key]?.database ?? true}
+                                        onChange={e => setPrefs(p => ({ ...p, [key]: { ...p[key], database: e.target.checked } }))}
+                                    />
+                                </div>
                             </td>
                             <td className="py-3 text-center">
-                                <input
-                                    type="checkbox"
-                                    checked={prefs[key]?.email ?? true}
-                                    onChange={e => setPrefs(p => ({ ...p, [key]: { ...p[key], email: e.target.checked } }))}
-                                    className="rounded"
-                                />
+                                <div className="flex justify-center">
+                                    <Checkbox
+                                        checked={prefs[key]?.email ?? true}
+                                        onChange={e => setPrefs(p => ({ ...p, [key]: { ...p[key], email: e.target.checked } }))}
+                                    />
+                                </div>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
             <div className="mt-4 flex justify-end">
-                <button onClick={handleSave} className="px-4 py-2 text-sm bg-brand-500 text-white rounded-soft hover:bg-brand-600 shadow-soft transition-all duration-150">
+                <Button onClick={handleSave} variant="primary" size="sm">
                     {t('common.save')}
-                </button>
+                </Button>
             </div>
         </div>
     );

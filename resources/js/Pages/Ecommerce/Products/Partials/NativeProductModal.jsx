@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
-import { Modal, Input, Select } from '@/Components/ui';
+import { Modal, Input, Select, Button } from '@/Components/ui';
 import MediaUpload from '@/Components/MediaUpload';
 import { Tag, RefreshCw, CreditCard, Gift, Image, Package, FileText, Check } from 'lucide-react';
 
@@ -76,9 +76,9 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
     return (
         <Modal show={isOpen} onClose={onClose} maxWidth="2xl">
             <Modal.Header title={isEdit ? 'Edit Native Product' : 'Create Native Product'} onClose={onClose} />
-            <Modal.Body>
-                <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Basic Info */}
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-5 max-h-[75vh] overflow-y-auto">
+                    {/* Basic Info */}
                 <div className="space-y-4">
                     <Input
                         label="Product Name"
@@ -415,26 +415,26 @@ export default function NativeProductModal({ isOpen, onClose, product = null, ca
                         </div>
                     )}
                 </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-                    <button
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
                         type="button"
+                        variant="secondary"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
                         disabled={processing}
-                        className="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg disabled:opacity-50 flex items-center gap-1.5"
+                        variant="primary"
+                        className="gap-1.5"
                     >
                         <Check className="h-4 w-4" />
                         {isEdit ? 'Update Product' : 'Create Product'}
-                    </button>
-                </div>
+                    </Button>
+                </Modal.Footer>
             </form>
-            </Modal.Body>
         </Modal>
     );
 }

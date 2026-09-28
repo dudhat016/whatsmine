@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Check, LayoutTemplate, ArrowRight, Star } from 'lucide-react';
+import { Sparkles, LayoutTemplate, ArrowRight, Star } from 'lucide-react';
+import { Modal, Button } from '@/Components/ui';
 
 const TEMPLATES = [
     {
@@ -110,47 +111,26 @@ export default function TemplateGalleryModal({ isOpen, onClose, onApplyTemplate 
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-    if (!isOpen) return null;
-
     const categories = ['All', 'Lead Capture', 'Sales & VSL', 'Webinar', 'Thank You'];
     const filteredTemplates = selectedCategory === 'All'
         ? TEMPLATES
         : TEMPLATES.filter(t => t.category === selectedCategory);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50 dark:bg-neutral-900/50">
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 rounded-xl">
-                            <LayoutTemplate className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                                Template Gallery
-                                <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 rounded-full">
-                                    Pro Templates
-                                </span>
-                            </h2>
-                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                                Choose a pre-designed page layout to jumpstart your funnel conversion.
-                            </p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
+        <Modal
+            show={!!isOpen}
+            onClose={onClose}
+            title="Template Gallery"
+            description="Choose a pre-designed page layout to jumpstart your funnel conversion."
+            maxWidth="4xl"
+        >
+            <div className="space-y-4">
                 {/* Filter Categories */}
-                <div className="px-6 py-3 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-2 overflow-x-auto bg-white dark:bg-neutral-900">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-neutral-100 dark:border-neutral-800">
                     {categories.map((cat) => (
                         <button
                             key={cat}
+                            type="button"
                             onClick={() => setSelectedCategory(cat)}
                             className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
                                 selectedCategory === cat
@@ -164,7 +144,7 @@ export default function TemplateGalleryModal({ isOpen, onClose, onApplyTemplate 
                 </div>
 
                 {/* Template Grid */}
-                <div className="flex-1 p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="max-h-[55vh] overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 pr-1">
                     {filteredTemplates.map((tpl) => {
                         const isSelected = selectedTemplate?.id === tpl.id;
                         return (
@@ -213,20 +193,23 @@ export default function TemplateGalleryModal({ isOpen, onClose, onApplyTemplate 
                 </div>
 
                 {/* Footer Controls */}
-                <div className="px-6 py-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-between">
+                <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
                     <span className="text-xs text-neutral-500 dark:text-neutral-400">
                         {selectedTemplate ? `Selected: "${selectedTemplate.title}"` : 'Select a template to apply'}
                     </span>
-                    <div className="flex items-center gap-3">
-                        <button
+                    <div className="flex items-center gap-2">
+                        <Button
                             type="button"
+                            variant="secondary"
+                            size="sm"
                             onClick={onClose}
-                            className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl hover:bg-neutral-100 transition"
                         >
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="primary"
+                            size="sm"
                             disabled={!selectedTemplate}
                             onClick={() => {
                                 if (selectedTemplate) {
@@ -234,14 +217,13 @@ export default function TemplateGalleryModal({ isOpen, onClose, onApplyTemplate 
                                     onClose();
                                 }
                             }}
-                            className="px-5 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-50 rounded-xl transition shadow-xs flex items-center gap-1.5"
+                            icon={Sparkles}
                         >
-                            <Sparkles className="w-3.5 h-3.5" />
                             Apply Template to Page
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 }

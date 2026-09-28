@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
-import { Sparkles, Loader2, ChevronLeft, Calendar, CheckSquare, Square, AlertCircle } from 'lucide-react';
+import { Sparkles, ChevronLeft, Calendar, CheckSquare, Square, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SocialBrandIcon } from '@/Components/BrandIcons';
 import { browserTz, tzLocalToUtcIso } from '@/Utils/datetime';
 import TimezonePicker from '@/Components/TimezonePicker';
-import { DatePicker, Input, Select } from '@/Components/ui';
+import { Modal, Button, DatePicker, Input, Select } from '@/Components/ui';
 
 const TONES = [
     { value: 'professional',  labelKey: 'social.tone_professional' },
@@ -145,7 +144,7 @@ function BriefStep({ brief, setBrief, accounts, onGenerate, loading, error }) {
                                     key={a.id}
                                     type="button"
                                     onClick={() => toggleAccount(a.id)}
-                                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
                                         selected
                                             ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300'
                                             : 'border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-brand-400'
@@ -160,14 +159,17 @@ function BriefStep({ brief, setBrief, accounts, onGenerate, loading, error }) {
                 )}
             </div>
 
-            <button
+            <Button
                 type="button"
+                variant="primary"
                 onClick={onGenerate}
-                disabled={loading || !brief.topic.trim() || !brief.start_date || !brief.end_date || brief.target_accounts.length === 0}
-                className="ai-glow w-full inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                loading={loading}
+                disabled={!brief.topic.trim() || !brief.start_date || !brief.end_date || brief.target_accounts.length === 0}
+                className="w-full justify-center"
+                leftIcon={<Sparkles className="h-4 w-4" />}
             >
-                {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t('social.generating_plan')}</> : <><Sparkles className="h-4 w-4" /> {t('social.generate_plan')}</>}
-            </button>
+                {t('social.generate_plan')}
+            </Button>
         </div>
     );
 }
@@ -214,7 +216,7 @@ function ReviewStep({ editedPosts, setEditedPosts, approved, setApproved, select
                 <button
                     type="button"
                     onClick={toggleAll}
-                    className="text-xs text-brand-600 dark:text-brand-400 hover:underline"
+                    className="text-xs text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
                 >
                     {approved.size === editedPosts.length ? t('social.deselect_all') : t('social.select_all')}
                 </button>
@@ -235,7 +237,7 @@ function ReviewStep({ editedPosts, setEditedPosts, approved, setApproved, select
                         }`}
                     >
                         <div className="flex items-start gap-3">
-                            <button type="button" onClick={() => toggleOne(i)} className="mt-0.5 shrink-0 text-brand-600 dark:text-brand-400">
+                            <button type="button" onClick={() => toggleOne(i)} className="mt-0.5 shrink-0 text-brand-600 dark:text-brand-400 cursor-pointer">
                                 {isApproved ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-neutral-400" />}
                             </button>
                             <div className="flex-1 space-y-3">
@@ -303,8 +305,6 @@ export default function AiPlannerModal({ show, onClose, accounts, onSuccess }) {
         target_accounts: accounts.map(a => a.id),
         timezone: userTz,
     });
-
-    if (!show) return null;
 
     const csrfToken = document.querySelector('meta[name=csrf-token]')?.content;
     const headers = {
@@ -395,78 +395,81 @@ export default function AiPlannerModal({ show, onClose, accounts, onSuccess }) {
     const approvedCount = approved.size;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget && !loading) onClose(); }}>
-            <div className="w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 shrink-0">
+        <Modal show={show} onClose={loading ? () => {} : onClose} maxWidth="2xl">
+            <Modal.Header
+                title={
                     <div className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-brand-600" />
-                        <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+                        <span className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
                             {step === 'brief' ? t('social.ai_post_planner') : step === 'review' ? t('social.review_generated_posts') : t('social.confirm_and_schedule')}
-                        </h2>
+                        </span>
                     </div>
-                    {!loading && (
-                        <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition text-xl leading-none">&times;</button>
-                    )}
-                </div>
+                }
+                onClose={loading ? undefined : onClose}
+                showClose={!loading}
+            />
 
-                {/* Step indicators */}
-                <div className="flex items-center gap-1 px-6 pt-4 shrink-0">
-                    {['brief', 'review'].map((s, idx) => (
-                        <div key={s} className="flex items-center gap-1">
-                            <div className={`h-2 w-2 rounded-full ${step === s || (step === 'review' && idx === 0) ? 'bg-brand-600' : 'bg-neutral-200 dark:bg-neutral-700'}`} />
-                            {idx === 0 && <div className={`h-0.5 w-8 ${step === 'review' ? 'bg-brand-600' : 'bg-neutral-200 dark:bg-neutral-700'}`} />}
-                        </div>
-                    ))}
-                    <span className="ml-2 text-xs text-neutral-400">{step === 'brief' ? t('social.step_1_of_2') : t('social.step_2_of_2')}</span>
-                </div>
-
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    {step === 'brief' && (
-                        <BriefStep
-                            brief={brief}
-                            setBrief={setBrief}
-                            accounts={accounts}
-                            onGenerate={handleGenerate}
-                            loading={loading}
-                            error={error}
-                        />
-                    )}
-                    {step === 'review' && (
-                        <ReviewStep
-                            editedPosts={editedPosts}
-                            setEditedPosts={setEditedPosts}
-                            approved={approved}
-                            setApproved={setApproved}
-                            selectedAccounts={selectedAccounts}
-                            error={error}
-                        />
-                    )}
-                </div>
-
-                {/* Footer */}
-                {step === 'review' && (
-                    <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-neutral-200 dark:border-neutral-700 shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => { setStep('brief'); setError(''); }}
-                            disabled={loading}
-                            className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 disabled:opacity-50 transition"
-                        >
-                            <ChevronLeft className="h-4 w-4" /> {t('common.back')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleSchedule}
-                            disabled={loading || approvedCount === 0}
-                            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t('social.scheduling')}</> : <><Calendar className="h-4 w-4" /> {t('social.schedule_n_posts', { count: approvedCount })}</>}
-                        </button>
+            {/* Step indicators */}
+            <div className="flex items-center gap-1 px-6 pt-4 shrink-0">
+                {['brief', 'review'].map((s, idx) => (
+                    <div key={s} className="flex items-center gap-1">
+                        <div className={`h-2 w-2 rounded-full ${step === s || (step === 'review' && idx === 0) ? 'bg-brand-600' : 'bg-neutral-200 dark:bg-neutral-700'}`} />
+                        {idx === 0 && <div className={`h-0.5 w-8 ${step === 'review' ? 'bg-brand-600' : 'bg-neutral-200 dark:bg-neutral-700'}`} />}
                     </div>
-                )}
+                ))}
+                <span className="ml-2 text-xs text-neutral-400">{step === 'brief' ? t('social.step_1_of_2') : t('social.step_2_of_2')}</span>
             </div>
-        </div>
+
+            {/* Body */}
+            <Modal.Body className="max-h-[65vh] overflow-y-auto">
+                {step === 'brief' && (
+                    <BriefStep
+                        brief={brief}
+                        setBrief={setBrief}
+                        accounts={accounts}
+                        onGenerate={handleGenerate}
+                        loading={loading}
+                        error={error}
+                    />
+                )}
+                {step === 'review' && (
+                    <ReviewStep
+                        editedPosts={editedPosts}
+                        setEditedPosts={setEditedPosts}
+                        approved={approved}
+                        setApproved={setApproved}
+                        selectedAccounts={selectedAccounts}
+                        error={error}
+                    />
+                )}
+            </Modal.Body>
+
+            {/* Footer */}
+            {step === 'review' && (
+                <Modal.Footer className="justify-between">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => { setStep('brief'); setError(''); }}
+                        disabled={loading}
+                        leftIcon={<ChevronLeft className="h-4 w-4" />}
+                    >
+                        {t('common.back')}
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={handleSchedule}
+                        loading={loading}
+                        disabled={approvedCount === 0}
+                        leftIcon={<Calendar className="h-4 w-4" />}
+                    >
+                        {t('social.schedule_n_posts', { count: approvedCount })}
+                    </Button>
+                </Modal.Footer>
+            )}
+        </Modal>
     );
 }

@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Input, Select } from '@/Components/ui';
+import { Button, Card, Input, Select, Checkbox } from '@/Components/ui';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
 
@@ -21,8 +21,11 @@ export default function AdminPlansEdit({ plan, currencies = [] }) {
                             <Input type="number" label={t('admin.monthly_price_cents')} value={data.monthly_price_cents ?? ''} onChange={(e) => setData('monthly_price_cents', e.target.value ? parseInt(e.target.value, 10) : null)} />
                             <Input type="number" label={t('admin.yearly_price_cents')} value={data.yearly_price_cents ?? ''} onChange={(e) => setData('yearly_price_cents', e.target.value ? parseInt(e.target.value, 10) : null)} />
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">{t('admin.currency_code_label')}</label>
-                                <Select value={data.currency_code ?? ''} onChange={(e) => setData('currency_code', e.target.value)}>
+                                <Select
+                                    label={t('admin.currency_code_label')}
+                                    value={data.currency_code ?? ''}
+                                    onChange={(e) => setData('currency_code', e.target.value)}
+                                >
                                     {data.currency_code && !currencies.some((c) => c.code === data.currency_code) && (
                                         <option value={data.currency_code}>{data.currency_code}</option>
                                     )}
@@ -31,17 +34,16 @@ export default function AdminPlansEdit({ plan, currencies = [] }) {
                                     ))}
                                 </Select>
                             </div>
-                            <label className="flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
-                                <input type="checkbox" checked={data.enabled ?? false} onChange={(e) => setData('enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" />
-                                <span className="text-sm">{t('common.enabled')}</span>
-                            </label>
+                            <Checkbox label={t('common.enabled')} checked={data.enabled ?? false} onChange={(e) => setData('enabled', e.target.checked)} />
                             <Input type="number" label={t('admin.sort_order')} value={data.sort_order ?? 0} onChange={(e) => setData('sort_order', parseInt(e.target.value, 10) || 0)} />
                             <Input type="number" label={t('admin.ai_credits')} value={data.ai_credits ?? ''} onChange={(e) => setData('ai_credits', e.target.value ? parseInt(e.target.value, 10) : null)} />
                             <Input type="number" label={t('admin.websites_limit')} value={data.websites_limit ?? ''} onChange={(e) => setData('websites_limit', e.target.value ? parseInt(e.target.value, 10) : null)} />
-                            <label className="flex items-center gap-2 text-neutral-900 dark:text-neutral-100"><input type="checkbox" checked={data.export_enabled ?? false} onChange={(e) => setData('export_enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /><span className="text-sm">{t('admin.export_enabled')}</span></label>
-                            <label className="flex items-center gap-2 text-neutral-900 dark:text-neutral-100"><input type="checkbox" checked={data.custom_domain_enabled ?? false} onChange={(e) => setData('custom_domain_enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /><span className="text-sm">{t('admin.custom_domain_enabled')}</span></label>
-                            <label className="flex items-center gap-2 text-neutral-900 dark:text-neutral-100"><input type="checkbox" checked={data.white_label_enabled ?? false} onChange={(e) => setData('white_label_enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /><span className="text-sm">{t('admin.white_label_enabled')}</span></label>
-                            <Button type="submit" variant="primary" disabled={processing}>{t('common.save')}</Button>
+                            <Checkbox label={t('admin.export_enabled')} checked={data.export_enabled ?? false} onChange={(e) => setData('export_enabled', e.target.checked)} />
+                            <Checkbox label={t('admin.custom_domain_enabled')} checked={data.custom_domain_enabled ?? false} onChange={(e) => setData('custom_domain_enabled', e.target.checked)} />
+                            <Checkbox label={t('admin.white_label_enabled')} checked={data.white_label_enabled ?? false} onChange={(e) => setData('white_label_enabled', e.target.checked)} />
+                            <div className="pt-2">
+                                <Button type="submit" variant="primary" disabled={processing}>{t('common.save')}</Button>
+                            </div>
                         </Card.Body>
                     </Card>
                 </form>

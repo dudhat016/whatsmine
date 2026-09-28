@@ -62,6 +62,29 @@ window.addEventListener('pageshow', (event) => {
     }
 });
 
+// Suppress default HTML5 native browser tooltip popups globally ("Please fill out this field")
+// and automatically apply styled UI error highlights with real-time clearing across all forms.
+if (typeof window !== 'undefined') {
+    window.addEventListener('invalid', (event) => {
+        event.preventDefault();
+        const target = event.target;
+        if (!target) return;
+
+        target.setAttribute('aria-invalid', 'true');
+        target.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+
+        const clearError = () => {
+            target.removeAttribute('aria-invalid');
+            target.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/20');
+            target.removeEventListener('input', clearError);
+            target.removeEventListener('change', clearError);
+        };
+
+        target.addEventListener('input', clearError);
+        target.addEventListener('change', clearError);
+    }, true);
+}
+
 const appName = import.meta.env.VITE_APP_NAME || 'WhatsMine';
 
 // Wrapper cache keyed by page component. resolve() runs on every navigation;

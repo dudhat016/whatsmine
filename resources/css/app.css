@@ -67,6 +67,14 @@ body {
     .dark textarea:focus {
         @apply border-brand-500 ring-brand-500/20;
     }
+
+    /* Universal red validation highlight */
+    input[aria-invalid="true"],
+    select[aria-invalid="true"],
+    textarea[aria-invalid="true"] {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+    }
 }
 
 /* Dark mode: checkbox/radio accent for visibility */

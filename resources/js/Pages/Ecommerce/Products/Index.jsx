@@ -1,10 +1,9 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import { Button, Card, Badge, Pagination, Input, Select } from '@/Components/ui';
+import { Button, Card, Badge, Pagination, Input, Select, Checkbox } from '@/Components/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Package, ShoppingBag, AlertTriangle, XOctagon, XCircle, Plus, Edit, Edit3, Trash2, Tag, RefreshCw, CreditCard, Gift, ExternalLink, Eye, Copy } from 'lucide-react';
-import NativeProductBuilder from './Partials/NativeProductBuilder';
 import { useConfirm } from '@/context/ConfirmationContext';
 
 function StatCard({ label, value, tone = 'neutral', Icon }) {
@@ -63,21 +62,17 @@ export default function ProductsIndex({ products, allProducts = [], filters = {}
     const flash = props.flash ?? {};
     const { confirm } = useConfirm();
     const [search, setSearch] = useState(filters.search ?? '');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState(null);
 
     const apply = (next) => {
         router.get(route('client.ecommerce.products.index'), { ...filters, ...next }, { preserveState: true, replace: true });
     };
 
     const handleCreate = () => {
-        setEditingProduct(null);
-        setIsModalOpen(true);
+        router.visit(route('client.ecommerce.products.create'));
     };
 
     const handleEdit = (p) => {
-        setEditingProduct(p);
-        setIsModalOpen(true);
+        router.visit(route('client.ecommerce.products.edit', p.id));
     };
 
     const { displayCurrency = 'USD' } = usePage().props;
@@ -175,11 +170,11 @@ export default function ProductsIndex({ products, allProducts = [], filters = {}
                         <option value="installments">Installment Plan</option>
                         <option value="free">🎁 FREE ($0)</option>
                     </Select>
-                    <label className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300 cursor-pointer">
-                        <input type="checkbox" checked={!!filters.low_stock} onChange={e => apply({ low_stock: e.target.checked ? 1 : undefined })}
-                            className="rounded border-neutral-300 text-brand-600" />
-                        {t('ecommerce.low_stock_only') || 'Low stock only'}
-                    </label>
+                    <Checkbox
+                        checked={!!filters.low_stock}
+                        onChange={e => apply({ low_stock: e.target.checked ? 1 : undefined })}
+                        label={t('ecommerce.low_stock_only') || 'Low stock only'}
+                    />
                 </div>
 
                 <Card padding={false} className="overflow-hidden">
@@ -270,14 +265,6 @@ export default function ProductsIndex({ products, allProducts = [], filters = {}
                     <Pagination data={products} />
                 </Card>
             </div>
-
-            <NativeProductBuilder
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                product={editingProduct}
-                calendars={calendars}
-                allProducts={allProducts}
-            />
         </ClientLayout>
     );
 }

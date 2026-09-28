@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Folder, FolderPlus, Palette } from 'lucide-react';
-import Button from '@/Components/ui/Button';
-import Input from '@/Components/ui/Input';
+import { Folder, FolderPlus, Palette } from 'lucide-react';
+import { Modal, Button, Input } from '@/Components/ui';
 
 const FOLDER_COLORS = [
     '#16a34a', // Emerald
@@ -30,8 +29,6 @@ export default function FolderModal({ isOpen, folder = null, onClose, onSave }) 
         setError('');
     }, [folder, isOpen]);
 
-    if (!isOpen) return null;
-
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!name.trim()) {
@@ -42,10 +39,9 @@ export default function FolderModal({ isOpen, folder = null, onClose, onSave }) 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-            <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-soft-lg shadow-soft-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800">
+        <Modal show={isOpen} onClose={onClose} maxWidth="md">
+            <Modal.Header
+                title={
                     <div className="flex items-center gap-2.5">
                         <div
                             className="p-2 rounded-soft text-white"
@@ -62,17 +58,12 @@ export default function FolderModal({ isOpen, folder = null, onClose, onSave }) 
                             </p>
                         </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-soft transition"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                </div>
+                }
+                onClose={onClose}
+            />
 
-                {/* Body Form */}
-                <form onSubmit={handleSubmit} className="p-5 space-y-4">
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-4">
                     <Input
                         label="Folder Name"
                         required
@@ -97,7 +88,7 @@ export default function FolderModal({ isOpen, folder = null, onClose, onSave }) 
                                     key={c}
                                     type="button"
                                     onClick={() => setColor(c)}
-                                    className={`w-7 h-7 rounded-full transition transform ${
+                                    className={`w-7 h-7 rounded-full transition transform cursor-pointer ${
                                         color === c ? 'ring-2 ring-offset-2 ring-neutral-900 dark:ring-neutral-100 scale-110' : 'hover:scale-105'
                                     }`}
                                     style={{ backgroundColor: c }}
@@ -106,18 +97,17 @@ export default function FolderModal({ isOpen, folder = null, onClose, onSave }) 
                             ))}
                         </div>
                     </div>
+                </Modal.Body>
 
-                    {/* Footer */}
-                    <div className="pt-3 flex items-center justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
-                        <Button variant="secondary" size="sm" type="button" onClick={onClose}>
-                            Cancel
-                        </Button>
-                        <Button variant="primary" size="sm" type="submit">
-                            {folder ? 'Save Changes' : 'Create Folder'}
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <Modal.Footer>
+                    <Button variant="secondary" size="sm" type="button" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" size="sm" type="submit">
+                        {folder ? 'Save Changes' : 'Create Folder'}
+                    </Button>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }

@@ -9,6 +9,7 @@ import Card from '@/Components/ui/Card';
 import Button from '@/Components/ui/Button';
 import Input from '@/Components/ui/Input';
 import Select from '@/Components/ui/Select';
+import DatePicker from '@/Components/ui/DatePicker';
 
 export default function ProposalEdit({ proposal = null, contacts = [], products = [] }) {
     const isEditing = Boolean(proposal?.id);
@@ -156,12 +157,15 @@ export default function ProposalEdit({ proposal = null, contacts = [], products 
                                 <option value="installments">Milestone Split-Pay</option>
                             </Select>
 
-                            <Input
-                                label="Valid Until Date"
-                                type="date"
-                                value={data.valid_until}
-                                onChange={(e) => setData('valid_until', e.target.value)}
-                            />
+                            <div>
+                                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                    Valid Until Date
+                                </label>
+                                <DatePicker
+                                    value={data.valid_until}
+                                    onChange={(v) => setData('valid_until', v)}
+                                />
+                            </div>
                         </div>
                     </div>
 

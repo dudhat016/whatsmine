@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { useConfirm } from '@/context/ConfirmationContext';
-import { Input } from '@/Components/ui';
+import { Input, Modal, Button } from '@/Components/ui';
 
 const STATUS_COLORS = {
     active: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
@@ -230,73 +230,103 @@ export default function AutomationIndex({ automations, flash: initialFlash }) {
                 )}
             </div>
 
-            {showCreate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-sm rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4">
-                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('automation.new_automation')}</h3>
-                        <form onSubmit={handleCreate} className="space-y-3">
-                            <Input
-                                label={t('common.name')}
-                                value={data.name}
-                                onChange={e => setData('name', e.target.value)}
-                                required
-                                placeholder={t('automation.name_placeholder')}
-                                autoFocus
-                            />
-                            <div className="flex gap-2 pt-2">
-                                <button type="submit" disabled={processing} className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition">
-                                    {processing ? t('automation.creating') : t('common.create')}
-                                </button>
-                                <button type="button" onClick={() => setShowCreate(false)} className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
-                                    {t('common.cancel')}
-                                </button>
-                            </div>
-                        </form>
+            <Modal
+                show={showCreate}
+                onClose={() => setShowCreate(false)}
+                title={t('automation.new_automation')}
+                maxWidth="sm"
+            >
+                <form onSubmit={handleCreate} className="space-y-4">
+                    <Input
+                        label={t('common.name')}
+                        value={data.name}
+                        onChange={e => setData('name', e.target.value)}
+                        required
+                        placeholder={t('automation.name_placeholder')}
+                        autoFocus
+                    />
+                    <div className="flex justify-end gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setShowCreate(false)}
+                        >
+                            {t('common.cancel')}
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="sm"
+                            disabled={processing}
+                        >
+                            {processing ? t('automation.creating') : t('common.create')}
+                        </Button>
                     </div>
-                </div>
-            )}
+                </form>
+            </Modal>
 
-            {showAi && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-lg rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4">
-                        <div className="flex items-center gap-2.5">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-900/30"><Sparkles className="h-4 w-4" /></span>
-                            <div>
-                                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('automation.ai_title')}</h3>
-                                <p className="text-xs text-neutral-500">{t('automation.ai_subtitle')}</p>
-                            </div>
-                        </div>
-                        <textarea
-                            autoFocus rows={5} value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} disabled={aiLoading}
-                            placeholder={t('automation.ai_placeholder')}
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
-                        />
-                        <div className="flex flex-wrap gap-2">
-                            {['automation.ai_example_welcome', 'automation.ai_example_abandoned', 'automation.ai_example_faq'].map(k => (
-                                <button key={k} disabled={aiLoading} onClick={() => setAiPrompt(t(k))} className="rounded-full border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-xs text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
-                                    {t(k)}
-                                </button>
-                            ))}
-                        </div>
-                        {aiError && (
-                            <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-900/30 px-3 py-2 text-sm text-red-700 dark:text-red-300">
-                                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />{aiError}
-                            </div>
-                        )}
-                        <p className="flex items-start gap-1.5 text-xs text-neutral-400">
-                            <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" />{t('automation.ai_disclaimer')}
-                        </p>
-                        <div className="flex gap-2 pt-1">
-                            <button disabled={aiLoading || !aiPrompt.trim()} onClick={handleGenerate} className="ai-glow flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-purple-600 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-60 transition">
-                                {aiLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t('automation.ai_generating')}</> : <><Sparkles className="h-4 w-4" /> {t('automation.ai_generate')}</>}
+            <Modal
+                show={showAi}
+                onClose={() => !aiLoading && setShowAi(false)}
+                title={t('automation.ai_title')}
+                description={t('automation.ai_subtitle')}
+                maxWidth="lg"
+            >
+                <div className="space-y-4">
+                    <textarea
+                        autoFocus
+                        rows={5}
+                        value={aiPrompt}
+                        onChange={e => setAiPrompt(e.target.value)}
+                        disabled={aiLoading}
+                        placeholder={t('automation.ai_placeholder')}
+                        className="w-full rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 text-neutral-900 dark:text-neutral-100"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                        {['automation.ai_example_welcome', 'automation.ai_example_abandoned', 'automation.ai_example_faq'].map(k => (
+                            <button
+                                key={k}
+                                type="button"
+                                disabled={aiLoading}
+                                onClick={() => setAiPrompt(t(k))}
+                                className="rounded-full border border-neutral-200 dark:border-neutral-700 px-3 py-1 text-xs text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+                            >
+                                {t(k)}
                             </button>
-                            <button type="button" disabled={aiLoading} onClick={() => setShowAi(false)} className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
-                                {t('common.cancel')}
-                            </button>
+                        ))}
+                    </div>
+                    {aiError && (
+                        <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-900/30 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+                            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />{aiError}
                         </div>
+                    )}
+                    <p className="flex items-start gap-1.5 text-xs text-neutral-400">
+                        <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-purple-500" />{t('automation.ai_disclaimer')}
+                    </p>
+                    <div className="flex justify-end gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            disabled={aiLoading}
+                            onClick={() => setShowAi(false)}
+                        >
+                            {t('common.cancel')}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            disabled={aiLoading || !aiPrompt.trim()}
+                            onClick={handleGenerate}
+                            icon={aiLoading ? Loader2 : Sparkles}
+                        >
+                            {aiLoading ? t('automation.ai_generating') : t('automation.ai_generate')}
+                        </Button>
                     </div>
                 </div>
-            )}
+            </Modal>
         </ClientLayout>
     );
 }

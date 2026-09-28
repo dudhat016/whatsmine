@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { X, Plus, Sparkles, Sliders, Check, User, Target, Folder } from 'lucide-react';
-import Input from '@/Components/ui/Input';
-import Select from '@/Components/ui/Select';
+import { Plus, Sparkles } from 'lucide-react';
+import { Modal, Button, Input, Select, Checkbox } from '@/Components/ui';
 
 export default function CreateCustomFieldModal({ isOpen, onClose, onCreateCustomField, availableFolders = [] }) {
     const [fieldData, setFieldData] = useState({
@@ -14,8 +13,6 @@ export default function CreateCustomFieldModal({ isOpen, onClose, onCreateCustom
         required: false,
         optionsText: '',
     });
-
-    if (!isOpen) return null;
 
     const defaultFolders = [
         { id: 'contact', name: 'Contact' },
@@ -56,147 +53,125 @@ export default function CreateCustomFieldModal({ isOpen, onClose, onCreateCustom
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50 dark:bg-neutral-900/50">
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 rounded-xl">
-                            <Sparkles className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-base font-bold text-neutral-900 dark:text-white">
-                                New Custom Field
-                            </h2>
-                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                                Configure Object, Group, and field options (GoHighLevel format).
-                            </p>
-                        </div>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+        <Modal
+            show={!!isOpen}
+            onClose={onClose}
+            title="New Custom Field"
+            description="Configure Object, Group, and field options (GoHighLevel format)."
+            maxWidth="md"
+        >
+            <form onSubmit={handleSave} className="space-y-4">
+                {/* Object & Group Dropdowns (GHL Feature) */}
+                <div className="grid grid-cols-2 gap-3">
+                    <Select
+                        label="Object Target *"
+                        value={fieldData.objectTarget}
+                        onChange={(e) => setFieldData({ ...fieldData, objectTarget: e.target.value })}
                     >
-                        <X className="w-5 h-5" />
-                    </button>
+                        <option value="contact">Contact</option>
+                        <option value="opportunity">Opportunity</option>
+                        <option value="company">Company</option>
+                    </Select>
+
+                    <Select
+                        label="Folder / Group *"
+                        value={fieldData.fieldGroup}
+                        onChange={(e) => setFieldData({ ...fieldData, fieldGroup: e.target.value })}
+                    >
+                        {folderOptions.map(f => (
+                            <option key={f.id || f.name} value={f.id || f.name}>
+                                {f.name}
+                            </option>
+                        ))}
+                    </Select>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSave} className="p-6 space-y-4">
-                    {/* Object & Group Dropdowns (GHL Feature) */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <Select
-                            label="Object Target *"
-                            value={fieldData.objectTarget}
-                            onChange={(e) => setFieldData({ ...fieldData, objectTarget: e.target.value })}
-                        >
-                            <option value="contact">Contact</option>
-                            <option value="opportunity">Opportunity</option>
-                            <option value="company">Company</option>
-                        </Select>
+                <Input
+                    label="Field Label *"
+                    type="text"
+                    required
+                    value={fieldData.label}
+                    onChange={(e) => setFieldData({ ...fieldData, label: e.target.value })}
+                    placeholder="e.g. Company Name or Budget Range"
+                />
 
-                        <Select
-                            label="Folder / Group *"
-                            value={fieldData.fieldGroup}
-                            onChange={(e) => setFieldData({ ...fieldData, fieldGroup: e.target.value })}
-                        >
-                            {folderOptions.map(f => (
-                                <option key={f.id || f.name} value={f.id || f.name}>
-                                    {f.name}
-                                </option>
-                            ))}
-                        </Select>
-                    </div>
-
-                    <Input
-                        label="Field Label *"
-                        type="text"
-                        required
-                        value={fieldData.label}
-                        onChange={(e) => setFieldData({ ...fieldData, label: e.target.value })}
-                        placeholder="e.g. Company Name or Budget Range"
-                    />
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <Select
-                            label="Input Type"
-                            value={fieldData.type}
-                            onChange={(e) => setFieldData({ ...fieldData, type: e.target.value })}
-                        >
-                            <option value="text">Single Line Text</option>
-                            <option value="textarea">Multi-Line Textarea</option>
-                            <option value="number">Number</option>
-                            <option value="tel">Phone</option>
-                            <option value="date">Date Picker</option>
-                            <option value="select">Dropdown (Select)</option>
-                            <option value="radio">Radio Buttons</option>
-                            <option value="checkbox">Checkbox (Single)</option>
-                            <option value="multi_checkbox">Multi-Checkboxes</option>
-                            <option value="file">File Upload</option>
-                            <option value="rating">Rating Stars</option>
-                            <option value="scale">Opinion Scale (1-10)</option>
-                            <option value="signature">Signature Pad</option>
-                            <option value="hidden">Hidden Field</option>
-                        </Select>
-
-                        <Input
-                            label="Custom Key (API)"
-                            type="text"
-                            value={fieldData.key}
-                            onChange={(e) => setFieldData({ ...fieldData, key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_') })}
-                            placeholder={fieldData.label ? fieldData.label.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'key_name'}
-                            className="font-mono"
-                        />
-                    </div>
-
-                    {['select', 'radio'].includes(fieldData.type) && (
-                        <Input
-                            label="Options (comma separated)"
-                            type="text"
-                            value={fieldData.optionsText}
-                            onChange={(e) => setFieldData({ ...fieldData, optionsText: e.target.value })}
-                            placeholder="Option 1, Option 2, Option 3"
-                        />
-                    )}
+                <div className="grid grid-cols-2 gap-3">
+                    <Select
+                        label="Input Type"
+                        value={fieldData.type}
+                        onChange={(e) => setFieldData({ ...fieldData, type: e.target.value })}
+                    >
+                        <option value="text">Single Line Text</option>
+                        <option value="textarea">Multi-Line Textarea</option>
+                        <option value="number">Number</option>
+                        <option value="tel">Phone</option>
+                        <option value="date">Date Picker</option>
+                        <option value="select">Dropdown (Select)</option>
+                        <option value="radio">Radio Buttons</option>
+                        <option value="checkbox">Checkbox (Single)</option>
+                        <option value="multi_checkbox">Multi-Checkboxes</option>
+                        <option value="file">File Upload</option>
+                        <option value="rating">Rating Stars</option>
+                        <option value="scale">Opinion Scale (1-10)</option>
+                        <option value="signature">Signature Pad</option>
+                        <option value="hidden">Hidden Field</option>
+                    </Select>
 
                     <Input
-                        label="Placeholder Text"
+                        label="Custom Key (API)"
                         type="text"
-                        value={fieldData.placeholder}
-                        onChange={(e) => setFieldData({ ...fieldData, placeholder: e.target.value })}
-                        placeholder="e.g. Enter your company name"
+                        value={fieldData.key}
+                        onChange={(e) => setFieldData({ ...fieldData, key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_') })}
+                        placeholder={fieldData.label ? fieldData.label.toLowerCase().replace(/[^a-z0-9]/g, '_') : 'key_name'}
+                        className="font-mono"
+                    />
+                </div>
+
+                {['select', 'radio'].includes(fieldData.type) && (
+                    <Input
+                        label="Options (comma separated)"
+                        type="text"
+                        value={fieldData.optionsText}
+                        onChange={(e) => setFieldData({ ...fieldData, optionsText: e.target.value })}
+                        placeholder="Option 1, Option 2, Option 3"
+                    />
+                )}
+
+                <Input
+                    label="Placeholder Text"
+                    type="text"
+                    value={fieldData.placeholder}
+                    onChange={(e) => setFieldData({ ...fieldData, placeholder: e.target.value })}
+                    placeholder="e.g. Enter your company name"
+                />
+
+                <div className="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                    <Checkbox
+                        label="Required Field"
+                        checked={fieldData.required}
+                        onChange={(e) => setFieldData({ ...fieldData, required: e.target.checked })}
                     />
 
-                    <div className="flex items-center justify-between pt-2">
-                        <label className="flex items-center gap-2 text-xs text-neutral-700 dark:text-neutral-300 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={fieldData.required}
-                                onChange={(e) => setFieldData({ ...fieldData, required: e.target.checked })}
-                                className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
-                            />
-                            Required Field
-                        </label>
-
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl hover:bg-neutral-100 transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="px-5 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition shadow-xs flex items-center gap-1.5"
-                            >
-                                <Plus className="w-3.5 h-3.5" />
-                                Save & Add Field
-                            </button>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={onClose}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="sm"
+                            icon={Plus}
+                        >
+                            Save & Add Field
+                        </Button>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            </form>
+        </Modal>
     );
 }

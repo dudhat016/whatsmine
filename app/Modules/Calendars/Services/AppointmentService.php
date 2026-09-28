@@ -54,6 +54,10 @@ class AppointmentService
                 default => $calendar->location_custom,
             };
 
+            $isPaidBooking = $calendar->requires_payment && (float) $calendar->amount > 0 && empty($payload['paid']);
+            $initialStatus = $isPaidBooking ? 'pending' : 'confirmed';
+            $initialPaymentStatus = $isPaidBooking ? 'unpaid' : 'paid';
+
             $appointment = Appointment::create([
                 'workspace_id' => $workspaceId,
                 'calendar_id' => $calendar->id,
@@ -63,10 +67,10 @@ class AppointmentService
                 'start_at' => $startAt,
                 'end_at' => $endAt,
                 'timezone' => $payload['timezone'] ?? 'UTC',
-                'status' => 'confirmed',
+                'status' => $initialStatus,
                 'location' => $calendar->location_type,
                 'meeting_join_url' => $joinUrl,
-                'payment_status' => $calendar->requires_payment ? (!empty($payload['payment_token']) || !empty($payload['paid']) ? 'paid' : 'unpaid') : 'paid',
+                'payment_status' => $initialPaymentStatus,
                 'payment_amount' => $calendar->requires_payment ? $calendar->amount : 0.00,
                 'reschedule_token' => Str::random(40),
                 'notes' => $payload['notes'] ?? null,
@@ -94,10 +98,10 @@ class AppointmentService
                         'start_at' => $nextStartAt,
                         'end_at' => $nextEndAt,
                         'timezone' => $payload['timezone'] ?? 'UTC',
-                        'status' => 'confirmed',
+                        'status' => $initialStatus,
                         'location' => $calendar->location_type,
                         'meeting_join_url' => $joinUrl,
-                        'payment_status' => 'paid',
+                        'payment_status' => $initialPaymentStatus,
                         'payment_amount' => 0.00,
                         'reschedule_token' => Str::random(40),
                         'notes' => $payload['notes'] ?? null,
@@ -105,11 +109,34 @@ class AppointmentService
                 }
             }
 
-            // Trigger automation workflows
-            $this->dispatchAutomationTrigger($appointment, 'appointment.created');
+            // Only trigger automation workflows if confirmed immediately
+            if ($initialStatus === 'confirmed') {
+                $this->dispatchAutomationTrigger($appointment, 'appointment.created');
+            }
 
             return $appointment;
         });
+    }
+
+    /**
+     * Mark an appointment as paid and confirm the booking.
+     */
+    public function markAsPaidAndConfirmed(Appointment $appointment, ?string $transactionId = null): void
+    {
+        $appointment->update([
+            'status' => 'confirmed',
+            'payment_status' => 'paid',
+            'payment_reference' => $transactionId ?: $appointment->payment_reference,
+        ]);
+
+        if ($appointment->recurringAppointments()->count() > 0) {
+            $appointment->recurringAppointments()->update([
+                'status' => 'confirmed',
+                'payment_status' => 'paid',
+            ]);
+        }
+
+        $this->dispatchAutomationTrigger($appointment, 'appointment.created');
     }
 
     /**

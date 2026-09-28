@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Tag, Sparkles } from 'lucide-react';
+import { Tag, Sparkles } from 'lucide-react';
 import { router } from '@inertiajs/react';
-import { Input } from '@/Components/ui';
+import { Modal, Button, Input } from '@/Components/ui';
 
 export default function AddCustomValueModal({ isOpen, onClose, valueToEdit = null }) {
     const [name, setName] = useState('');
@@ -24,8 +24,6 @@ export default function AddCustomValueModal({ isOpen, onClose, valueToEdit = nul
         }
     }, [valueToEdit, isOpen]);
 
-    if (!isOpen) return null;
-
     const handleNameChange = (e) => {
         const val = e.target.value;
         setName(val);
@@ -45,42 +43,33 @@ export default function AddCustomValueModal({ isOpen, onClose, valueToEdit = nul
 
         setProcessing(true);
 
-        if (valueToEdit) {
-            router.put(route('client.custom_values.update', valueToEdit.id), {
-                name: name.trim(),
-                key: key.trim() || name.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'),
-                value: value.trim(),
-            }, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setProcessing(false);
-                    onClose();
-                },
-                onError: () => setProcessing(false),
-            });
-        } else {
-            router.post(route('client.custom_values.store'), {
-                name: name.trim(),
-                key: key.trim() || name.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'),
-                value: value.trim(),
-            }, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setProcessing(false);
-                    onClose();
-                },
-                onError: () => setProcessing(false),
-            });
-        }
+        const payload = {
+            name: name.trim(),
+            key: key.trim() || name.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'),
+            value: value.trim(),
+        };
+
+        const targetRoute = valueToEdit
+            ? route('client.custom_values.update', valueToEdit.id)
+            : route('client.custom_values.store');
+        const method = valueToEdit ? router.put : router.post;
+
+        method(targetRoute, payload, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setProcessing(false);
+                onClose();
+            },
+            onError: () => setProcessing(false),
+        });
     };
 
     const displayToken = `{{ custom_values.${key || 'your_key'} }}`;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150">
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50 dark:bg-neutral-900/50">
+        <Modal show={isOpen} onClose={onClose} maxWidth="lg">
+            <Modal.Header
+                title={
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-200/50 dark:border-emerald-800/40">
                             <Tag className="w-5 h-5" />
@@ -94,16 +83,12 @@ export default function AddCustomValueModal({ isOpen, onClose, valueToEdit = nul
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+                }
+                onClose={onClose}
+            />
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-4">
                     <Input
                         label="Name *"
                         type="text"
@@ -158,25 +143,24 @@ export default function AddCustomValueModal({ isOpen, onClose, valueToEdit = nul
                             When referenced in messages, emails, or funnels, this exact value will replace the tag.
                         </p>
                     </div>
+                </Modal.Body>
 
-                    <div className="pt-2 flex items-center justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={processing || !name.trim()}
-                            className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
-                        >
-                            <span>{valueToEdit ? 'Save Changes' : 'Create Custom Value'}</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <Modal.Footer>
+                    <Button variant="secondary" size="sm" type="button" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        type="submit"
+                        loading={processing}
+                        disabled={!name.trim()}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                        {valueToEdit ? 'Save Changes' : 'Create Custom Value'}
+                    </Button>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }

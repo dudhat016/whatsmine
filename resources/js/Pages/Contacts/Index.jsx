@@ -4,8 +4,7 @@ import EmptyState from '@/Components/EmptyState';
 import { useState, useRef, useCallback } from 'react';
 import { UserPlus, Upload, Search, Tag, Trash2, Eye, Users, Table2, Download, CheckSquare, Square, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useConfirm } from '@/context/ConfirmationContext';
-import { Input } from '@/Components/ui';
+import { Input, Modal, Button, Checkbox, Pagination } from '@/Components/ui';
 
 function ContactAvatar({ contact, size = 8 }) {
     const { t } = useTranslation();
@@ -311,87 +310,82 @@ export default function ContactsIndex({ contacts, filters, segments = [] }) {
                 </div>
 
                 {/* Pagination */}
-                {contacts.last_page > 1 && (
-                    <div className="flex gap-1">
-                        {contacts.links.map((link, i) => (
-                            <a key={i} href={link.url ?? '#'} className={`px-3 py-1.5 rounded text-sm border ${link.active ? 'bg-brand-600 text-white border-brand-600' : 'border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800'} ${!link.url ? 'opacity-40 pointer-events-none' : ''}`} dangerouslySetInnerHTML={{ __html: link.label }} />
-                        ))}
-                    </div>
-                )}
+                <Pagination data={contacts} />
             </div>
 
             {/* Add Contact Modal */}
-            {showAddModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-md rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4">
-                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('contacts_page.add_contact')}</h3>
-                        <form onSubmit={submitAdd} className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Input
-                                    label={t('contacts_page.first_name')}
-                                    type="text"
-                                    value={data.first_name}
-                                    onChange={e => setData('first_name', e.target.value)}
-                                />
-                                <Input
-                                    label={t('contacts_page.last_name')}
-                                    type="text"
-                                    value={data.last_name}
-                                    onChange={e => setData('last_name', e.target.value)}
-                                />
-                            </div>
+            <Modal show={showAddModal} onClose={() => setShowAddModal(false)} maxWidth="md">
+                <Modal.Header title={t('contacts_page.add_contact')} onClose={() => setShowAddModal(false)} />
+                <form onSubmit={submitAdd}>
+                    <Modal.Body className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
                             <Input
-                                label={t('contacts_page.phone_e164')}
+                                label={t('contacts_page.first_name')}
                                 type="text"
-                                value={data.phone_e164}
-                                onChange={e => handlePhoneChange(e.target.value)}
-                                placeholder="+8801XXXXXXXXX"
+                                value={data.first_name}
+                                onChange={e => setData('first_name', e.target.value)}
                             />
                             <Input
-                                label={t('common.email')}
-                                type="email"
-                                value={data.email}
-                                onChange={e => handleEmailChange(e.target.value)}
+                                label={t('contacts_page.last_name')}
+                                type="text"
+                                value={data.last_name}
+                                onChange={e => setData('last_name', e.target.value)}
                             />
-                            <div className="flex gap-4">
-                                {[['opt_in_whatsapp', 'WhatsApp', !data.phone_e164.trim()], ['opt_in_sms', t('contacts_page.channel_sms'), !data.phone_e164.trim()], ['opt_in_email', t('common.email'), !data.email.trim()]].map(([key, label, disabled]) => (
-                                    <label key={key} className={`flex items-center gap-1.5 text-sm ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
-                                        <input type="checkbox" checked={data[key]} onChange={e => setData(key, e.target.checked)} disabled={disabled} className="rounded" />
-                                        {label}
-                                    </label>
-                                ))}
-                            </div>
-                            {segments.length > 0 && (
-                                <div>
-                                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('contacts_page.add_to_segments')}</label>
-                                    <div className="mt-1.5 flex flex-wrap gap-2">
-                                        {segments.map(seg => {
-                                            const checked = data.segment_ids.includes(seg.id);
-                                            return (
-                                                <label key={seg.id} className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs cursor-pointer transition ${checked ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300' : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:border-brand-400'}`}>
-                                                    <input type="checkbox" className="sr-only" checked={checked} onChange={() => {
-                                                        const ids = checked ? data.segment_ids.filter(id => id !== seg.id) : [...data.segment_ids, seg.id];
-                                                        setData('segment_ids', ids);
-                                                    }} />
-                                                    {seg.name}
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
+                        </div>
+                        <Input
+                            label={t('contacts_page.phone_e164')}
+                            type="text"
+                            value={data.phone_e164}
+                            onChange={e => handlePhoneChange(e.target.value)}
+                            placeholder="+8801XXXXXXXXX"
+                        />
+                        <Input
+                            label={t('common.email')}
+                            type="email"
+                            value={data.email}
+                            onChange={e => handleEmailChange(e.target.value)}
+                        />
+                        <div className="flex flex-wrap gap-4 pt-1">
+                            {[['opt_in_whatsapp', 'WhatsApp', !data.phone_e164.trim()], ['opt_in_sms', t('contacts_page.channel_sms'), !data.phone_e164.trim()], ['opt_in_email', t('common.email'), !data.email.trim()]].map(([key, label, disabled]) => (
+                                <Checkbox
+                                    key={key}
+                                    checked={data[key]}
+                                    onChange={e => setData(key, e.target.checked)}
+                                    disabled={disabled}
+                                    label={label}
+                                />
+                            ))}
+                        </div>
+                        {segments.length > 0 && (
+                            <div>
+                                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('contacts_page.add_to_segments')}</label>
+                                <div className="mt-1.5 flex flex-wrap gap-2">
+                                    {segments.map(seg => {
+                                        const checked = data.segment_ids.includes(seg.id);
+                                        return (
+                                            <label key={seg.id} className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs cursor-pointer transition ${checked ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium' : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:border-brand-400'}`}>
+                                                <input type="checkbox" className="sr-only" checked={checked} onChange={() => {
+                                                    const ids = checked ? data.segment_ids.filter(id => id !== seg.id) : [...data.segment_ids, seg.id];
+                                                    setData('segment_ids', ids);
+                                                }} />
+                                                {seg.name}
+                                            </label>
+                                        );
+                                    })}
                                 </div>
-                            )}
-                            <div className="flex gap-2 pt-2">
-                                <button type="submit" disabled={processing} className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition">
-                                    {processing ? t('common.saving') : t('common.save')}
-                                </button>
-                                <button type="button" onClick={() => setShowAddModal(false)} className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
-                                    {t('common.cancel')}
-                                </button>
                             </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                        )}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button type="button" variant="secondary" onClick={() => setShowAddModal(false)}>
+                            {t('common.cancel')}
+                        </Button>
+                        <Button type="submit" disabled={processing}>
+                            {processing ? t('common.saving') : t('common.save')}
+                        </Button>
+                    </Modal.Footer>
+                </form>
+            </Modal>
         </ClientLayout>
     );
 }

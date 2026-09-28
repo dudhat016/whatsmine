@@ -1,5 +1,6 @@
 import React from 'react';
 import { PanelInput, PanelTextarea, PanelSelect, FieldLabel } from '../BuilderUI';
+import { Checkbox } from '@/Components/ui';
 
 const INPUT_TYPES = ['headline', 'subheadline', 'paragraph', 'bullets', 'quote', 'submit_button',
     'section', 'input_email', 'input_name', 'input_phone', 'checkbox',
@@ -307,15 +308,11 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                                 onChange={e => update('targetUrl', e.target.value)}
                                 placeholder="https://example.com/special-offer"
                             />
-                            <label className="flex items-center gap-2 pt-1 text-[11px] text-neutral-600 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={val('targetBlank', false)}
-                                    onChange={e => update('targetBlank', e.target.checked)}
-                                    className="rounded border-neutral-300 text-brand-600 focus:ring-brand-500 h-3.5 w-3.5"
-                                />
-                                <span>Open link in new browser tab</span>
-                            </label>
+                            <Checkbox
+                                checked={val('targetBlank', false)}
+                                onChange={e => update('targetBlank', e.target.checked)}
+                                label="Open link in new browser tab"
+                            />
                         </div>
                     )}
 
@@ -1193,15 +1190,11 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
                     <div className="space-y-1 border-t border-neutral-200 pt-2">
                         <div className="flex items-center justify-between">
                             <p className="text-[10px] font-bold text-neutral-600 uppercase">1-Click Order Bump</p>
-                            <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-neutral-700">
-                                <input
-                                    type="checkbox"
-                                    checked={val('hasOrderBump') !== false}
-                                    onChange={e => update('hasOrderBump', e.target.checked)}
-                                    className="rounded border-neutral-300 text-brand-600"
-                                />
-                                Enable Bump
-                            </label>
+                            <Checkbox
+                                checked={val('hasOrderBump') !== false}
+                                onChange={e => update('hasOrderBump', e.target.checked)}
+                                label="Enable Bump"
+                            />
                         </div>
                         {val('hasOrderBump') !== false && (
                             <div className="space-y-1.5 pt-1">
@@ -1339,12 +1332,10 @@ export default function ContentPanel({ element, val, handleUpdateElementSetting,
 
                     {val('linkUrl', '') && (
                         <div className="flex items-center justify-between py-1">
-                            <span className="text-neutral-600 dark:text-neutral-400 font-medium">Open link in new tab</span>
-                            <input
-                                type="checkbox"
+                            <Checkbox
                                 checked={!!val('linkTargetBlank')}
                                 onChange={e => update('linkTargetBlank', e.target.checked)}
-                                className="rounded text-brand-600 focus:ring-brand-500 cursor-pointer"
+                                label="Open link in new tab"
                             />
                         </div>
                     )}

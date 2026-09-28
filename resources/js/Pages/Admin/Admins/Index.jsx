@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Badge, Button, Card, Input, Select, Modal, Pagination } from '@/Components/ui';
+import { Badge, Button, Card, Input, Select, Modal, Pagination, Checkbox } from '@/Components/ui';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { Pencil, Trash2, Lock, Unlock, Search } from 'lucide-react';
@@ -245,20 +245,17 @@ export default function AdminAdminsIndex({ admins, roles, filters = {}, flash })
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('admin.col_roles')}</label>
                                 <div className="space-y-2">
                                     {roles?.map((r) => (
-                                        <label key={r.id} className="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={addForm.data.role_ids.includes(r.id)}
-                                                onChange={(e) => {
-                                                    const ids = e.target.checked
-                                                        ? [...addForm.data.role_ids, r.id]
-                                                        : addForm.data.role_ids.filter((id) => id !== r.id);
-                                                    addForm.setData('role_ids', ids);
-                                                }}
-                                                className="rounded border-neutral-300 dark:border-neutral-600"
-                                            />
-                                            <span className="text-sm">{r.name} ({r.key})</span>
-                                        </label>
+                                        <Checkbox
+                                            key={r.id}
+                                            label={`${r.name} (${r.key})`}
+                                            checked={addForm.data.role_ids.includes(r.id)}
+                                            onChange={(e) => {
+                                                const ids = e.target.checked
+                                                    ? [...addForm.data.role_ids, r.id]
+                                                    : addForm.data.role_ids.filter((id) => id !== r.id);
+                                                addForm.setData('role_ids', ids);
+                                            }}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -317,20 +314,17 @@ export default function AdminAdminsIndex({ admins, roles, filters = {}, flash })
                                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('admin.col_roles')}</label>
                                 <div className="space-y-2">
                                     {roles?.map((r) => (
-                                        <label key={r.id} className="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={editForm.data.role_ids.includes(r.id)}
-                                                onChange={(e) => {
-                                                    const ids = e.target.checked
-                                                        ? [...editForm.data.role_ids, r.id]
-                                                        : editForm.data.role_ids.filter((id) => id !== r.id);
-                                                    editForm.setData('role_ids', ids);
-                                                }}
-                                                className="rounded border-neutral-300 dark:border-neutral-600"
-                                            />
-                                            <span className="text-sm">{r.name} ({r.key})</span>
-                                        </label>
+                                        <Checkbox
+                                            key={r.id}
+                                            label={`${r.name} (${r.key})`}
+                                            checked={editForm.data.role_ids.includes(r.id)}
+                                            onChange={(e) => {
+                                                const ids = e.target.checked
+                                                    ? [...editForm.data.role_ids, r.id]
+                                                    : editForm.data.role_ids.filter((id) => id !== r.id);
+                                                editForm.setData('role_ids', ids);
+                                            }}
+                                        />
                                     ))}
                                 </div>
                             </div>

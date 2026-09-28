@@ -8,9 +8,11 @@ use App\Modules\Ecommerce\Models\EcommerceProduct;
 use App\Modules\Ecommerce\Models\EcommerceStore;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Stripe\StripeClient;
 
 class PublicStorefrontController extends Controller
 {
@@ -121,10 +123,6 @@ class PublicStorefrontController extends Controller
                 'pricing_type' => $product->pricing_type,
                 'product_type' => $product->product_type,
             ];
-
-            if ($product->inventory_quantity !== null) {
-                $product->decrement('inventory_quantity', min($qty, $product->inventory_quantity));
-            }
         }
 
         // Apply Coupon Discount if valid
@@ -165,10 +163,6 @@ class PublicStorefrontController extends Controller
                 $bumpConfig['external_url'] = $bumpProduct->digital_external_url;
                 $bumpConfig['license_key'] = $bumpProduct->digital_license_key;
                 $bumpConfig['calendar_id'] = $bumpProduct->calendar_id;
-
-                if ($bumpProduct->product_type === 'physical' && $bumpProduct->inventory_quantity !== null) {
-                    $bumpProduct->decrement('inventory_quantity', 1);
-                }
             }
 
             $totalAmount += $bumpPrice;
@@ -184,6 +178,10 @@ class PublicStorefrontController extends Controller
                 'is_bump' => true,
             ];
         }
+
+        $isFreeOrder = ($totalAmount <= 0.00) || ($primaryProduct && $primaryProduct->pricing_type === 'free');
+        $financialStatus = $isFreeOrder ? 'paid' : 'pending';
+        $fulfillmentStatus = $isFreeOrder ? 'fulfilled' : 'unfulfilled';
 
         $orderNumber = 'WM-' . strtoupper(Str::random(6));
         $accessToken = Str::random(32);
@@ -213,8 +211,8 @@ class PublicStorefrontController extends Controller
             'platform' => $store->platform,
             'total' => $totalAmount,
             'currency' => 'USD',
-            'financial_status' => 'paid',
-            'fulfillment_status' => 'fulfilled',
+            'financial_status' => $financialStatus,
+            'fulfillment_status' => $fulfillmentStatus,
             'placed_at' => now(),
             'line_items' => $lineItems,
             'raw' => [
@@ -230,57 +228,140 @@ class PublicStorefrontController extends Controller
             ],
         ]);
 
-        $vaultUrl = route('public.storefront.vault', $accessToken);
+        // If free order, fulfill immediately and return digital vault URL
+        if ($isFreeOrder) {
+            $this->decrementOrderInventory($order);
+            $vaultUrl = route('public.storefront.vault', $accessToken);
 
-        return response()->json([
-            'success' => true,
-            'order_number' => $orderNumber,
-            'total' => number_format($totalAmount, 2),
-            'vault_url' => $vaultUrl,
-            'message' => 'Order placed successfully!',
-        ]);
+            return response()->json([
+                'success' => true,
+                'is_paid' => true,
+                'order_number' => $orderNumber,
+                'total' => number_format($totalAmount, 2),
+                'redirect_url' => $vaultUrl,
+                'message' => 'Free access confirmed successfully!',
+            ]);
+        }
+
+        // For paid orders, initiate Stripe Hosted Checkout Session
+        $stripeSecret = $this->resolveStripeSecretKey($store);
+
+        if (!$stripeSecret || strlen($stripeSecret) < 8) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment gateway is not configured for this store. Please configure Stripe credentials.',
+            ], 422);
+        }
+
+        try {
+            $stripe = new StripeClient($stripeSecret);
+            $storeSlug = $store->slug ?? $store->id;
+            $productSlug = $primaryProduct ? ($primaryProduct->slug ?? $primaryProduct->id) : '';
+
+            $session = $stripe->checkout->sessions->create([
+                'payment_method_types' => ['card'],
+                'customer_email' => $validated['customer_email'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => strtolower($store->currency_code ?? 'usd'),
+                        'unit_amount' => (int) round($totalAmount * 100),
+                        'product_data' => [
+                            'name' => $primaryProduct ? $primaryProduct->name : 'Product Order',
+                            'description' => $orderBumpIncluded ? 'Includes bonus order bump offer' : ($primaryProduct->description ? Str::limit($primaryProduct->description, 120) : null),
+                            'images' => ($primaryProduct && $primaryProduct->image_url) ? [$primaryProduct->image_url] : [],
+                        ],
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'client_reference_id' => $orderNumber,
+                'metadata' => [
+                    'order_id' => (string) $order->id,
+                    'access_token' => $accessToken,
+                    'store_id' => (string) $store->id,
+                    'workspace_id' => (string) $store->workspace_id,
+                    'type' => 'ecommerce_order',
+                ],
+                'success_url' => route('public.storefront.payment.success', $accessToken) . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => route('public.storefront.show', ['slug' => $storeSlug, 'productSlug' => $productSlug]) . '?payment_status=cancelled',
+            ]);
+
+            $raw = $order->raw ?? [];
+            $raw['stripe_session_id'] = $session->id;
+            $order->update(['raw' => $raw]);
+
+            return response()->json([
+                'success' => true,
+                'is_paid' => false,
+                'redirect_url' => $session->url,
+                'message' => 'Redirecting to secure payment checkout...',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('PublicStorefrontController: Failed creating Stripe checkout session', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to initialize payment with provider: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function paymentSuccess(Request $request, string $token)
+    {
+        $order = EcommerceOrder::where('access_token', $token)->firstOrFail();
+
+        $sessionId = $request->query('session_id');
+        if ($sessionId && $order->financial_status !== 'paid') {
+            $store = $order->store ?? $this->resolveStore((string) $order->store_id);
+            $stripeSecret = $this->resolveStripeSecretKey($store);
+            if ($stripeSecret) {
+                try {
+                    $stripe = new StripeClient($stripeSecret);
+                    $session = $stripe->checkout->sessions->retrieve($sessionId);
+                    if ($session && $session->payment_status === 'paid') {
+                        $this->fulfillOrder($order);
+                        $raw = $order->raw ?? [];
+                        $raw['stripe_payment_intent_id'] = $session->payment_intent;
+                        $order->update(['raw' => $raw]);
+
+                        return redirect()->route('public.storefront.vault', $token)->with('success', 'Payment successful! Your order is confirmed.');
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('PublicStorefrontController: Failed verifying Stripe session', ['session' => $sessionId, 'error' => $e->getMessage()]);
+                }
+            }
+        }
+
+        if ($order->financial_status === 'paid') {
+            return redirect()->route('public.storefront.vault', $token);
+        }
+
+        // If not paid, redirect back to product page with cancellation notice
+        $store = $order->store ?? $this->resolveStore((string) $order->store_id);
+        $lineItems = $order->line_items ?? [];
+        $firstItem = $lineItems[0] ?? null;
+        $product = $firstItem && isset($firstItem['product_id']) ? EcommerceProduct::find($firstItem['product_id']) : null;
+        $productSlug = $product ? ($product->slug ?? $product->id) : '';
+
+        return redirect()->route('public.storefront.show', [
+            'slug' => $store->slug ?? $store->id,
+            'productSlug' => $productSlug,
+        ])->with('error', 'Payment was not completed or was cancelled.');
     }
 
     public function digitalVault(string $token): Response
     {
         $order = EcommerceOrder::where('access_token', $token)->firstOrFail();
 
-        $lineItems = $order->line_items ?? [];
-        $firstItem = $lineItems[0] ?? null;
-
-        $product = null;
-        if ($firstItem && isset($firstItem['product_id'])) {
-            $product = EcommerceProduct::find($firstItem['product_id']);
-        }
-
-        return Inertia::render('Public/Storefront/DigitalVault', [
-            'order' => [
-                'number' => $order->number,
-                'access_token' => $order->access_token,
-                'download_count' => $order->download_count ?? 0,
-                'created_at' => $order->created_at ? $order->created_at->toFormattedDateString() : null,
-                'customer_name' => $order->raw['customer_name'] ?? 'Valued Customer',
-                'order_bump_data' => $order->raw['order_bump_data'] ?? null,
-            ],
-            'product' => $product ? [
-                'id' => $product->id,
-                'name' => $product->name,
-                'description' => $product->description,
-                'image_url' => $product->image_url,
-                'digital_fulfillment_type' => $product->digital_fulfillment_type ?? 'file',
-                'digital_file_url' => $product->digital_file_url,
-                'digital_external_url' => $product->digital_external_url,
-                'digital_license_key' => $product->digital_license_key,
-                'digital_download_limit' => $product->digital_download_limit ?? 5,
-                'calendar_id' => $product->calendar_id,
-                'calendar_slug' => $product->calendar?->slug,
-            ] : null,
-        ]);
+        return Inertia::render('Public/Storefront/DigitalVault', $this->buildVaultData($order));
     }
 
     public function downloadDigitalFile(string $token)
     {
         $order = EcommerceOrder::where('access_token', $token)->firstOrFail();
+
+        if ($order->financial_status !== 'paid') {
+            return redirect()->route('public.storefront.vault', $token)->with('error', 'Payment must be completed to access digital content.');
+        }
 
         $lineItems = $order->line_items ?? [];
         $firstItem = $lineItems[0] ?? null;
@@ -307,6 +388,93 @@ class PublicStorefrontController extends Controller
         }
 
         return back()->with('error', 'Digital download file is not configured.');
+    }
+
+    private function fulfillOrder(EcommerceOrder $order): void
+    {
+        if ($order->financial_status === 'paid') {
+            return;
+        }
+
+        $order->update([
+            'financial_status' => 'paid',
+            'fulfillment_status' => 'fulfilled',
+        ]);
+
+        $this->decrementOrderInventory($order);
+    }
+
+    private function decrementOrderInventory(EcommerceOrder $order): void
+    {
+        $lineItems = $order->line_items ?? [];
+        foreach ($lineItems as $item) {
+            if (!empty($item['product_id'])) {
+                $product = EcommerceProduct::find($item['product_id']);
+                if ($product && $product->product_type === 'physical' && $product->inventory_quantity !== null) {
+                    $qty = (int) ($item['quantity'] ?? 1);
+                    $product->decrement('inventory_quantity', min($qty, $product->inventory_quantity));
+                }
+            }
+        }
+    }
+
+    private function buildVaultData(EcommerceOrder $order): array
+    {
+        $lineItems = $order->line_items ?? [];
+        $firstItem = $lineItems[0] ?? null;
+
+        $product = null;
+        if ($firstItem && isset($firstItem['product_id'])) {
+            $product = EcommerceProduct::find($firstItem['product_id']);
+        }
+
+        $store = $order->store ?? $this->resolveStore((string) $order->store_id);
+
+        return [
+            'order' => [
+                'number' => $order->number,
+                'access_token' => $order->access_token,
+                'total' => (float) $order->total,
+                'financial_status' => $order->financial_status,
+                'is_paid' => $order->financial_status === 'paid',
+                'download_count' => $order->download_count ?? 0,
+                'created_at' => $order->created_at ? $order->created_at->toFormattedDateString() : null,
+                'customer_name' => $order->raw['customer_name'] ?? 'Valued Customer',
+                'order_bump_data' => $order->raw['order_bump_data'] ?? null,
+                'payment_url' => route('public.storefront.payment.page', $order->access_token),
+            ],
+            'product' => $product ? [
+                'id' => $product->id,
+                'name' => $product->name,
+                'description' => $product->description,
+                'image_url' => $product->image_url,
+                'digital_fulfillment_type' => $product->digital_fulfillment_type ?? 'file',
+                'digital_file_url' => $product->digital_file_url,
+                'digital_external_url' => $product->digital_external_url,
+                'digital_license_key' => $product->digital_license_key,
+                'digital_download_limit' => $product->digital_download_limit ?? 5,
+                'calendar_id' => $product->calendar_id,
+                'calendar_slug' => $product->calendar?->slug,
+            ] : null,
+            'store' => [
+                'id' => $store->id,
+                'name' => $store->name,
+                'slug' => $store->slug ?? Str::slug($store->name),
+            ],
+        ];
+    }
+
+    private function resolveStripeSecretKey(EcommerceStore $store): ?string
+    {
+        $creds = $store->credentials ?? [];
+        if (!empty($creds['stripe_secret_key'])) {
+            return $creds['stripe_secret_key'];
+        }
+        if (!empty($creds['stripe_secret'])) {
+            return $creds['stripe_secret'];
+        }
+
+        return config('billing.gateways.stripe.secret_key') ?: env('STRIPE_SECRET');
     }
 
     private function resolveStore(string $slug): EcommerceStore

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm, usePage } from '@inertiajs/react';
 import MediaUpload from '@/Components/MediaUpload';
 import ProductLandingView from '@/Components/Ecommerce/ProductLandingView';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Toggle } from '@/Components/ui';
 import { 
     X, ArrowLeft, Monitor, Smartphone, Check, FileText, Link as LinkIcon, 
     Key, Clock, Sparkles, HelpCircle, MessageSquare, User, Tag, RefreshCw, 
@@ -10,9 +10,9 @@ import {
     Star, Images, Quote, Percent, Zap, Ticket, Package
 } from 'lucide-react';
 
-export default function NativeProductBuilder({ isOpen, onClose, product = null, calendars = [], allProducts = [] }) {
+export default function NativeProductBuilder({ isOpen, onClose, product = null, calendars = [], allProducts = [], nativeStore: nativeStoreProp }) {
     const { props: pageProps } = usePage();
-    const nativeStore = pageProps.nativeStore;
+    const nativeStore = nativeStoreProp || pageProps.nativeStore;
     const isEdit = !!product;
     const [step, setStep] = useState(1);
     const [previewDevice, setPreviewDevice] = useState('desktop');
@@ -128,10 +128,76 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
         }
     }, [product, isOpen]);
 
+    const [stepErrors, setStepErrors] = useState({});
+
+    const validateStep = (currentStep) => {
+        const errs = {};
+        if (currentStep === 1) {
+            if (!data.name || !data.name.trim()) {
+                errs.name = 'Product title is required.';
+            }
+            if (data.digital_fulfillment_type === 'file' && !data.digital_file_url) {
+                errs.digital_file_url = 'Please upload a digital file or provide a download URL.';
+            }
+            if (data.digital_fulfillment_type === 'external_link' && !data.digital_external_url) {
+                errs.digital_external_url = 'Please provide an external access URL.';
+            }
+            if (data.digital_fulfillment_type === 'booking' && !data.calendar_id) {
+                errs.calendar_id = 'Please select a booking calendar.';
+            }
+        } else if (currentStep === 2) {
+            if (data.pricing_type !== 'free') {
+                if (data.price === '' || isNaN(data.price) || parseFloat(data.price) <= 0) {
+                    errs.price = 'Price must be greater than 0 for paid products.';
+                }
+            }
+            if (data.pricing_type === 'installments') {
+                if (!data.installment_count || parseInt(data.installment_count) < 2) {
+                    errs.installment_count = 'Installment count must be at least 2 payments.';
+                }
+            }
+        }
+        setStepErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
+
+    const handleNextStep = () => {
+        if (validateStep(step)) {
+            setStepErrors({});
+            setStep(step + 1);
+        }
+    };
+
+    const handleStepTabClick = (targetStep) => {
+        if (targetStep > step) {
+            if (validateStep(step)) {
+                setStepErrors({});
+                setStep(targetStep);
+            }
+        } else {
+            setStepErrors({});
+            setStep(targetStep);
+        }
+    };
+
     if (!isOpen) return null;
 
     const handleSubmit = (e) => {
         if (e) e.preventDefault();
+
+        const isStep1Valid = validateStep(1);
+        if (!isStep1Valid) {
+            setStep(1);
+            return;
+        }
+
+        const isStep2Valid = validateStep(2);
+        if (!isStep2Valid) {
+            setStep(2);
+            return;
+        }
+
+        setStepErrors({});
 
         transform((currentData) => ({
             ...currentData,
@@ -150,11 +216,15 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
 
         if (isEdit) {
             put(route('client.ecommerce.products.update', product.id), {
-                onSuccess: () => onClose(),
+                onSuccess: () => {
+                    if (onClose) onClose();
+                },
             });
         } else {
             post(route('client.ecommerce.products.store'), {
-                onSuccess: () => onClose(),
+                onSuccess: () => {
+                    if (onClose) onClose();
+                },
             });
         }
     };
@@ -241,7 +311,7 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                     <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800">
                         <button
                             type="button"
-                            onClick={() => setStep(1)}
+                            onClick={() => handleStepTabClick(1)}
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
                                 step === 1
                                     ? 'bg-emerald-600 text-white shadow-sm'
@@ -252,7 +322,7 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                         </button>
                         <button
                             type="button"
-                            onClick={() => setStep(2)}
+                            onClick={() => handleStepTabClick(2)}
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
                                 step === 2
                                     ? 'bg-emerald-600 text-white shadow-sm'
@@ -320,10 +390,13 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             type="text"
                                             maxLength={75}
                                             value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
+                                            onChange={(e) => { setData('name', e.target.value); if (stepErrors.name) setStepErrors(p => ({ ...p, name: null })); }}
                                             placeholder="e.g. Master Digital Product Vault 2026"
-                                            required
+                                            error={stepErrors.name || errors.name}
                                         />
+                                        {(stepErrors.name || errors.name) && (
+                                            <p className="mt-1 text-xs text-red-500 flex items-center gap-1">⚠ {stepErrors.name || errors.name}</p>
+                                        )}
                                     </div>
 
                                     {/* 2. Cover Banner */}
@@ -830,16 +903,12 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
                                                 <Package className="h-3.5 w-3.5 text-amber-500" /> Stock Limit / Inventory
                                             </label>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" checked={!!data.enable_stock_limit}
-                                                    onChange={(e) => {
-                                                        const enabled = e.target.checked;
-                                                        setData(prev => ({ ...prev, enable_stock_limit: enabled, inventory_quantity: enabled ? (prev.inventory_quantity ?? 10) : null }));
-                                                    }}
-                                                    className="sr-only peer"
-                                                />
-                                                <div className="w-9 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-neutral-600 peer-checked:bg-emerald-600"></div>
-                                            </label>
+                                            <Toggle
+                                                checked={!!data.enable_stock_limit}
+                                                onChange={(enabled) => {
+                                                    setData(prev => ({ ...prev, enable_stock_limit: enabled, inventory_quantity: enabled ? (prev.inventory_quantity ?? 10) : null }));
+                                                }}
+                                            />
                                         </div>
                                         {data.enable_stock_limit ? (
                                             <div>
@@ -913,13 +982,10 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                                             <label className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
                                                 <Zap className="h-3.5 w-3.5 text-amber-500" /> 1-Click Order Bump
                                             </label>
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" checked={!!data.order_bump?.enabled}
-                                                    onChange={(e) => setData('order_bump', { ...data.order_bump, enabled: e.target.checked })}
-                                                    className="sr-only peer"
-                                                />
-                                                <div className="w-9 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:after:border-neutral-600 peer-checked:bg-emerald-600"></div>
-                                            </label>
+                                            <Toggle
+                                                checked={!!data.order_bump?.enabled}
+                                                onChange={(enabled) => setData('order_bump', { ...data.order_bump, enabled })}
+                                            />
                                         </div>
                                         {data.order_bump?.enabled && (
                                             <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2.5">
@@ -1143,7 +1209,7 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                             {step < 2 ? (
                                 <button
                                     type="button"
-                                    onClick={() => setStep(step + 1)}
+                                    onClick={handleNextStep}
                                     className="px-5 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black font-bold text-xs hover:opacity-90 transition flex items-center gap-1.5"
                                 >
                                     Next Step <ChevronRight className="h-4 w-4" />
@@ -1163,30 +1229,30 @@ export default function NativeProductBuilder({ isOpen, onClose, product = null, 
                 </div>
 
                 {/* RIGHT: WhatsMine Real-Time Device Canvas */}
-                <div className="flex-1 bg-neutral-950 p-6 md:p-10 flex flex-col items-center justify-center overflow-y-auto relative">
-                    <div className="text-xs font-semibold uppercase tracking-widest text-neutral-500 mb-4 flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-400" /> WhatsMine Live Device Preview
+                <div className="flex-1 bg-neutral-100 dark:bg-neutral-950 p-6 md:p-10 flex flex-col items-center justify-center overflow-y-auto relative transition-colors duration-300">
+                    <div className="text-xs font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-4 flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" /> WhatsMine Live Device Preview
                     </div>
 
                     {/* Preview Frame Container */}
-                    <div className={`transition-all duration-300 rounded-3xl bg-neutral-900 border border-neutral-800 overflow-hidden shadow-2xl flex flex-col ${
+                    <div className={`transition-all duration-300 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-2xl flex flex-col ${
                         previewDevice === 'mobile' ? 'w-[375px] h-[680px]' : 'w-full max-w-4xl h-[680px]'
                     }`}>
                         {/* WhatsMine Mock Browser Header */}
-                        <div className="h-9 bg-neutral-950 border-b border-neutral-800 px-4 flex items-center justify-between shrink-0">
+                        <div className="h-9 bg-neutral-100 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 px-4 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-1.5">
                                 <div className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
                                 <div className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
                                 <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
                             </div>
-                            <div title={displayUrl} className="px-3 py-0.5 rounded-full bg-neutral-900 text-[10px] text-neutral-400 font-mono border border-neutral-800 truncate max-w-[300px]">
+                            <div title={displayUrl} className="px-3 py-0.5 rounded-full bg-white dark:bg-neutral-900 text-[10px] text-neutral-600 dark:text-neutral-400 font-mono border border-neutral-200 dark:border-neutral-800 truncate max-w-[300px]">
                                 {displayUrl}
                             </div>
                             <div className="w-8" />
                         </div>
 
                         {/* Public Page Glassmorphism Canvas */}
-                        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-neutral-100 flex flex-col">
+                        <div className="flex-1 overflow-y-auto bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 flex flex-col">
                             <ProductLandingView
                                 data={data}
                                 store={nativeStore}

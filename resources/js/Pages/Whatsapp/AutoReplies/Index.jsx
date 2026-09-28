@@ -1,8 +1,8 @@
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
-import { Input, Select } from '@/Components/ui';
-import { Plus, Trash2, ToggleLeft, ToggleRight, Zap, Pencil, X } from 'lucide-react';
+import { Input, Select, Modal, Button, Checkbox } from '@/Components/ui';
+import { Plus, Trash2, ToggleLeft, ToggleRight, Zap, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useConfirm } from '@/context/ConfirmationContext';
@@ -171,31 +171,27 @@ function RuleForm({ data, setData, errors, onSubmit, onCancel, processing, submi
             </div>
 
             {/* Enabled */}
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                    type="checkbox"
-                    checked={data.enabled}
-                    onChange={e => setData('enabled', e.target.checked)}
-                    className="rounded border-neutral-300 dark:border-neutral-600 text-brand-600"
-                />
-                <span className="text-sm text-neutral-700 dark:text-neutral-300">{t('common.enabled')}</span>
-            </label>
+            <Checkbox
+                checked={data.enabled}
+                onChange={e => setData('enabled', e.target.checked)}
+                label={t('common.enabled')}
+            />
 
             <div className="flex gap-2 pt-2">
-                <button
+                <Button
                     type="submit"
                     disabled={processing}
-                    className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition"
+                    className="flex-1"
                 >
                     {processing ? t('whatsapp.auto_replies_saving') : (submitLabel ?? t('whatsapp.auto_replies_save_rule'))}
-                </button>
-                <button
+                </Button>
+                <Button
                     type="button"
+                    variant="secondary"
                     onClick={onCancel}
-                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
                 >
                     {t('common.cancel')}
-                </button>
+                </Button>
             </div>
         </form>
     );
@@ -275,12 +271,11 @@ export default function WhatsappAutoRepliesIndex({ rules }) {
                         </p>
                     </div>
                     {(
-                        <button
+                        <Button
                             onClick={() => setShowCreate(true)}
-                            className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 transition"
                         >
-                            <Plus className="h-4 w-4" /> {t('whatsapp.auto_replies_add_rule')}
-                        </button>
+                            <Plus className="h-4 w-4 mr-1.5" /> {t('whatsapp.auto_replies_add_rule')}
+                        </Button>
                     )}
                 </div>
 
@@ -377,50 +372,36 @@ export default function WhatsappAutoRepliesIndex({ rules }) {
             </div>
 
             {/* ── Create modal ── */}
-            {showCreate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-md rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('whatsapp.auto_replies_new_rule')}</h3>
-                            <button type="button" onClick={() => setShowCreate(false)} className="text-neutral-400 hover:text-neutral-600">
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
-                        <RuleForm
-                            data={createForm.data}
-                            setData={createForm.setData}
-                            errors={createForm.errors}
-                            onSubmit={handleCreate}
-                            onCancel={() => setShowCreate(false)}
-                            processing={createForm.processing}
-                            submitLabel={t('whatsapp.auto_replies_create_rule')}
-                        />
-                    </div>
-                </div>
-            )}
+            <Modal show={showCreate} onClose={() => setShowCreate(false)} maxWidth="md">
+                <Modal.Header title={t('whatsapp.auto_replies_new_rule')} onClose={() => setShowCreate(false)} />
+                <Modal.Body className="max-h-[80vh] overflow-y-auto">
+                    <RuleForm
+                        data={createForm.data}
+                        setData={createForm.setData}
+                        errors={createForm.errors}
+                        onSubmit={handleCreate}
+                        onCancel={() => setShowCreate(false)}
+                        processing={createForm.processing}
+                        submitLabel={t('whatsapp.auto_replies_create_rule')}
+                    />
+                </Modal.Body>
+            </Modal>
 
             {/* ── Edit modal ── */}
-            {editingRule && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-md rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('whatsapp.auto_replies_edit_rule')}</h3>
-                            <button type="button" onClick={() => setEditingRule(null)} className="text-neutral-400 hover:text-neutral-600">
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
-                        <RuleForm
-                            data={editForm.data}
-                            setData={editForm.setData}
-                            errors={editForm.errors}
-                            onSubmit={handleEdit}
-                            onCancel={() => setEditingRule(null)}
-                            processing={editForm.processing}
-                            submitLabel={t('whatsapp.auto_replies_save_changes')}
-                        />
-                    </div>
-                </div>
-            )}
+            <Modal show={!!editingRule} onClose={() => setEditingRule(null)} maxWidth="md">
+                <Modal.Header title={t('whatsapp.auto_replies_edit_rule')} onClose={() => setEditingRule(null)} />
+                <Modal.Body className="max-h-[80vh] overflow-y-auto">
+                    <RuleForm
+                        data={editForm.data}
+                        setData={editForm.setData}
+                        errors={editForm.errors}
+                        onSubmit={handleEdit}
+                        onCancel={() => setEditingRule(null)}
+                        processing={editForm.processing}
+                        submitLabel={t('whatsapp.auto_replies_save_changes')}
+                    />
+                </Modal.Body>
+            </Modal>
         </ClientLayout>
     );
 }

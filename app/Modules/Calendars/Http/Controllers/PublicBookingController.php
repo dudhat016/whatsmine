@@ -9,8 +9,10 @@ use App\Modules\Calendars\Services\AppointmentService;
 use App\Modules\Calendars\Services\CalendarService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Stripe\StripeClient;
 
 class PublicBookingController extends Controller
 {
@@ -69,6 +71,16 @@ class PublicBookingController extends Controller
         ]);
     }
 
+    private function resolveStripeSecretKey(int $workspaceId): ?string
+    {
+        $store = \App\Modules\Ecommerce\Models\EcommerceStore::where('workspace_id', $workspaceId)->where('is_active', true)->first();
+        if ($store && !empty($store->credentials['stripe_secret_key'])) {
+            return $store->credentials['stripe_secret_key'];
+        }
+
+        return config('billing.gateways.stripe.secret_key') ?: env('STRIPE_SECRET');
+    }
+
     /**
      * Process booking submission.
      */
@@ -94,11 +106,105 @@ class PublicBookingController extends Controller
 
         $appointment = $this->appointmentService->createAppointment($calendar, $validated);
 
+        // If this calendar requires payment, initiate Stripe Checkout
+        if ($calendar->requires_payment && (float) $calendar->amount > 0) {
+            $stripeSecret = $this->resolveStripeSecretKey((int) $calendar->workspace_id);
+
+            if (!$stripeSecret || strlen($stripeSecret) < 8) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment gateway is not configured for this calendar. Please contact support.',
+                ], 422);
+            }
+
+            try {
+                $stripe = new StripeClient($stripeSecret);
+
+                $session = $stripe->checkout->sessions->create([
+                    'payment_method_types' => ['card'],
+                    'customer_email' => $validated['email'],
+                    'line_items' => [[
+                        'price_data' => [
+                            'currency' => strtolower($calendar->currency ?? 'usd'),
+                            'unit_amount' => (int) round(((float) $calendar->amount) * 100),
+                            'product_data' => [
+                                'name' => "Appointment: {$calendar->name}",
+                                'description' => "Scheduled session on {$appointment->start_at->format('M d, Y @ h:i A')}",
+                            ],
+                        ],
+                        'quantity' => 1,
+                    ]],
+                    'mode' => 'payment',
+                    'client_reference_id' => 'APT-' . $appointment->id,
+                    'metadata' => [
+                        'appointment_id' => (string) $appointment->id,
+                        'calendar_id' => (string) $calendar->id,
+                        'reschedule_token' => $appointment->reschedule_token,
+                        'workspace_id' => (string) $calendar->workspace_id,
+                        'type' => 'calendar_booking',
+                    ],
+                    'success_url' => route('public.booking.payment.success', $appointment->reschedule_token) . '?session_id={CHECKOUT_SESSION_ID}',
+                    'cancel_url' => route('public.booking.widget', $calendar->slug) . '?payment_status=cancelled',
+                ]);
+
+                $appointment->update([
+                    'payment_reference' => $session->id,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'requires_payment' => true,
+                    'appointment' => $appointment,
+                    'redirect_url' => $session->url,
+                    'message' => 'Redirecting to payment checkout...',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('PublicBookingController: Stripe checkout session creation failed', ['error' => $e->getMessage()]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to initialize payment gateway: ' . $e->getMessage(),
+                ], 422);
+            }
+        }
+
         return response()->json([
             'success' => true,
+            'requires_payment' => false,
             'appointment' => $appointment,
             'redirect_url' => $calendar->redirect_url ?: null,
         ]);
+    }
+
+    /**
+     * Handle return redirect from payment gateway after checkout.
+     */
+    public function paymentSuccess(Request $request, string $token)
+    {
+        $appointment = Appointment::where('reschedule_token', $token)
+            ->with(['calendar', 'contact'])
+            ->firstOrFail();
+
+        $sessionId = $request->query('session_id');
+        if ($sessionId && $appointment->payment_status !== 'paid') {
+            $stripeSecret = $this->resolveStripeSecretKey((int) $appointment->workspace_id);
+            if ($stripeSecret) {
+                try {
+                    $stripe = new StripeClient($stripeSecret);
+                    $session = $stripe->checkout->sessions->retrieve($sessionId);
+                    if ($session && $session->payment_status === 'paid') {
+                        $this->appointmentService->markAsPaidAndConfirmed($appointment, $session->payment_intent ?? $session->id);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('PublicBookingController: Failed verifying Stripe session', ['session' => $sessionId, 'error' => $e->getMessage()]);
+                }
+            }
+        }
+
+        if ($appointment->calendar?->redirect_url) {
+            return redirect($appointment->calendar->redirect_url);
+        }
+
+        return redirect()->route('public.booking.reschedule.show', $token)->with('success', 'Appointment confirmed and payment received!');
     }
 
     /**

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, usePage } from '@inertiajs/react';
 import { Key, Plus, Trash2, Copy, Check } from 'lucide-react';
-import { DatePicker, Input } from '@/Components/ui';
+import { DatePicker, Input, Modal, Button, Checkbox } from '@/Components/ui';
 import { formatDateTz } from '@/Utils/datetime';
 import { useTranslation } from 'react-i18next';
 import { useConfirm } from '@/context/ConfirmationContext';
@@ -76,68 +76,66 @@ function CreateTokenModal({ onClose, onCreated }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white dark:bg-neutral-800 rounded-soft-lg w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                    <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">{t('api.create_token')}</h2>
-                    <form onSubmit={submit} className="space-y-5">
-                        <div>
-                            <Input
-                                type="text"
-                                label={t('api.token_name_label')}
-                                value={name}
-                                onChange={e => setName(e.target.value)}
-                                placeholder={t('api.token_name_placeholder')}
-                                required
-                            />
-                        </div>
+        <Modal show={true} onClose={onClose} maxWidth="lg">
+            <Modal.Header title={t('api.create_token')} onClose={onClose} />
+            <form onSubmit={submit}>
+                <Modal.Body className="space-y-5">
+                    <div>
+                        <Input
+                            type="text"
+                            label={t('api.token_name_label')}
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            placeholder={t('api.token_name_placeholder')}
+                            required
+                        />
+                    </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('api.permissions_label')}</label>
-                            <label className="flex items-center gap-2 mb-3 cursor-pointer">
-                                <input type="checkbox" checked={wildcardAll} onChange={e => setWildcardAll(e.target.checked)} className="rounded" />
-                                <span className="text-sm text-neutral-700 dark:text-neutral-300 font-medium">{t('api.full_access')}</span>
-                            </label>
-                            {!wildcardAll && (
-                                <div className="border border-neutral-200 dark:border-neutral-600 rounded-soft divide-y divide-neutral-100 dark:divide-neutral-700">
-                                    {ALL_SCOPES.map(({ scope, labelKey }) => (
-                                        <label key={scope} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedScopes.includes(scope)}
-                                                onChange={() => toggleScope(scope)}
-                                                className="rounded"
-                                            />
-                                            <div className="min-w-0 flex-1">
-                                                <span className="text-xs font-mono text-brand-600 dark:text-brand-400">{scope}</span>
-                                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{t(labelKey)}</p>
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                    <div>
+                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('api.permissions_label')}</label>
+                        <Checkbox
+                            checked={wildcardAll}
+                            onChange={e => setWildcardAll(e.target.checked)}
+                            label={t('api.full_access')}
+                            className="mb-3"
+                        />
+                        {!wildcardAll && (
+                            <div className="border border-neutral-200 dark:border-neutral-600 rounded-soft divide-y divide-neutral-100 dark:divide-neutral-700 max-h-48 overflow-y-auto">
+                                {ALL_SCOPES.map(({ scope, labelKey }) => (
+                                    <label key={scope} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                                        <Checkbox
+                                            checked={selectedScopes.includes(scope)}
+                                            onChange={() => toggleScope(scope)}
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <span className="text-xs font-mono text-brand-600 dark:text-brand-400">{scope}</span>
+                                            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{t(labelKey)}</p>
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('api.expires_at_label')}</label>
-                            <DatePicker
-                                value={expiresAt}
-                                onChange={setExpiresAt}
-                                min={new Date().toISOString().slice(0, 10)}
-                            />
-                        </div>
+                    <div>
+                        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">{t('api.expires_at_label')}</label>
+                        <DatePicker
+                            value={expiresAt}
+                            onChange={setExpiresAt}
+                            min={new Date().toISOString().slice(0, 10)}
+                        />
+                    </div>
 
-                        {error && <p className="text-coral-500 text-sm">{error}</p>}
-                        <div className="flex justify-end gap-2 pt-1">
-                            <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-soft text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700">{t('common.cancel')}</button>
-                            <button type="submit" disabled={loading} className="px-4 py-2 text-sm bg-brand-500 text-white rounded-soft hover:bg-brand-600 disabled:opacity-50">
-                                {loading ? t('api.creating') : t('api.create_token')}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+                    {error && <p className="text-coral-500 text-sm">{error}</p>}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button type="button" variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
+                    <Button type="submit" disabled={loading}>
+                        {loading ? t('api.creating') : t('api.create_token')}
+                    </Button>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }
 
@@ -152,29 +150,29 @@ function NewTokenDisplay({ token, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white dark:bg-neutral-800 rounded-soft-lg p-6 w-full max-w-lg shadow-xl">
-                <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">{t('api.token_created')}</h2>
-                <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">
+        <Modal show={true} onClose={onClose} maxWidth="lg">
+            <Modal.Header title={t('api.token_created')} onClose={onClose} />
+            <Modal.Body className="space-y-4">
+                <p className="text-sm text-amber-600 dark:text-amber-400">
                     {t('api.copy_token_warning')}
                 </p>
-                <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-700 rounded-soft p-3">
+                <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-700/50 rounded-soft p-3">
                     <code className="flex-1 text-xs text-neutral-900 dark:text-white break-all font-mono">{token.token}</code>
                     <button onClick={copy} className="shrink-0 p-1.5 text-neutral-500 hover:text-brand-600">
                         {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                     </button>
                 </div>
-                <div className="mt-3">
+                <div>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">{t('api.scopes_label')}</p>
                     <div className="flex flex-wrap gap-1">
                         {(token.abilities ?? ['*']).map(s => <ScopeTag key={s} scope={s} />)}
                     </div>
                 </div>
-                <div className="mt-4 flex justify-end">
-                    <button onClick={onClose} className="px-4 py-2 text-sm bg-brand-500 text-white rounded-soft hover:bg-brand-600">{t('common.close')}</button>
-                </div>
-            </div>
-        </div>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button onClick={onClose}>{t('common.close')}</Button>
+            </Modal.Footer>
+        </Modal>
     );
 }
 
@@ -222,12 +220,11 @@ export default function TokensIndex({ initialTokens = [] }) {
                             <p className="text-sm text-neutral-500 dark:text-neutral-400">{t('api.tokens_subtitle')}</p>
                         </div>
                     </div>
-                    <button
+                    <Button
                         onClick={() => setShowCreate(true)}
-                        className="inline-flex items-center gap-2 rounded-soft bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 shadow-soft transition-all duration-150"
                     >
-                        <Plus className="h-4 w-4" /> {t('api.create_token')}
-                    </button>
+                        <Plus className="h-4 w-4 mr-1.5" /> {t('api.create_token')}
+                    </Button>
                 </div>
 
                 <div className="bg-white dark:bg-neutral-800 rounded-soft border border-neutral-200 dark:border-neutral-700 overflow-hidden">

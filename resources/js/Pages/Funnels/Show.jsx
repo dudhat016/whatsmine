@@ -6,6 +6,8 @@ import Button from '@/Components/ui/Button';
 import Input from '@/Components/ui/Input';
 import Select from '@/Components/ui/Select';
 import DatePicker from '@/Components/ui/DatePicker';
+import Modal from '@/Components/ui/Modal';
+import Checkbox from '@/Components/ui/Checkbox';
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -1720,308 +1722,276 @@ export default function FunnelShow({
             </div>
 
             {/* ── MODAL: ADD STEP ──────────────────────────────────────────────── */}
-            {showAddStepModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-                    <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-xl shadow-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800">
-                            <h3 className="font-bold text-base text-neutral-900 dark:text-neutral-100">
-                                Add New Funnel Step
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={() => setShowAddStepModal(false)}
-                                className="p-1 text-neutral-400 hover:text-neutral-600 rounded"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleCreateStep} className="p-5 space-y-4 text-xs">
-                            <Input
-                                label="Step Name *"
-                                type="text"
-                                value={addStepForm.data.name}
-                                onChange={(e) => addStepForm.setData('name', e.target.value)}
-                                placeholder="e.g. Core Checkout, VIP Upsell, Booking"
-                                required
-                                autoFocus
-                            />
+            <Modal
+                show={showAddStepModal}
+                onClose={() => setShowAddStepModal(false)}
+                title="Add New Funnel Step"
+                maxWidth="md"
+            >
+                <form onSubmit={handleCreateStep} className="space-y-4 text-xs">
+                    <Input
+                        label="Step Name *"
+                        type="text"
+                        value={addStepForm.data.name}
+                        onChange={(e) => addStepForm.setData('name', e.target.value)}
+                        placeholder="e.g. Core Checkout, VIP Upsell, Booking"
+                        required
+                        autoFocus
+                    />
 
-                            <Select
-                                label="Step Type Pipeline Role *"
-                                value={addStepForm.data.type}
-                                onChange={(e) => addStepForm.setData('type', e.target.value)}
-                            >
-                                <optgroup label="Sales & Commerce">
-                                    <option value="sales">Sales Page</option>
-                                    <option value="checkout" disabled={hasFunnelCheckout}>
-                                        Order Form / Checkout {hasFunnelCheckout ? '(Already in funnel — 1 Max)' : ''}
-                                    </option>
-                                    <option value="upsell">Upsell (One-Time-Offer / OTO)</option>
-                                    <option value="downsell">Downsell Discount</option>
-                                    <option value="thank_you" disabled={hasFunnelThankYou}>
-                                        Thank You / Confirmation {hasFunnelThankYou ? '(Already in funnel — 1 Max)' : ''}
-                                    </option>
-                                </optgroup>
-                                <optgroup label="Lead Generation">
-                                    <option value="optin">Opt-in / Lead Capture</option>
-                                    <option value="optin_thank_you">Opt-in Thank You</option>
-                                    <option value="contact_us">Contact Us Form (Inquiry)</option>
-                                    <option value="booking">Booking / Calendar Meeting</option>
-                                </optgroup>
-                                <optgroup label="Webinar Funnels">
-                                    <option value="webinar_registration">Webinar Registration</option>
-                                    <option value="webinar_broadcast">Webinar Broadcast / Room</option>
-                                    <option value="webinar_thank_you">Webinar Replay / Pass</option>
-                                </optgroup>
-                                <optgroup label="Legal & Information">
-                                    <option value="info_page">Info / Policy Page</option>
-                                    <option value="legal_terms">Terms & Conditions</option>
-                                    <option value="legal_privacy">Privacy Policy</option>
-                                </optgroup>
-                            </Select>
-                            <div className="pt-2 flex justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
-                                <Button variant="secondary" size="sm" type="button" onClick={() => setShowAddStepModal(false)}>
-                                    Cancel
-                                </Button>
-                                <Button variant="primary" size="sm" type="submit" disabled={addStepForm.processing}>
-                                    Create Step
-                                </Button>
-                            </div>
-                        </form>
+                    <Select
+                        label="Step Type Pipeline Role *"
+                        value={addStepForm.data.type}
+                        onChange={(e) => addStepForm.setData('type', e.target.value)}
+                    >
+                        <optgroup label="Sales & Commerce">
+                            <option value="sales">Sales Page</option>
+                            <option value="checkout" disabled={hasFunnelCheckout}>
+                                Order Form / Checkout {hasFunnelCheckout ? '(Already in funnel — 1 Max)' : ''}
+                            </option>
+                            <option value="upsell">Upsell (One-Time-Offer / OTO)</option>
+                            <option value="downsell">Downsell Discount</option>
+                            <option value="thank_you" disabled={hasFunnelThankYou}>
+                                Thank You / Confirmation {hasFunnelThankYou ? '(Already in funnel — 1 Max)' : ''}
+                            </option>
+                        </optgroup>
+                        <optgroup label="Lead Generation">
+                            <option value="optin">Opt-in / Lead Capture</option>
+                            <option value="optin_thank_you">Opt-in Thank You</option>
+                            <option value="contact_us">Contact Us Form (Inquiry)</option>
+                            <option value="booking">Booking / Calendar Meeting</option>
+                        </optgroup>
+                        <optgroup label="Webinar Funnels">
+                            <option value="webinar_registration">Webinar Registration</option>
+                            <option value="webinar_broadcast">Webinar Broadcast / Room</option>
+                            <option value="webinar_thank_you">Webinar Replay / Pass</option>
+                        </optgroup>
+                        <optgroup label="Legal & Information">
+                            <option value="info_page">Info / Policy Page</option>
+                            <option value="legal_terms">Terms & Conditions</option>
+                            <option value="legal_privacy">Privacy Policy</option>
+                        </optgroup>
+                    </Select>
+                    <div className="pt-2 flex justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
+                        <Button variant="secondary" size="sm" type="button" onClick={() => setShowAddStepModal(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="primary" size="sm" type="submit" disabled={addStepForm.processing}>
+                            Create Step
+                        </Button>
                     </div>
-                </div>
-            )}
+                </form>
+            </Modal>
 
             {/* ── MODAL: ADD PRODUCT TO STEP ───────────────────────────────────── */}
-            {showAddProductModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-                    <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-xl shadow-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800">
-                            <div>
-                                <h3 className="font-bold text-base text-neutral-900 dark:text-neutral-100">
-                                    {modalRoleTitle}
-                                </h3>
-                                <p className="text-[11px] text-neutral-400 mt-0.5">
-                                    {modalRoleSubtitle}
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowAddProductModal(false)}
-                                className="p-1 text-neutral-400 hover:text-neutral-600 rounded"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+            <Modal
+                show={showAddProductModal}
+                onClose={() => setShowAddProductModal(false)}
+                title={modalRoleTitle}
+                description={modalRoleSubtitle}
+                maxWidth="md"
+            >
+                <form onSubmit={handleAttachProduct} className="space-y-4 text-xs">
+                    {/* Step Role Notice (Context-driven: Locked for Upsell/Downsell, Toggleable for Checkout Bumps) */}
+                    {currentStep?.type === 'upsell' && (
+                        <div className="p-3 bg-indigo-50/70 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800 flex items-center gap-2 text-indigo-800 dark:text-indigo-200 font-medium">
+                            <ArrowUpRight className="w-4 h-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                            <span>Configured automatically as <strong>1-Click Upsell (OTO)</strong> for this upsell step.</span>
                         </div>
-                        <form onSubmit={handleAttachProduct} className="p-5 space-y-4 text-xs">
-                            {/* Step Role Notice (Context-driven: Locked for Upsell/Downsell, Toggleable for Checkout Bumps) */}
-                            {currentStep?.type === 'upsell' && (
-                                <div className="p-3 bg-indigo-50/70 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800 flex items-center gap-2 text-indigo-800 dark:text-indigo-200 font-medium">
-                                    <ArrowUpRight className="w-4 h-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
-                                    <span>Configured automatically as <strong>1-Click Upsell (OTO)</strong> for this upsell step.</span>
-                                </div>
-                            )}
+                    )}
 
-                            {currentStep?.type === 'downsell' && (
-                                <div className="p-3 bg-rose-50/70 dark:bg-rose-950/30 rounded-lg border border-rose-200 dark:border-rose-800 flex items-center gap-2 text-rose-800 dark:text-rose-200 font-medium">
-                                    <ArrowDownRight className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
-                                    <span>Configured automatically as <strong>1-Click Downsell Offer</strong> for this downsell step.</span>
-                                </div>
-                            )}
+                    {currentStep?.type === 'downsell' && (
+                        <div className="p-3 bg-rose-50/70 dark:bg-rose-950/30 rounded-lg border border-rose-200 dark:border-rose-800 flex items-center gap-2 text-rose-800 dark:text-rose-200 font-medium">
+                            <ArrowDownRight className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                            <span>Configured automatically as <strong>1-Click Downsell Offer</strong> for this downsell step.</span>
+                        </div>
+                    )}
 
-                            {currentStep?.type === 'checkout' && hasMainCheckoutProduct ? (
-                                <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800 space-y-1 text-xs">
-                                    <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-200">
-                                        <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                                        <span>Configuring as Order Bump (Checkout Add-on)</span>
-                                    </div>
-                                    <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                                        A main product is already attached. This offer will be bound as an optional one-click checkbox add-on on the checkout page.
-                                    </p>
-                                </div>
-                            ) : (
-                                currentStep?.type !== 'upsell' && currentStep?.type !== 'downsell' && (
-                                    <div className="p-3 bg-neutral-50 dark:bg-neutral-800/60 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-1.5">
-                                        <label className="flex items-center gap-2.5 cursor-pointer font-semibold text-neutral-800 dark:text-neutral-200">
-                                            <input
-                                                type="checkbox"
-                                                checked={productForm.data.type === 'bump'}
-                                                onChange={(e) => {
-                                                    const isBump = e.target.checked;
-                                                    const prod = selectedCatalogProduct;
-                                                    const pr = productForm.data.price;
-                                                    productForm.setData((prev) => ({
-                                                        ...prev,
-                                                        type: isBump ? 'bump' : 'main',
-                                                        bump_headline: isBump && !prev.bump_headline ? `YES! Add ${prod?.name || prev.name || 'this add-on'} for only ${fmtCurrency(pr)}` : prev.bump_headline,
-                                                        bump_description: isBump && !prev.bump_description ? 'Special one-time offer available only right now on this order form.' : prev.bump_description,
-                                                    }));
-                                                }}
-                                                className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4"
-                                            />
-                                            <span>Enable as Order Bump (Checkout Add-on)</span>
-                                        </label>
-                                        <p className="text-[11px] text-neutral-400 pl-6.5">
-                                            Check this if this product is an optional one-click checkbox add-on on the checkout page instead of the main product.
-                                        </p>
-                                    </div>
-                                )
-                            )}
-
-                            {/* Product Selection Dropdown (from Ecommerce Product Catalog) */}
-                            <div>
-                                {eligibleProducts.length > 0 ? (
-                                    <Select
-                                        label="Select Product from Store Catalog *"
-                                        value={productForm.data.product_id}
-                                        onChange={(e) => handleSelectCatalogProduct(e.target.value)}
-                                        required
-                                    >
-                                        <option value="" disabled>-- Choose a product from catalog --</option>
-                                        {eligibleProducts.map((prod) => (
-                                            <option key={prod.id} value={prod.id}>
-                                                {prod.name} — {fmtCurrency(prod.price || prod.prices?.[0]?.price)} ({prod.product_type || 'Digital'})
-                                            </option>
-                                        ))}
-                                    </Select>
-                                ) : availableProducts.length > 0 ? (
-                                    <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200 text-xs">
-                                        <strong>All products already attached:</strong> All {availableProducts.length} product(s) from your store catalog have already been attached to this step.
-                                    </div>
-                                ) : (
-                                    <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200 text-xs flex items-center justify-between gap-2">
-                                        <span>No products found in store catalog.</span>
-                                        <Link
-                                            href={route().has('client.ecommerce.products.index') ? route('client.ecommerce.products.index') : '/app/ecommerce/products'}
-                                            className="font-bold underline text-amber-900 dark:text-amber-100 hover:opacity-80"
-                                            target="_blank"
-                                        >
-                                            + Manage Products
-                                        </Link>
-                                    </div>
-                                )}
+                    {currentStep?.type === 'checkout' && hasMainCheckoutProduct ? (
+                        <div className="p-3 bg-amber-50/70 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800 space-y-1 text-xs">
+                            <div className="flex items-center gap-2 font-bold text-amber-900 dark:text-amber-200">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                <span>Configuring as Order Bump (Checkout Add-on)</span>
                             </div>
-
-                            {/* Selected Product Preview Card */}
-                            {selectedCatalogProduct && (
-                                <div className="p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-neutral-200 dark:border-neutral-700 flex items-center gap-3">
-                                    {selectedCatalogProduct.image_url ? (
-                                        <img
-                                            src={selectedCatalogProduct.image_url}
-                                            alt={selectedCatalogProduct.name}
-                                            className="w-11 h-11 rounded-lg object-cover border border-neutral-200 dark:border-neutral-700 shrink-0"
-                                        />
-                                    ) : (
-                                        <div className="w-11 h-11 rounded-lg bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200 dark:border-brand-800 shrink-0">
-                                            <Package className="w-5 h-5" />
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="font-bold text-neutral-900 dark:text-neutral-100 truncate text-xs">
-                                                {selectedCatalogProduct.name}
-                                            </h4>
-                                            <span className="capitalize px-1.5 py-0.2 rounded text-[10px] font-semibold bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300">
-                                                {selectedCatalogProduct.product_type || 'Digital'}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[11px] text-neutral-400 mt-0.5">
-                                            <span className="font-bold text-neutral-900 dark:text-neutral-100">
-                                                {fmtCurrency(productForm.data.price)}
-                                            </span>
-                                            <span>•</span>
-                                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                                                Catalog Synced
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Pricing Tier Dropdown (if multiple prices exist) */}
-                            {selectedCatalogProduct?.prices && selectedCatalogProduct.prices.length > 1 && (
-                                <Select
-                                    label="Pricing Option / Tier *"
-                                    value={productForm.data.product_price_id}
-                                    onChange={(e) => handleSelectPriceTier(e.target.value)}
-                                >
-                                    {selectedCatalogProduct.prices.map((tier) => (
-                                        <option key={tier.id} value={tier.id}>
-                                            {tier.name || 'Standard'} — {fmtCurrency(tier.price)} {tier.billing_interval ? `/${tier.billing_interval}` : ''}
-                                        </option>
-                                    ))}
-                                </Select>
-                            )}
-
-                            {/* Fallback Manual Inputs if no catalog products exist */}
-                            {availableProducts.length === 0 && (
-                                <div className="space-y-3 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                                    <Input
-                                        label="Product Title *"
-                                        type="text"
-                                        value={productForm.data.name}
-                                        onChange={(e) => productForm.setData('name', e.target.value)}
-                                        placeholder="e.g. Masterclass VIP Pass"
-                                        required
-                                    />
-                                    <Input
-                                        label="Price ($) *"
-                                        type="number"
-                                        step="0.01"
-                                        value={productForm.data.price}
-                                        onChange={(e) => productForm.setData('price', e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            )}
-
-                            {/* Order Bump Specific Fields */}
-                            {productForm.data.type === 'bump' && (
-                                <div className="p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800/60 space-y-3">
-                                    <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200 text-xs">
-                                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                        Order Bump Checkout Configuration
-                                    </div>
-                                    <Input
-                                        label="Bump Headline *"
-                                        type="text"
-                                        value={productForm.data.bump_headline}
-                                        onChange={(e) => productForm.setData('bump_headline', e.target.value)}
-                                        placeholder="e.g. YES! Add the Audio Workbook for only $19"
-                                        required
-                                    />
-                                    <div>
-                                        <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">
-                                            Bump Description
-                                        </label>
-                                        <textarea
-                                            value={productForm.data.bump_description}
-                                            onChange={(e) => productForm.setData('bump_description', e.target.value)}
-                                            placeholder="Explain why this one-time add-on is irresistible..."
-                                            rows={2}
-                                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="pt-2 flex justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
-                                <Button variant="secondary" size="sm" type="button" onClick={() => setShowAddProductModal(false)}>
-                                    Cancel
-                                </Button>
-                                <Button
-                                    variant="primary"
-                                    size="sm"
-                                    type="submit"
-                                    disabled={productForm.processing || (availableProducts.length > 0 && (!productForm.data.product_id || eligibleProducts.length === 0))}
-                                >
-                                    {productForm.processing ? 'Attaching...' : 'Attach to Step'}
-                                </Button>
+                            <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                                A main product is already attached. This offer will be bound as an optional one-click checkbox add-on on the checkout page.
+                            </p>
+                        </div>
+                    ) : (
+                        currentStep?.type !== 'upsell' && currentStep?.type !== 'downsell' && (
+                            <div className="p-3 bg-neutral-50 dark:bg-neutral-800/60 rounded-xl border border-neutral-200 dark:border-neutral-700 space-y-1.5">
+                                <Checkbox
+                                    label="Enable as Order Bump (Checkout Add-on)"
+                                    description="Check this if this product is an optional one-click checkbox add-on on the checkout page instead of the main product."
+                                    checked={productForm.data.type === 'bump'}
+                                    onChange={(e) => {
+                                        const isBump = e.target.checked;
+                                        const prod = selectedCatalogProduct;
+                                        const pr = productForm.data.price;
+                                        productForm.setData((prev) => ({
+                                            ...prev,
+                                            type: isBump ? 'bump' : 'main',
+                                            bump_headline: isBump && !prev.bump_headline ? `YES! Add ${prod?.name || prev.name || 'this add-on'} for only ${fmtCurrency(pr)}` : prev.bump_headline,
+                                            bump_description: isBump && !prev.bump_description ? 'Special one-time offer available only right now on this order form.' : prev.bump_description,
+                                        }));
+                                    }}
+                                />
                             </div>
-                        </form>
+                        )
+                    )}
+
+                    {/* Product Selection Dropdown (from Ecommerce Product Catalog) */}
+                    <div>
+                        {eligibleProducts.length > 0 ? (
+                            <Select
+                                label="Select Product from Store Catalog *"
+                                value={productForm.data.product_id}
+                                onChange={(e) => handleSelectCatalogProduct(e.target.value)}
+                                required
+                            >
+                                <option value="" disabled>-- Choose a product from catalog --</option>
+                                {eligibleProducts.map((prod) => (
+                                    <option key={prod.id} value={prod.id}>
+                                        {prod.name} — {fmtCurrency(prod.price || prod.prices?.[0]?.price)} ({prod.product_type || 'Digital'})
+                                    </option>
+                                ))}
+                            </Select>
+                        ) : availableProducts.length > 0 ? (
+                            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200 text-xs">
+                                <strong>All products already attached:</strong> All {availableProducts.length} product(s) from your store catalog have already been attached to this step.
+                            </div>
+                        ) : (
+                            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-amber-800 dark:text-amber-200 text-xs flex items-center justify-between gap-2">
+                                <span>No products found in store catalog.</span>
+                                <Link
+                                    href={route().has('client.ecommerce.products.index') ? route('client.ecommerce.products.index') : '/app/ecommerce/products'}
+                                    className="font-bold underline text-amber-900 dark:text-amber-100 hover:opacity-80"
+                                    target="_blank"
+                                >
+                                    + Manage Products
+                                </Link>
+                            </div>
+                        )}
                     </div>
-                </div>
-            )}
+
+                    {/* Selected Product Preview Card */}
+                    {selectedCatalogProduct && (
+                        <div className="p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-neutral-200 dark:border-neutral-700 flex items-center gap-3">
+                            {selectedCatalogProduct.image_url ? (
+                                <img
+                                    src={selectedCatalogProduct.image_url}
+                                    alt={selectedCatalogProduct.name}
+                                    className="w-11 h-11 rounded-lg object-cover border border-neutral-200 dark:border-neutral-700 shrink-0"
+                                />
+                            ) : (
+                                <div className="w-11 h-11 rounded-lg bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200 dark:border-brand-800 shrink-0">
+                                    <Package className="w-5 h-5" />
+                                </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h4 className="font-bold text-neutral-900 dark:text-neutral-100 truncate text-xs">
+                                        {selectedCatalogProduct.name}
+                                    </h4>
+                                    <span className="capitalize px-1.5 py-0.2 rounded text-[10px] font-semibold bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300">
+                                        {selectedCatalogProduct.product_type || 'Digital'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-[11px] text-neutral-400 mt-0.5">
+                                    <span className="font-bold text-neutral-900 dark:text-neutral-100">
+                                        {fmtCurrency(productForm.data.price)}
+                                    </span>
+                                    <span>•</span>
+                                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                        Catalog Synced
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Pricing Tier Dropdown (if multiple prices exist) */}
+                    {selectedCatalogProduct?.prices && selectedCatalogProduct.prices.length > 1 && (
+                        <Select
+                            label="Pricing Option / Tier *"
+                            value={productForm.data.product_price_id}
+                            onChange={(e) => handleSelectPriceTier(e.target.value)}
+                        >
+                            {selectedCatalogProduct.prices.map((tier) => (
+                                <option key={tier.id} value={tier.id}>
+                                    {tier.name || 'Standard'} — {fmtCurrency(tier.price)} {tier.billing_interval ? `/${tier.billing_interval}` : ''}
+                                </option>
+                            ))}
+                        </Select>
+                    )}
+
+                    {/* Fallback Manual Inputs if no catalog products exist */}
+                    {availableProducts.length === 0 && (
+                        <div className="space-y-3 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                            <Input
+                                label="Product Title *"
+                                type="text"
+                                value={productForm.data.name}
+                                onChange={(e) => productForm.setData('name', e.target.value)}
+                                placeholder="e.g. Masterclass VIP Pass"
+                                required
+                            />
+                            <Input
+                                label="Price ($) *"
+                                type="number"
+                                step="0.01"
+                                value={productForm.data.price}
+                                onChange={(e) => productForm.setData('price', e.target.value)}
+                                required
+                            />
+                        </div>
+                    )}
+
+                    {/* Order Bump Specific Fields */}
+                    {productForm.data.type === 'bump' && (
+                        <div className="p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800/60 space-y-3">
+                            <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200 text-xs">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                Order Bump Checkout Configuration
+                            </div>
+                            <Input
+                                label="Bump Headline *"
+                                type="text"
+                                value={productForm.data.bump_headline}
+                                onChange={(e) => productForm.setData('bump_headline', e.target.value)}
+                                placeholder="e.g. YES! Add the Audio Workbook for only $19"
+                                required
+                            />
+                            <div>
+                                <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">
+                                    Bump Description
+                                </label>
+                                <textarea
+                                    value={productForm.data.bump_description}
+                                    onChange={(e) => productForm.setData('bump_description', e.target.value)}
+                                    placeholder="Explain why this one-time add-on is irresistible..."
+                                    rows={2}
+                                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="pt-2 flex justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
+                        <Button variant="secondary" size="sm" type="button" onClick={() => setShowAddProductModal(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            type="submit"
+                            disabled={productForm.processing || (availableProducts.length > 0 && (!productForm.data.product_id || eligibleProducts.length === 0))}
+                        >
+                            {productForm.processing ? 'Attaching...' : 'Attach to Step'}
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </ClientLayout>
     );
 }

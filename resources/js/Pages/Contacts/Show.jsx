@@ -1,6 +1,6 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Checkbox, Button } from '@/Components/ui';
 import {
     ArrowLeft, MessageSquare, Phone, Mail, Globe, Camera, Trash2, Upload,
     ChevronDown, ChevronRight, Folder, FileText, CheckCircle2,
@@ -477,15 +477,12 @@ export default function ContactShow({
 
                     <div className="flex gap-4 flex-wrap pt-2">
                         {[['opt_in_whatsapp', t('contacts_page.channel_wa')], ['opt_in_sms', t('contacts_page.channel_sms')], ['opt_in_email', t('common.email')]].map(([key, label]) => (
-                            <label key={key} className="flex items-center gap-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={data[key]}
-                                    onChange={e => setData(key, e.target.checked)}
-                                    className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
-                                />
-                                {label}
-                            </label>
+                            <Checkbox
+                                key={key}
+                                label={label}
+                                checked={data[key]}
+                                onChange={e => setData(key, e.target.checked)}
+                            />
                         ))}
                     </div>
 
@@ -509,9 +506,9 @@ export default function ContactShow({
                         </div>
                     )}
 
-                    <button type="submit" disabled={processing} className="w-full rounded-xl bg-brand-600 py-2.5 text-xs font-bold text-white hover:bg-brand-700 disabled:opacity-60 transition shadow-xs cursor-pointer">
-                        {processing ? t('common.saving') : t('contacts_page.save_changes')}
-                    </button>
+                    <Button type="submit" loading={processing} className="w-full">
+                        {t('contacts_page.save_changes')}
+                    </Button>
                 </form>
 
                 {/* Conversation timeline */}

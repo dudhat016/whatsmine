@@ -5,6 +5,8 @@ import Badge from '@/Components/ui/Badge';
 import Button from '@/Components/ui/Button';
 import Input from '@/Components/ui/Input';
 import Select from '@/Components/ui/Select';
+import Modal from '@/Components/ui/Modal';
+import Checkbox from '@/Components/ui/Checkbox';
 import EmptyState from '@/Components/EmptyState';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -392,11 +394,9 @@ export default function FunnelIndex({
                                         <thead className="bg-neutral-50 dark:bg-neutral-800/60 text-neutral-700 dark:text-neutral-200 font-semibold border-b border-neutral-200 dark:border-neutral-800">
                                             <tr>
                                                 <th className="p-3.5 w-10 text-center">
-                                                    <input
-                                                        type="checkbox"
+                                                    <Checkbox
                                                         checked={funnels.length > 0 && selectedFunnelIds.length === funnels.length}
                                                         onChange={toggleSelectAll}
-                                                        className="rounded border-neutral-300 dark:border-neutral-700 text-brand-600 focus:ring-brand-500"
                                                     />
                                                 </th>
                                                 <th className="p-3.5">Name</th>
@@ -503,11 +503,9 @@ export default function FunnelIndex({
                                                         }`}
                                                     >
                                                         <td className="p-3.5 text-center">
-                                                            <input
-                                                                type="checkbox"
+                                                            <Checkbox
                                                                 checked={isSelected}
                                                                 onChange={() => toggleSelectFunnel(funnel.id)}
-                                                                className="rounded border-neutral-300 dark:border-neutral-700 text-brand-600 focus:ring-brand-500"
                                                             />
                                                         </td>
                                                         <td className="p-3.5">
@@ -902,66 +900,55 @@ export default function FunnelIndex({
             </div>
 
             {/* ── Create Funnel Modal ────────────────────────────────────────── */}
-            {showCreate && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="modal-create-funnel-title"
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                >
-                    <div className="w-full max-w-sm rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4">
-                        <h2 id="modal-create-funnel-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                            {t('funnel.create_funnel') || 'Create Funnel'}
-                        </h2>
-                        <form onSubmit={handleCreate} className="space-y-3" noValidate>
-                            <Input
-                                id="funnel-name"
-                                label={t('funnel.funnel_name') || 'Funnel Name'}
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                required
-                                autoFocus
-                                placeholder={t('funnel.funnel_name_placeholder') || 'e.g. Black Friday Special'}
-                                error={errors.name}
-                            />
+            <Modal show={showCreate} onClose={() => { setShowCreate(false); reset(); }} maxWidth="sm">
+                <Modal.Header title={t('funnel.create_funnel') || 'Create Funnel'} onClose={() => { setShowCreate(false); reset(); }} />
+                <form onSubmit={handleCreate} noValidate>
+                    <Modal.Body className="space-y-3">
+                        <Input
+                            id="funnel-name"
+                            label={t('funnel.funnel_name') || 'Funnel Name'}
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                            required
+                            autoFocus
+                            placeholder={t('funnel.funnel_name_placeholder') || 'e.g. Black Friday Special'}
+                            error={errors.name}
+                        />
 
-                            {/* Folder Assignment indicator */}
-                            <Select
-                                label="Folder"
-                                value={data.folder_id || ''}
-                                onChange={(e) => setData('folder_id', e.target.value ? Number(e.target.value) : null)}
-                            >
-                                <option value="">Home (No Folder / Root)</option>
-                                {folders.map((f) => (
-                                    <option key={f.id} value={f.id}>
-                                        {f.name}
-                                    </option>
-                                ))}
-                            </Select>
-
-                            <div className="flex gap-2 pt-2">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                >
-                                    {processing ? (t('common.saving') || 'Creating...') : (t('common.create') || 'Create Funnel')}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowCreate(false);
-                                        reset();
-                                    }}
-                                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition focus:outline-none focus:ring-2 focus:ring-brand-500 text-neutral-700 dark:text-neutral-300"
-                                >
-                                    {t('common.cancel') || 'Cancel'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                        {/* Folder Assignment indicator */}
+                        <Select
+                            label="Folder"
+                            value={data.folder_id || ''}
+                            onChange={(e) => setData('folder_id', e.target.value ? Number(e.target.value) : null)}
+                        >
+                            <option value="">Home (No Folder / Root)</option>
+                            {folders.map((f) => (
+                                <option key={f.id} value={f.id}>
+                                    {f.name}
+                                </option>
+                            ))}
+                        </Select>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                setShowCreate(false);
+                                reset();
+                            }}
+                        >
+                            {t('common.cancel') || 'Cancel'}
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={processing}
+                        >
+                            {processing ? (t('common.saving') || 'Creating...') : (t('common.create') || 'Create Funnel')}
+                        </Button>
+                    </Modal.Footer>
+                </form>
+            </Modal>
 
             {/* ── Folder Create/Edit Modal ──────────────────────────────────── */}
             <FolderModal

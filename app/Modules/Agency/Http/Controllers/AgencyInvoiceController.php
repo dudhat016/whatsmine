@@ -204,6 +204,16 @@ class AgencyInvoiceController extends Controller
         ]);
     }
 
+    private function resolveStripeSecretKey(int $workspaceId): ?string
+    {
+        $store = \App\Modules\Ecommerce\Models\EcommerceStore::where('workspace_id', $workspaceId)->where('is_active', true)->first();
+        if ($store && !empty($store->credentials['stripe_secret_key'])) {
+            return $store->credentials['stripe_secret_key'];
+        }
+
+        return config('billing.gateways.stripe.secret_key') ?: env('STRIPE_SECRET');
+    }
+
     public function pay(Request $request, string $uuid)
     {
         $invoice = AgencyInvoice::where('uuid', $uuid)->firstOrFail();
@@ -214,18 +224,81 @@ class AgencyInvoiceController extends Controller
             'transaction_id' => 'nullable|string',
         ]);
 
-        $payAmount = isset($data['amount']) ? (float) $data['amount'] : (float) $invoice->balance_due;
+        $payAmount = isset($data['amount']) ? (float) $data['amount'] : (float) ($invoice->balance_due ?? $invoice->total);
+
+        // If Stripe payment is selected
+        if (in_array($data['payment_method'], ['stripe', 'card', 'credit_card'])) {
+            $stripeSecret = $this->resolveStripeSecretKey((int) $invoice->workspace_id);
+
+            if (!$stripeSecret || strlen($stripeSecret) < 8) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment gateway is not configured for this workspace. Please contact support.',
+                ], 422);
+            }
+
+            try {
+                $stripe = new \Stripe\StripeClient($stripeSecret);
+
+                $session = $stripe->checkout->sessions->create([
+                    'payment_method_types' => ['card'],
+                    'customer_email' => $invoice->contact?->email,
+                    'line_items' => [[
+                        'price_data' => [
+                            'currency' => strtolower($invoice->currency ?? 'usd'),
+                            'unit_amount' => (int) round($payAmount * 100),
+                            'product_data' => [
+                                'name' => "Invoice #{$invoice->invoice_number}",
+                                'description' => "Payment towards Invoice #{$invoice->invoice_number}",
+                            ],
+                        ],
+                        'quantity' => 1,
+                    ]],
+                    'mode' => 'payment',
+                    'client_reference_id' => 'INV-' . $invoice->invoice_number,
+                    'metadata' => [
+                        'invoice_id' => (string) $invoice->id,
+                        'invoice_uuid' => $invoice->uuid,
+                        'invoice_number' => $invoice->invoice_number,
+                        'pay_amount' => (string) $payAmount,
+                        'workspace_id' => (string) $invoice->workspace_id,
+                        'type' => 'agency_invoice',
+                    ],
+                    'success_url' => route('agency.invoices.payment.success', $invoice->uuid) . '?session_id={CHECKOUT_SESSION_ID}&amount=' . $payAmount,
+                    'cancel_url' => route('agency.invoices.checkout', $invoice->uuid) . '?payment_status=cancelled',
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'requires_redirect' => true,
+                    'redirect_url' => $session->url,
+                    'message' => 'Redirecting to secure payment checkout...',
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('AgencyInvoiceController: Stripe session creation failed', ['error' => $e->getMessage()]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to initialize payment gateway: ' . $e->getMessage(),
+                ], 422);
+            }
+        }
+
+        // Offline / manual methods (bank_transfer, cash, check, etc.)
+        return $this->recordInvoicePayment($invoice, $payAmount, $data['payment_method'], $data['transaction_id'] ?? null);
+    }
+
+    private function recordInvoicePayment(AgencyInvoice $invoice, float $payAmount, string $method, ?string $transactionId = null)
+    {
         $newAmountPaid = ((float) $invoice->amount_paid) + $payAmount;
         $newBalanceDue = max(0.00, ((float) $invoice->total) - $newAmountPaid);
-
         $newStatus = $newBalanceDue <= 0.00 ? 'paid' : 'partially_paid';
 
         $raw = $invoice->raw ?? [];
         $raw['payments'] = $raw['payments'] ?? [];
         $raw['payments'][] = [
             'amount' => $payAmount,
-            'method' => $data['payment_method'],
-            'transaction_id' => $data['transaction_id'] ?? ('TXN-' . strtoupper(\Illuminate\Support\Str::random(10))),
+            'method' => $method,
+            'transaction_id' => $transactionId ?? ('TXN-' . strtoupper(\Illuminate\Support\Str::random(10))),
             'paid_at' => now()->toIso8601String(),
         ];
 
@@ -244,7 +317,7 @@ class AgencyInvoiceController extends Controller
             'amount_paid' => $payAmount,
             'total_amount' => (float) $invoice->total,
             'balance_due' => $newBalanceDue,
-            'payment_method' => $data['payment_method'],
+            'payment_method' => $method,
             'paid_at' => now()->toIso8601String(),
         ]);
 
@@ -255,6 +328,32 @@ class AgencyInvoiceController extends Controller
             'balance_due' => (float) $invoice->balance_due,
             'message' => 'Payment processed successfully.',
         ]);
+    }
+
+    public function paymentSuccess(Request $request, string $uuid)
+    {
+        $invoice = AgencyInvoice::where('uuid', $uuid)->firstOrFail();
+
+        $sessionId = $request->query('session_id');
+        $amount = (float) $request->query('amount', $invoice->balance_due ?? $invoice->total);
+
+        if ($sessionId) {
+            $stripeSecret = $this->resolveStripeSecretKey((int) $invoice->workspace_id);
+            if ($stripeSecret) {
+                try {
+                    $stripe = new \Stripe\StripeClient($stripeSecret);
+                    $session = $stripe->checkout->sessions->retrieve($sessionId);
+                    if ($session && $session->payment_status === 'paid') {
+                        $this->recordInvoicePayment($invoice, $amount, 'stripe', $session->payment_intent ?? $session->id);
+                        return redirect()->route('agency.invoices.checkout', $uuid)->with('success', 'Payment confirmed! Thank you.');
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('AgencyInvoiceController: Failed verifying Stripe session', ['session' => $sessionId, 'error' => $e->getMessage()]);
+                }
+            }
+        }
+
+        return redirect()->route('agency.invoices.checkout', $uuid);
     }
 
     public function downloadPdf(string $uuid)

@@ -1,7 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import { Input } from '@/Components/ui';
+import { Input, Button, Checkbox } from '@/Components/ui';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, CheckCircle, Trash2, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
@@ -352,32 +352,29 @@ function ProviderCard({ provider }) {
                     />
                 </div>
 
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                        type="checkbox"
-                        checked={data.default}
-                        onChange={e => setData('default', e.target.checked)}
-                        className="rounded"
-                    />
-                    {t('sms.set_default')}
-                </label>
+                <Checkbox
+                    checked={data.default}
+                    onChange={e => setData('default', e.target.checked)}
+                    label={t('sms.set_default')}
+                />
 
                 <div className="flex gap-2 pt-1">
-                    <button
+                    <Button
                         type="submit"
-                        disabled={processing}
-                        className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition"
+                        loading={processing}
+                        className="flex-1"
                     >
-                        {processing ? t('sms.saving') : t('common.save')}
-                    </button>
+                        {t('common.save')}
+                    </Button>
                     {provider.configured && (
-                        <button
+                        <Button
                             type="button"
+                            variant="secondary"
                             onClick={handleDelete}
-                            className="rounded-lg border border-neutral-200 dark:border-neutral-700 px-3 py-2 text-neutral-500 hover:text-red-500 hover:border-red-300 transition"
+                            className="text-neutral-500 hover:text-red-500 hover:border-red-300"
                         >
                             <Trash2 className="h-4 w-4" />
-                        </button>
+                        </Button>
                     )}
                 </div>
             </form>

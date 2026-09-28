@@ -1,11 +1,24 @@
 import { useState, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { Upload, Link, X, Image, FileText, Check, Loader2, AlertCircle } from 'lucide-react';
+import { 
+    Upload, 
+    Link as LinkIcon, 
+    X, 
+    Image as ImageIcon, 
+    FileText, 
+    Check, 
+    Loader2, 
+    AlertCircle, 
+    FolderOpen,
+    Sparkles
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Input from '@/Components/ui/Input';
+import Button from '@/Components/ui/Button';
+import MediaPickerModal from '@/Components/Media/MediaPickerModal';
 
 /**
- * MediaUpload — dual-mode media input component.
+ * MediaUpload — unified media input component with integrated MediaPickerModal.
  *
  * Props:
  *   value        (string)   — current URL value
@@ -21,6 +34,7 @@ import Input from '@/Components/ui/Input';
 export default function MediaUpload({
     value = '',
     onChange,
+    multiple = false,
     accept = 'image/*',
     maxSizeMb = 50,
     label,
@@ -30,7 +44,8 @@ export default function MediaUpload({
     className = '',
 }) {
     const { t } = useTranslation();
-    const [mode, setMode] = useState('upload'); // 'url' | 'upload'
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [mode, setMode] = useState('upload'); // 'upload' | 'url'
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);
     const [dragging, setDragging] = useState(false);
@@ -42,7 +57,7 @@ export default function MediaUpload({
         if (!file) return;
 
         if (file.size > maxSizeMb * 1024 * 1024) {
-            setError(t('ui.file_exceeds_limit', { max: maxSizeMb }));
+            setError(t('ui.file_exceeds_limit', { max: maxSizeMb }) || `File exceeds maximum limit of ${maxSizeMb} MB.`);
             return;
         }
 
@@ -59,12 +74,12 @@ export default function MediaUpload({
             });
 
             onChange?.(resp.data.url);
-            setMode('url');
         } catch (err) {
             const msg =
                 err?.response?.data?.error ||
                 err?.response?.data?.message ||
-                t('ui.upload_failed_retry');
+                t('ui.upload_failed_retry') ||
+                'Upload failed. Please try again.';
             setError(msg);
         } finally {
             setUploading(false);
@@ -91,41 +106,43 @@ export default function MediaUpload({
 
     return (
         <div className={`space-y-2 ${className}`}>
-            {label && (
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    {label}
-                </label>
-            )}
+            <div className="flex items-center justify-between">
+                {label && (
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        {label}
+                    </label>
+                )}
 
-            {/* Mode toggle */}
-            <div className="flex rounded-soft border border-neutral-200 dark:border-neutral-700 overflow-hidden w-fit">
-                <button
-                    type="button"
-                    onClick={() => setMode('url')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                        mode === 'url'
-                            ? 'bg-brand-500 text-white'
-                            : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700'
-                    }`}
-                >
-                    <Link className="h-3.5 w-3.5" />
-                    {t('ui.url')}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setMode('upload')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
-                        mode === 'upload'
-                            ? 'bg-brand-500 text-white'
-                            : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700'
-                    }`}
-                >
-                    <Upload className="h-3.5 w-3.5" />
-                    {t('ui.upload')}
-                </button>
+                {/* Mode Switcher */}
+                <div className="flex rounded-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden w-fit ml-auto">
+                    <button
+                        type="button"
+                        onClick={() => setMode('upload')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors ${
+                            mode === 'upload'
+                                ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
+                                : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700'
+                        }`}
+                    >
+                        <Upload className="h-3 w-3" />
+                        Upload
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setMode('url')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold transition-colors ${
+                            mode === 'url'
+                                ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
+                                : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700'
+                        }`}
+                    >
+                        <LinkIcon className="h-3 w-3" />
+                        URL
+                    </button>
+                </div>
             </div>
 
-            {/* URL mode */}
+            {/* URL Direct Input mode */}
             {mode === 'url' && (
                 <div className="relative">
                     <Input
@@ -148,84 +165,143 @@ export default function MediaUpload({
                 </div>
             )}
 
-            {/* Upload mode */}
+            {/* Upload & Library Mode */}
             {mode === 'upload' && (
-                <div
-                    onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-                    onDragLeave={() => setDragging(false)}
-                    onDrop={handleDrop}
-                    onClick={() => !uploading && fileRef.current?.click()}
-                    className={`relative flex flex-col items-center justify-center gap-2 rounded-soft-lg border-2 border-dashed cursor-pointer transition-colors px-4 py-6
-                        ${dragging
-                            ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20'
-                            : 'border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800/50 hover:border-brand-400 hover:bg-brand-50/50 dark:hover:bg-brand-900/10'
-                        }
-                        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
-                >
-                    {uploading ? (
-                        <>
-                            <Loader2 className="h-6 w-6 text-brand-500 animate-spin" />
-                            <span className="text-sm text-neutral-500 dark:text-neutral-400">{t('ui.uploading')}</span>
-                        </>
-                    ) : (
-                        <>
-                            <Upload className="h-6 w-6 text-neutral-400" />
-                            <span className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
-                                {t('ui.drag_drop_or')} <span className="text-brand-600 dark:text-brand-400 font-medium">{t('ui.browse')}</span>
-                            </span>
-                            <span className="text-xs text-neutral-400">
-                                {accept} · {t('ui.max_size_mb', { max: maxSizeMb })}
-                            </span>
-                        </>
-                    )}
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept={accept}
-                        className="hidden"
-                        onChange={handleFileChange}
-                        disabled={disabled || uploading}
-                    />
+                <div className="space-y-2">
+                    <div
+                        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                        onDragLeave={() => setDragging(false)}
+                        onDrop={handleDrop}
+                        className={`relative flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-dashed transition-all px-4 py-5 ${
+                            dragging
+                                ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-950/20'
+                                : 'border-neutral-300 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/40 hover:border-neutral-400 dark:hover:border-neutral-600'
+                        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        {uploading ? (
+                            <div className="flex flex-col items-center justify-center py-2 space-y-1.5">
+                                <Loader2 className="h-6 w-6 text-brand-600 animate-spin" />
+                                <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">Uploading file...</span>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center text-center space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={() => setIsPickerOpen(true)}
+                                        disabled={disabled}
+                                        className="gap-1.5 shadow-sm text-xs font-bold"
+                                    >
+                                        <FolderOpen className="h-3.5 w-3.5 text-brand-600" />
+                                        Media Library
+                                    </Button>
+
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => fileRef.current?.click()}
+                                        disabled={disabled}
+                                        className="gap-1.5 text-xs font-semibold"
+                                    >
+                                        <Upload className="h-3.5 w-3.5" />
+                                        Browse Device
+                                    </Button>
+                                </div>
+
+                                <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                                    or drag & drop files here (Max {maxSizeMb} MB)
+                                </span>
+                            </div>
+                        )}
+
+                        <input
+                            ref={fileRef}
+                            type="file"
+                            accept={accept}
+                            className="hidden"
+                            onChange={handleFileChange}
+                            disabled={disabled || uploading}
+                        />
+                    </div>
                 </div>
             )}
 
             {/* Error message */}
             {error && (
-                <div className="flex items-center gap-2 text-xs text-coral-600 dark:text-coral-400">
+                <div className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 font-medium">
                     <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                    {error}
+                    <span>{error}</span>
                 </div>
             )}
 
-            {/* Preview */}
+            {/* Active Asset Preview Card */}
             {value && (
-                <div className="flex items-center gap-3 p-2 rounded-soft bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-sm">
                     {isImage ? (
                         <img
                             src={value}
-                            alt="preview"
-                            className="h-10 w-10 rounded object-cover shrink-0"
+                            alt="Preview"
+                            className="h-11 w-11 rounded-lg object-cover border border-neutral-200 dark:border-neutral-700 shrink-0 bg-neutral-100 dark:bg-neutral-900"
                             onError={(e) => {
                                 e.currentTarget.onerror = null;
                                 e.currentTarget.src = 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400';
                             }}
                         />
                     ) : (
-                        <div className="h-10 w-10 rounded bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center shrink-0">
-                            <FileText className="h-5 w-5 text-neutral-500" />
+                        <div className="h-11 w-11 rounded-lg bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center shrink-0 border border-neutral-200 dark:border-neutral-600">
+                            <FileText className="h-5 w-5 text-neutral-500 dark:text-neutral-300" />
                         </div>
                     )}
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400 truncate flex-1 min-w-0">{value}</span>
-                    <button
-                        type="button"
-                        onClick={clear}
-                        className="shrink-0 text-neutral-400 hover:text-coral-500 transition"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
+
+                    <div className="flex-1 min-w-0">
+                        <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 truncate block">
+                            {value.split('/').pop()?.split('?')[0] || 'Selected Asset'}
+                        </span>
+                        <span className="text-[10px] text-neutral-400 truncate block font-mono">
+                            {value}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIsPickerOpen(true)}
+                            className="text-xs px-2 py-1 h-auto"
+                        >
+                            Change
+                        </Button>
+                        <button
+                            type="button"
+                            onClick={clear}
+                            title="Remove file"
+                            className="p-1 rounded-md text-neutral-400 hover:text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
                 </div>
             )}
+
+            {/* Media Picker Modal */}
+            <MediaPickerModal
+                isOpen={isPickerOpen}
+                onClose={() => setIsPickerOpen(false)}
+                multiple={multiple}
+                onSelect={(selected, files) => {
+                    onChange?.(selected, files);
+                    setIsPickerOpen(false);
+                }}
+                currentValue={value}
+                accept={accept}
+                maxSizeMb={maxSizeMb}
+                collection={collection}
+                title={label ? `Select ${label}` : 'Select Media Asset'}
+            />
         </div>
     );
 }

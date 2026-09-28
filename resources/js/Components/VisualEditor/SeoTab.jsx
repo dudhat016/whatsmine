@@ -4,7 +4,7 @@ import {
     Smartphone, Monitor, ExternalLink, HelpCircle, CheckCircle2,
     AlertTriangle, XCircle, Copy, Eye, Sliders, MessageCircle, Twitter
 } from 'lucide-react';
-import { Input } from '@/Components/ui';
+import { Input, Toggle } from '@/Components/ui';
 
 export default function SeoTab({
     seoSettings = {},
@@ -251,15 +251,10 @@ export default function SeoTab({
                             Enable for upsells, thank-you pages, or private members-only funnels.
                         </p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={!!seoSettings.noIndex}
-                            onChange={e => handleSeoChange('noIndex', e.target.checked)}
-                            className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-neutral-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
-                    </label>
+                    <Toggle
+                        checked={!!seoSettings.noIndex}
+                        onChange={val => handleSeoChange('noIndex', val)}
+                    />
                 </div>
             </div>
 

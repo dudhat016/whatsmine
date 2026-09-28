@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import { Download, ExternalLink, Key, Check, ShieldCheck, FileText, Package, Clock, Copy } from 'lucide-react';
+import { Download, ExternalLink, Key, Check, ShieldCheck, FileText, Clock, Copy, AlertCircle, CreditCard, Lock } from 'lucide-react';
 
 export default function DigitalVault({ order, product }) {
     const [copied, setCopied] = useState(false);
@@ -13,24 +13,54 @@ export default function DigitalVault({ order, product }) {
         }
     };
 
+    const isPaid = order.is_paid !== false && order.financial_status === 'paid';
     const remainingDownloads = Math.max(0, (product?.digital_download_limit || 5) - (order.download_count || 0));
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-center p-4 font-sans">
+        <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-center p-4 font-sans selection:bg-emerald-500 selection:text-white">
             <Head title={`Digital Vault — Order #${order.number}`} />
 
-            <div className="w-full max-w-xl bg-neutral-900 rounded-3xl border border-neutral-800 p-6 md:p-8 space-y-6 shadow-2xl">
+            <div className="w-full max-w-xl bg-neutral-900/90 backdrop-blur-xl rounded-3xl border border-neutral-800 p-6 md:p-8 space-y-6 shadow-2xl relative overflow-hidden">
+                {/* Decorative ambient gradient */}
+                <div className="absolute -top-24 -left-24 w-60 h-60 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+
                 {/* Header Badge */}
-                <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
-                    <div className="flex items-center gap-2 text-green-400 font-semibold text-xs uppercase tracking-wider">
-                        <ShieldCheck className="h-4 w-4" /> Verified Purchase Vault
-                    </div>
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-4 relative z-10">
+                    {isPaid ? (
+                        <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                            <ShieldCheck className="h-4 w-4" /> Verified Purchase Vault
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                            <AlertCircle className="h-4 w-4" /> Payment Authorization Pending
+                        </div>
+                    )}
                     <span className="text-xs text-neutral-400 font-mono">Order #{order.number}</span>
                 </div>
 
+                {/* Payment Pending Alert when unpaid */}
+                {!isPaid && (
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3 relative z-10 text-center">
+                        <div className="flex items-center justify-center gap-2 text-amber-400 font-bold text-sm">
+                            <Lock className="h-4 w-4" /> Access Locked Until Payment
+                        </div>
+                        <p className="text-xs text-neutral-300">
+                            Payment for this order has not been completed yet. Please complete payment to unlock your downloads and resources.
+                        </p>
+                        {order.payment_url && (
+                            <a
+                                href={order.payment_url}
+                                className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/20"
+                            >
+                                <CreditCard className="h-4 w-4" /> Complete Payment Now (${parseFloat(order.total || 0).toFixed(2)})
+                            </a>
+                        )}
+                    </div>
+                )}
+
                 {/* Product Title & Info */}
                 {product ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3 relative z-10">
                         <div className="flex items-center gap-4">
                             {product.image_url ? (
                                 <img src={product.image_url} alt="" className="h-16 w-16 rounded-2xl object-cover border border-neutral-800" />
@@ -56,13 +86,13 @@ export default function DigitalVault({ order, product }) {
                     </div>
                 )}
 
-                {/* Content Delivery Cards */}
-                {product && (
-                    <div className="space-y-4 pt-2">
+                {/* Content Delivery Cards — Only visible when paid */}
+                {isPaid && product && (
+                    <div className="space-y-4 pt-2 relative z-10">
                         {/* 📄 Download File Fulfillment */}
                         {product.digital_fulfillment_type === 'file' && (
                             <div className="p-5 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3 text-center">
-                                <FileText className="h-10 w-10 text-brand-400 mx-auto" />
+                                <FileText className="h-10 w-10 text-emerald-400 mx-auto" />
                                 <div>
                                     <h3 className="font-bold text-base text-white">Your Download File is Ready</h3>
                                     <p className="text-xs text-neutral-400 mt-1">
@@ -73,7 +103,7 @@ export default function DigitalVault({ order, product }) {
                                 {remainingDownloads > 0 ? (
                                     <a
                                         href={route('public.storefront.download', order.access_token)}
-                                        className="w-full py-3.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-brand-600/20"
+                                        className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
                                     >
                                         <Download className="h-5 w-5" /> Download File Now
                                     </a>
@@ -109,16 +139,16 @@ export default function DigitalVault({ order, product }) {
                                 <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
                                     <Key className="h-4 w-4" /> Your Product License Key
                                 </div>
-                                <div className="p-3 bg-neutral-900 rounded-xl border border-neutral-800 font-mono text-sm text-green-400 flex items-center justify-between break-all">
+                                <div className="p-3 bg-neutral-900 rounded-xl border border-neutral-800 font-mono text-sm text-emerald-400 flex items-center justify-between break-all">
                                     <span>{product.digital_license_key}</span>
                                     <button
                                         onClick={handleCopyKey}
                                         className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition ml-2"
                                     >
-                                        {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                                        {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
                                     </button>
                                 </div>
-                                {copied && <p className="text-xs text-green-400">Copied to clipboard!</p>}
+                                {copied && <p className="text-xs text-emerald-400">Copied to clipboard!</p>}
                             </div>
                         )}
 
@@ -138,7 +168,7 @@ export default function DigitalVault({ order, product }) {
                                         rel="noreferrer"
                                         className="w-full py-3.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20"
                                     >
-                                        <Calendar className="h-5 w-5" /> Select Time Slot on Calendar
+                                        <Clock className="h-5 w-5" /> Select Time Slot on Calendar
                                     </a>
                                 ) : (
                                     <p className="text-xs text-neutral-500">Booking calendar details sent to your email & WhatsApp.</p>
@@ -150,7 +180,7 @@ export default function DigitalVault({ order, product }) {
                         {order.order_bump_data && (
                             <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
                                 <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                                    <Sparkles className="h-4 w-4" /> Bonus Purchased: {order.order_bump_data.title || 'Order Bump Upsell'}
+                                    <ShieldCheck className="h-4 w-4" /> Bonus Purchased: {order.order_bump_data.title || 'Order Bump Upsell'}
                                 </div>
                                 {order.order_bump_data.file_url && (
                                     <a
@@ -183,7 +213,7 @@ export default function DigitalVault({ order, product }) {
                 )}
 
                 {/* Footer Support */}
-                <div className="border-t border-neutral-800/80 pt-4 text-center">
+                <div className="border-t border-neutral-800/80 pt-4 text-center relative z-10">
                     <p className="text-xs text-neutral-500">Need support with your order? Reply directly to your WhatsApp purchase receipt.</p>
                 </div>
             </div>

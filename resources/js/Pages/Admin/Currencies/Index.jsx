@@ -1,5 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Button, Card, Input } from '@/Components/ui';
+import { Button, Card, Input, Checkbox } from '@/Components/ui';
 import { Head } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import { useTranslation } from 'react-i18next';
@@ -62,8 +62,8 @@ function CurrencyRow({ currency }) {
             <td className="py-3 pr-4"><Input value={data.symbol} onChange={(e) => setData('symbol', e.target.value)} size="sm" wrapperClassName="w-16" /></td>
             <td className="py-3 pr-4"><Input type="number" value={data.decimals} onChange={(e) => setData('decimals', parseInt(e.target.value, 10) || 0)} size="sm" wrapperClassName="w-16" /></td>
             <td className="py-3 pr-4"><Input type="number" step="any" value={data.exchange_rate} onChange={(e) => setData('exchange_rate', e.target.value)} size="sm" wrapperClassName="w-24" /></td>
-            <td className="py-3 pr-4"><input type="checkbox" checked={data.is_default} onChange={(e) => setData('is_default', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /></td>
-            <td className="py-3 pr-4"><input type="checkbox" checked={data.enabled} onChange={(e) => setData('enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /></td>
+            <td className="py-3 pr-4"><Checkbox checked={data.is_default} onChange={(e) => setData('is_default', e.target.checked)} /></td>
+            <td className="py-3 pr-4"><Checkbox checked={data.enabled} onChange={(e) => setData('enabled', e.target.checked)} /></td>
             <td className="py-3"><button type="button" onClick={() => put(route('admin.currencies.update', currency.code))} className="text-brand-600 dark:text-brand-400 text-sm hover:underline font-medium" disabled={processing}>{t('common.save')}</button></td>
         </tr>
     );
@@ -97,8 +97,8 @@ function AddCurrencyRow() {
             </td>
             <td className="py-3 pr-4"><Input type="number" value={data.decimals} onChange={(e) => setData('decimals', parseInt(e.target.value, 10) || 0)} size="sm" wrapperClassName="w-16" /></td>
             <td className="py-3 pr-4"><Input type="number" step="any" value={data.exchange_rate} onChange={(e) => setData('exchange_rate', e.target.value)} placeholder="1" size="sm" wrapperClassName="w-24" /></td>
-            <td className="py-3 pr-4"><input type="checkbox" checked={data.is_default} onChange={(e) => setData('is_default', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /></td>
-            <td className="py-3 pr-4"><input type="checkbox" checked={data.enabled} onChange={(e) => setData('enabled', e.target.checked)} className="rounded border-neutral-300 dark:border-neutral-600 text-brand-500" /></td>
+            <td className="py-3 pr-4"><Checkbox checked={data.is_default} onChange={(e) => setData('is_default', e.target.checked)} /></td>
+            <td className="py-3 pr-4"><Checkbox checked={data.enabled} onChange={(e) => setData('enabled', e.target.checked)} /></td>
             <td className="py-3"><Button type="button" onClick={submit} size="sm" disabled={processing || !data.code || !data.symbol}>{t('common.add', 'Add')}</Button></td>
         </tr>
     );

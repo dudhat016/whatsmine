@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
-import { X, Search, User, Phone, Mail, Globe, Send, Loader2, MessageSquarePlus, ChevronRight } from 'lucide-react';
+import { Search, User, Phone, Mail, Globe, Send, Loader2, MessageSquarePlus, ChevronRight } from 'lucide-react';
 import { ChannelBrandIcon, CHANNEL_LABELS } from '@/Components/BrandIcons';
-import Input from '@/Components/ui/Input';
+import { Modal, Input, Button } from '@/Components/ui';
 import { useTranslation } from 'react-i18next';
 
 function ContactAvatar({ contact, size = 'md' }) {
@@ -66,19 +66,6 @@ export default function NewConversationModal({ onClose }) {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
     const searchRef = useRef(null);
-    const overlayRef = useRef(null);
-
-    // Close on overlay click
-    const handleOverlay = (e) => {
-        if (e.target === overlayRef.current) onClose();
-    };
-
-    // Close on Escape
-    useEffect(() => {
-        const handler = (e) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', handler);
-        return () => document.removeEventListener('keydown', handler);
-    }, [onClose]);
 
     // Auto-focus search
     useEffect(() => {
@@ -137,35 +124,30 @@ export default function NewConversationModal({ onClose }) {
         : '';
 
     return (
-        <div
-            ref={overlayRef}
-            onClick={handleOverlay}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-        >
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]">
-
+        <Modal show={true} onClose={onClose} maxWidth="lg">
+            <div className="flex flex-col overflow-hidden max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200 dark:border-neutral-700 shrink-0">
-                    <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
-                            <MessageSquarePlus className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                <Modal.Header
+                    title={
+                        <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center">
+                                <MessageSquarePlus className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('inbox.new_conversation')}</h2>
+                                <p className="text-xs text-neutral-400 font-normal">
+                                    {step === 'contact' && t('inbox.search_select_contact')}
+                                    {step === 'channel' && t('inbox.pick_channel_for', { name: contactName })}
+                                    {step === 'compose' && t('inbox.message_via', { channel: CHANNEL_LABELS[selectedAccount?.channel] ?? selectedAccount?.channel })}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{t('inbox.new_conversation')}</h2>
-                            <p className="text-xs text-neutral-400">
-                                {step === 'contact' && t('inbox.search_select_contact')}
-                                {step === 'channel' && t('inbox.pick_channel_for', { name: contactName })}
-                                {step === 'compose' && t('inbox.message_via', { channel: CHANNEL_LABELS[selectedAccount?.channel] ?? selectedAccount?.channel })}
-                            </p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
+                    }
+                    onClose={onClose}
+                />
 
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-1 px-5 py-2 bg-neutral-50 dark:bg-neutral-800/50 text-xs text-neutral-400 shrink-0">
+                <div className="flex items-center gap-1 px-5 py-2 bg-neutral-50 dark:bg-neutral-800/50 text-xs text-neutral-400 shrink-0 border-b border-neutral-100 dark:border-neutral-800">
                     <button onClick={() => setStep('contact')} className={`${step === 'contact' ? 'text-brand-600 dark:text-brand-400 font-medium' : 'hover:text-neutral-600'} transition`}>{t('inbox.step_contact')}</button>
                     <ChevronRight className="h-3 w-3" />
                     <button onClick={() => selectedContact && setStep('channel')} className={`${step === 'channel' ? 'text-brand-600 dark:text-brand-400 font-medium' : selectedContact ? 'hover:text-neutral-600' : 'opacity-40 cursor-default'} transition`}>{t('inbox.step_channel')}</button>
@@ -175,7 +157,7 @@ export default function NewConversationModal({ onClose }) {
 
                 {/* ── Step 1: Contact search ── */}
                 {step === 'contact' && (
-                    <div className="flex flex-col flex-1 overflow-hidden">
+                    <div className="flex flex-col flex-1 overflow-hidden min-h-[300px]">
                         <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 shrink-0">
                             <Input
                                 ref={searchRef}
@@ -187,7 +169,7 @@ export default function NewConversationModal({ onClose }) {
                                 rightIcon={loadingContacts ? <Loader2 className="h-4 w-4 text-neutral-400 animate-spin" /> : null}
                             />
                         </div>
-                        <div className="flex-1 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto max-h-[360px]">
                             {!loadingContacts && contacts.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-12 text-neutral-400">
                                     <User className="h-8 w-8 mb-2 opacity-40" />
@@ -208,7 +190,7 @@ export default function NewConversationModal({ onClose }) {
 
                 {/* ── Step 2: Channel selection ── */}
                 {step === 'channel' && (
-                    <div className="flex flex-col flex-1 overflow-hidden">
+                    <div className="flex flex-col flex-1 overflow-hidden min-h-[300px]">
                         {/* Selected contact summary */}
                         <div className="flex items-center gap-3 px-5 py-3 bg-neutral-50 dark:bg-neutral-800/50 border-b border-neutral-100 dark:border-neutral-800 shrink-0">
                             <ContactAvatar contact={selectedContact} />
@@ -219,7 +201,7 @@ export default function NewConversationModal({ onClose }) {
                             <button onClick={() => setStep('contact')} className="ml-auto text-xs text-brand-600 hover:underline dark:text-brand-400 shrink-0">{t('inbox.change')}</button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4">
+                        <div className="flex-1 overflow-y-auto p-4 max-h-[360px]">
                             {loadingChannels ? (
                                 <div className="flex items-center justify-center py-10">
                                     <Loader2 className="h-6 w-6 text-brand-600 animate-spin" />
@@ -271,7 +253,7 @@ export default function NewConversationModal({ onClose }) {
                             <button type="button" onClick={() => setStep('channel')} className="text-xs text-brand-600 hover:underline dark:text-brand-400 shrink-0">{t('inbox.change')}</button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                        <Modal.Body className="space-y-4 max-h-[360px] overflow-y-auto">
                             {/* Contact detail card */}
                             <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 space-y-2 bg-white dark:bg-neutral-800/50">
                                 <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">{t('inbox.contact_details')}</p>
@@ -313,23 +295,21 @@ export default function NewConversationModal({ onClose }) {
                             </div>
 
                             {error && <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">{error}</p>}
-                        </div>
+                        </Modal.Body>
 
                         {/* Footer */}
-                        <div className="px-5 py-4 border-t border-neutral-200 dark:border-neutral-700 flex gap-3 shrink-0">
-                            <button type="button" onClick={() => setStep('channel')}
-                                className="flex-1 rounded-xl border border-neutral-300 dark:border-neutral-600 px-4 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={() => setStep('channel')}>
                                 {t('common.back')}
-                            </button>
-                            <button type="submit" disabled={submitting}
-                                className="flex-1 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition flex items-center justify-center gap-2">
-                                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            </Button>
+                            <Button type="submit" disabled={submitting}>
+                                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                                 {submitting ? t('inbox.starting') : t('inbox.start_conversation')}
-                            </button>
-                        </div>
+                            </Button>
+                        </Modal.Footer>
                     </form>
                 )}
             </div>
-        </div>
+        </Modal>
     );
 }

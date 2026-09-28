@@ -1,7 +1,7 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Modal, Button } from '@/Components/ui';
 import { useState } from 'react';
 import { Plus, Trash2, Filter, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -81,9 +81,9 @@ export default function ContactsSegments({ segments }) {
                         <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{t('contacts_page.seg_subtitle')}</p>
                     </div>
                     {(
-                        <button type="button" onClick={() => setShowCreate(true)} className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 transition">
-                            <Plus className="h-4 w-4" /> {t('contacts_page.seg_new')}
-                        </button>
+                        <Button type="button" onClick={() => setShowCreate(true)}>
+                            <Plus className="h-4 w-4 mr-1.5" /> {t('contacts_page.seg_new')}
+                        </Button>
                     )}
                 </div>
 
@@ -121,51 +121,48 @@ export default function ContactsSegments({ segments }) {
                 </div>
             </div>
 
-            {showCreate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-lg rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('contacts_page.seg_new')}</h3>
-                        <form onSubmit={submitCreate} className="space-y-4">
-                            <div>
-                                <Input label={t('common.name')} type="text" value={data.name} onChange={e => setData('name', e.target.value)} required />
-                            </div>
-                            <div className="flex gap-4">
-                                {['static', 'dynamic'].map(type => (
-                                    <label key={type} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                                        <input type="radio" value={type} checked={data.type === type} onChange={() => setData('type', type)} />
-                                        <span className="capitalize">{type}</span>
-                                    </label>
-                                ))}
-                            </div>
+            <Modal show={showCreate} onClose={() => setShowCreate(false)} maxWidth="lg">
+                <Modal.Header title={t('contacts_page.seg_new')} onClose={() => setShowCreate(false)} />
+                <form onSubmit={submitCreate}>
+                    <Modal.Body className="space-y-4 max-h-[75vh] overflow-y-auto">
+                        <div>
+                            <Input label={t('common.name')} type="text" value={data.name} onChange={e => setData('name', e.target.value)} required />
+                        </div>
+                        <div className="flex gap-4">
+                            {['static', 'dynamic'].map(type => (
+                                <label key={type} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                                    <input type="radio" value={type} checked={data.type === type} onChange={() => setData('type', type)} />
+                                    <span className="capitalize">{type}</span>
+                                </label>
+                            ))}
+                        </div>
 
-                            {data.type === 'dynamic' && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('contacts_page.seg_rules')}</label>
-                                        <Select value={data.rules_json.combinator} onChange={e => setData('rules_json', { ...data.rules_json, combinator: e.target.value })} size="sm" className="w-36">
-                                            <option value="AND">{t('contacts_page.seg_match_all')}</option>
-                                            <option value="OR">{t('contacts_page.seg_match_any')}</option>
-                                        </Select>
-                                    </div>
-                                    {data.rules_json.conditions.map((cond, i) => (
-                                        <RuleRow key={i} condition={cond} onChange={c => updateCondition(i, c)} onRemove={() => removeCondition(i)} />
-                                    ))}
-                                    <button type="button" onClick={addCondition} className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400">{t('contacts_page.seg_add_condition')}</button>
+                        {data.type === 'dynamic' && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">{t('contacts_page.seg_rules')}</label>
+                                    <Select value={data.rules_json.combinator} onChange={e => setData('rules_json', { ...data.rules_json, combinator: e.target.value })} size="sm" className="w-36">
+                                        <option value="AND">{t('contacts_page.seg_match_all')}</option>
+                                        <option value="OR">{t('contacts_page.seg_match_any')}</option>
+                                    </Select>
                                 </div>
-                            )}
-
-                            <div className="flex gap-2 pt-2">
-                                <button type="submit" disabled={processing} className="flex-1 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition">
-                                    {processing ? t('common.creating') : t('contacts_page.seg_create')}
-                                </button>
-                                <button type="button" onClick={() => setShowCreate(false)} className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
-                                    {t('common.cancel')}
-                                </button>
+                                {data.rules_json.conditions.map((cond, i) => (
+                                    <RuleRow key={i} condition={cond} onChange={c => updateCondition(i, c)} onRemove={() => removeCondition(i)} />
+                                ))}
+                                <button type="button" onClick={addCondition} className="text-sm text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium">{t('contacts_page.seg_add_condition')}</button>
                             </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                        )}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button type="button" variant="secondary" onClick={() => setShowCreate(false)}>
+                            {t('common.cancel')}
+                        </Button>
+                        <Button type="submit" disabled={processing}>
+                            {processing ? t('common.creating') : t('contacts_page.seg_create')}
+                        </Button>
+                    </Modal.Footer>
+                </form>
+            </Modal>
         </ClientLayout>
     );
 }

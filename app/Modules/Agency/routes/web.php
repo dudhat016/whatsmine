@@ -33,6 +33,7 @@ Route::middleware(['web'])->prefix('agency')->name('agency.')->group(function ()
     // Public 1-Click Invoice Checkout Page
     Route::get('/invoices/{uuid}/checkout', [AgencyInvoiceController::class, 'showPublicCheckout'])->name('invoices.checkout');
     Route::post('/invoices/{uuid}/pay', [AgencyInvoiceController::class, 'pay'])->name('invoices.pay');
+    Route::get('/invoices/{uuid}/payment/success', [AgencyInvoiceController::class, 'paymentSuccess'])->name('invoices.payment.success');
     Route::get('/invoices/{uuid}/pdf', [AgencyInvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
 
     // Public Onboarding Form

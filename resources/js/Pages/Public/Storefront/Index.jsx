@@ -3,8 +3,10 @@ import { Head, Link } from '@inertiajs/react';
 import { ShoppingBag, Search, Tag, RefreshCw, CreditCard, Gift, Check, X, ShieldCheck, ArrowRight, Package, Truck, Lock, Sun, Moon, Zap } from 'lucide-react';
 import { Input } from '@/Components/ui';
 import { useConfirm } from '@/context/ConfirmationContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function StorefrontIndex({ store, products = [] }) {
+    const { theme, setTheme } = useTheme();
     const { alert } = useConfirm();
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
@@ -13,7 +15,6 @@ export default function StorefrontIndex({ store, products = [] }) {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isOrderComplete, setIsOrderComplete] = useState(false);
     const [completedOrder, setCompletedOrder] = useState(null);
-    const [isDarkMode, setIsDarkMode] = useState(false);
 
     const [checkoutForm, setCheckoutForm] = useState({
         customer_name: '',
@@ -133,7 +134,7 @@ export default function StorefrontIndex({ store, products = [] }) {
 
     return (
         <div className={`min-h-screen font-sans transition-colors duration-200 ${
-            isDarkMode 
+            theme === 'dark'
                 ? 'dark bg-neutral-950 text-neutral-100' 
                 : 'bg-neutral-50 text-neutral-900'
         }`}>
@@ -155,11 +156,11 @@ export default function StorefrontIndex({ store, products = [] }) {
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
-                            onClick={() => setIsDarkMode(!isDarkMode)}
+                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                             className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition"
                             title="Toggle Light / Dark Mode"
                         >
-                            {isDarkMode ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-neutral-600" />}
+                            {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-neutral-600" />}
                         </button>
 
                         <button
@@ -298,19 +299,23 @@ export default function StorefrontIndex({ store, products = [] }) {
                                     Your cart is empty.
                                 </div>
                             ) : (
-                                cart.map(item => (
-                                    <div key={item.product_id} className="pt-3 flex items-center justify-between gap-3">
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-semibold text-sm truncate">{item.name}</h4>
-                                            <span className="text-xs text-neutral-500">${item.price.toFixed(2)} each</span>
+                                cart.map(item => {
+                                    const itemId = item.id || item.product_id;
+                                    const price = Number(item.price || 0);
+                                    return (
+                                        <div key={itemId} className="pt-3 flex items-center justify-between gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-sm truncate">{item.name}</h4>
+                                                <span className="text-xs text-neutral-500">${price.toFixed(2)} each</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => updateQuantity(itemId, -1)} className="h-7 w-7 rounded bg-neutral-100 dark:bg-neutral-800 font-bold">-</button>
+                                                <span className="text-xs font-semibold">{item.quantity}</span>
+                                                <button onClick={() => updateQuantity(itemId, 1)} className="h-7 w-7 rounded bg-neutral-100 dark:bg-neutral-800 font-bold">+</button>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <button onClick={() => updateQuantity(item.product_id, -1)} className="h-7 w-7 rounded bg-neutral-100 dark:bg-neutral-800 font-bold">-</button>
-                                            <span className="text-xs font-semibold">{item.quantity}</span>
-                                            <button onClick={() => updateQuantity(item.product_id, 1)} className="h-7 w-7 rounded bg-neutral-100 dark:bg-neutral-800 font-bold">+</button>
-                                        </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
 

@@ -2391,11 +2391,66 @@ HTML;
             ? url("/f/{$workspaceSlug}/{$funnelSlug}/" . ($nextStep->slug ?: 'step-' . $nextStep->id))
             : url("/f/{$workspaceSlug}/{$funnelSlug}");
 
+        // If paid funnel checkout, create Stripe Checkout Session
+        if ((float) $validated['total_amount'] > 0) {
+            $stripeSecret = $this->resolveStripeSecretKey((int) $funnel->workspace_id);
+            if ($stripeSecret && strlen($stripeSecret) > 8) {
+                try {
+                    $stripe = new \Stripe\StripeClient($stripeSecret);
+                    $session = $stripe->checkout->sessions->create([
+                        'payment_method_types' => ['card'],
+                        'customer_email' => $validated['email'],
+                        'line_items' => [[
+                            'price_data' => [
+                                'currency' => 'usd',
+                                'unit_amount' => (int) round(((float) $validated['total_amount']) * 100),
+                                'product_data' => [
+                                    'name' => $validated['product_name'] ?? ($funnel->name . ' Checkout'),
+                                    'description' => !empty($validated['has_bump']) ? 'Includes ' . ($validated['bump_title'] ?? 'Bonus Offer') : null,
+                                ],
+                            ],
+                            'quantity' => 1,
+                        ]],
+                        'mode' => 'payment',
+                        'client_reference_id' => 'FUNNEL-' . $funnel->id . '-' . $submission->id,
+                        'metadata' => [
+                            'funnel_id' => (string) $funnel->id,
+                            'submission_id' => (string) $submission->id,
+                            'contact_id' => (string) $contact->id,
+                            'workspace_id' => (string) $funnel->workspace_id,
+                            'type' => 'funnel_checkout',
+                        ],
+                        'success_url' => $redirectUrl . '?session_id={CHECKOUT_SESSION_ID}&payment_status=success',
+                        'cancel_url' => url("/f/{$workspaceSlug}/{$funnelSlug}") . '?payment_status=cancelled',
+                    ]);
+
+                    return response()->json([
+                        'success'       => true,
+                        'submission_id' => $submission->id,
+                        'redirect_url'  => $session->url,
+                        'message'       => 'Redirecting to payment checkout...',
+                    ]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('FunnelRenderController: Stripe session creation failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
         return response()->json([
             'success'       => true,
             'submission_id' => $submission->id,
             'redirect_url'  => $redirectUrl,
         ]);
+    }
+
+    private function resolveStripeSecretKey(int $workspaceId): ?string
+    {
+        $store = \App\Modules\Ecommerce\Models\EcommerceStore::where('workspace_id', $workspaceId)->where('is_active', true)->first();
+        if ($store && !empty($store->credentials['stripe_secret_key'])) {
+            return $store->credentials['stripe_secret_key'];
+        }
+
+        return config('billing.gateways.stripe.secret_key') ?: env('STRIPE_SECRET');
     }
 
     // ─── 1-Click Upsell / OTO Action Endpoint ───────────────────────────────

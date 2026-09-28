@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PanelSelect, PanelToggle, PanelNumber, PanelInput, SectionTitle, FieldLabel, IconButtonGroup } from '../BuilderUI';
-import { Select } from '@/Components/ui';
+import { Select, Checkbox } from '@/Components/ui';
 import { Monitor, Tablet, Smartphone } from 'lucide-react';
 import ColorPickerInput from '../ColorPicker';
 import GapControl from './GapControl';
@@ -836,15 +836,11 @@ export default function LayoutPanel({ element, val, viewport, handleUpdateElemen
                                                 placeholder="https://... or #checkout"
                                             />
                                             {activeColStyle.linkUrl && (
-                                                <label className="flex items-center gap-1.5 text-[11px] text-neutral-600 dark:text-neutral-400 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={!!activeColStyle.linkTargetBlank}
-                                                        onChange={e => updateColumnStyle(selectedColIndex, 'linkTargetBlank', e.target.checked)}
-                                                        className="rounded border-neutral-300 text-brand-600 focus:ring-brand-500 h-3 w-3"
-                                                    />
-                                                    <span>Open in new tab</span>
-                                                </label>
+                                                <Checkbox
+                                                    checked={!!activeColStyle.linkTargetBlank}
+                                                    onChange={e => updateColumnStyle(selectedColIndex, 'linkTargetBlank', e.target.checked)}
+                                                    label="Open in new tab"
+                                                />
                                             )}
                                         </div>
                                     </div>

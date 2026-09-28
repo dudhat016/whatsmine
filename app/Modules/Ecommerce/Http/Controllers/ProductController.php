@@ -122,6 +122,32 @@ class ProductController extends Controller
         ]);
     }
 
+    public function create(Request $request): Response
+    {
+        $workspaceId = $this->workspaceId($request);
+        $nativeStore = EcommerceStore::getOrCreateNativeStore($workspaceId);
+
+        $calendars = \App\Modules\Calendars\Models\BookingCalendar::where('workspace_id', $workspaceId)
+            ->where('is_active', true)
+            ->get(['id', 'name', 'slug', 'type', 'duration_minutes']);
+
+        $allProducts = EcommerceProduct::where('workspace_id', $workspaceId)
+            ->with('prices')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'price', 'pricing_type', 'image_url', 'digital_fulfillment_type', 'digital_file_url', 'digital_external_url', 'digital_license_key']);
+
+        return Inertia::render('Ecommerce/Products/Create', [
+            'nativeStore' => [
+                'id' => $nativeStore->id,
+                'slug' => $nativeStore->slug ?? (string) $nativeStore->id,
+                'url' => route('public.storefront.index', $nativeStore->slug ?? $nativeStore->id),
+            ],
+            'calendars' => $calendars,
+            'allProducts' => $allProducts,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $workspaceId = $this->workspaceId($request);
@@ -217,7 +243,71 @@ class ProductController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'Product created successfully.');
+        return redirect()->route('client.ecommerce.products.index')->with('success', 'Product created successfully.');
+    }
+
+    public function edit(Request $request, EcommerceProduct $product): Response
+    {
+        $workspaceId = $this->workspaceId($request);
+        if ((int) $product->workspace_id !== $workspaceId) {
+            abort(403);
+        }
+
+        $product->load('prices');
+        $nativeStore = EcommerceStore::getOrCreateNativeStore($workspaceId);
+
+        $calendars = \App\Modules\Calendars\Models\BookingCalendar::where('workspace_id', $workspaceId)
+            ->where('is_active', true)
+            ->get(['id', 'name', 'slug', 'type', 'duration_minutes']);
+
+        $allProducts = EcommerceProduct::where('workspace_id', $workspaceId)
+            ->with('prices')
+            ->where('status', 'active')
+            ->where('id', '!=', $product->id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'price', 'pricing_type', 'image_url', 'digital_fulfillment_type', 'digital_file_url', 'digital_external_url', 'digital_license_key']);
+
+        return Inertia::render('Ecommerce/Products/Edit', [
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'slug' => $product->slug ?? \Illuminate\Support\Str::slug($product->name),
+                'description' => $product->description,
+                'sku' => $product->sku,
+                'price' => $product->price,
+                'compare_price' => $product->compare_price,
+                'pricing_type' => $product->pricing_type ?? 'one_time',
+                'billing_interval' => $product->billing_interval,
+                'billing_interval_count' => $product->billing_interval_count,
+                'trial_days' => $product->trial_days,
+                'installment_count' => $product->installment_count,
+                'product_type' => $product->product_type ?? 'digital',
+                'inventory_quantity' => $product->inventory_quantity,
+                'status' => $product->status,
+                'image_url' => $product->image_url,
+                'platform' => $product->platform,
+                'meta_title' => $product->meta_title,
+                'meta_description' => $product->meta_description,
+                'access_duration_type' => $product->access_duration_type ?? 'lifetime',
+                'access_duration_days' => $product->access_duration_days,
+                'digital_fulfillment_type' => $product->digital_fulfillment_type,
+                'digital_file_url' => $product->digital_file_url,
+                'digital_external_url' => $product->digital_external_url,
+                'digital_license_key' => $product->digital_license_key,
+                'digital_download_limit' => $product->digital_download_limit,
+                'digital_expiration_days' => $product->digital_expiration_days,
+                'calendar_id' => $product->calendar_id,
+                'raw' => $product->raw,
+                'prices' => $product->prices,
+            ],
+            'nativeStore' => [
+                'id' => $nativeStore->id,
+                'slug' => $nativeStore->slug ?? (string) $nativeStore->id,
+                'url' => route('public.storefront.index', $nativeStore->slug ?? $nativeStore->id),
+            ],
+            'calendars' => $calendars,
+            'allProducts' => $allProducts,
+        ]);
     }
 
     public function update(Request $request, EcommerceProduct $product)
@@ -310,7 +400,7 @@ class ProductController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'Product updated successfully.');
+        return redirect()->route('client.ecommerce.products.index')->with('success', 'Product updated successfully.');
     }
 
     public function destroy(Request $request, EcommerceProduct $product)

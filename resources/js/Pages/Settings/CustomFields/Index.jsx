@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Head, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Checkbox } from '@/Components/ui';
 import {
     Plus,
     Search,
@@ -781,12 +781,10 @@ export default function CustomFieldsIndex({ folders = [], customFields = [], del
                                 <thead>
                                     <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 text-[11px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                                         <th className="py-3 px-4 w-12 text-center">
-                                            <input
-                                                type="checkbox"
+                                            <Checkbox
                                                 disabled={selectableFields.length === 0}
                                                 checked={selectableFields.length > 0 && selectedFieldIds.length === selectableFields.length}
                                                 onChange={toggleSelectAll}
-                                                className="w-3.5 h-3.5 rounded text-brand-600 focus:ring-brand-500 disabled:opacity-30"
                                                 title={selectableFields.length === 0 ? 'No custom user fields to select' : 'Select all custom fields'}
                                             />
                                         </th>
@@ -817,12 +815,10 @@ export default function CustomFieldsIndex({ folders = [], customFields = [], del
                                                 <td className="py-3.5 px-4 text-center">
                                                     <div className="flex items-center justify-center gap-1.5">
                                                         <GripVertical className="w-3.5 h-3.5 text-neutral-300 group-hover:text-neutral-500 cursor-grab" />
-                                                        <input
-                                                            type="checkbox"
+                                                        <Checkbox
                                                             disabled={isSystemField}
                                                             checked={selectedFieldIds.includes(field.id)}
                                                             onChange={() => toggleSelectField(field.id)}
-                                                            className="w-3.5 h-3.5 rounded text-brand-600 focus:ring-brand-500 disabled:opacity-30 disabled:cursor-not-allowed"
                                                             title={isSystemField ? 'System default fields cannot be deleted' : 'Select field'}
                                                         />
                                                     </div>

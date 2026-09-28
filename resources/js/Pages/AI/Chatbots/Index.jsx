@@ -1,7 +1,7 @@
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
-import { Input, Select } from '@/Components/ui';
+import { Input, Select, Modal, Button, Toggle } from '@/Components/ui';
 import { Plus, Bot, Trash2, Play, Settings, Send, X, BookOpen, Zap, MessageSquare, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,17 +18,7 @@ const TONE_COLORS = {
 };
 
 function ToggleSwitch({ checked, onChange }) {
-    return (
-        <button
-            type="button"
-            role="switch"
-            aria-checked={checked}
-            onClick={() => onChange(!checked)}
-            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${checked ? 'bg-brand-600' : 'bg-neutral-200 dark:bg-neutral-700'}`}
-        >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
-        </button>
-    );
+    return <Toggle checked={checked} onChange={onChange} />;
 }
 
 function PlaygroundPanel({ chatbot }) {
@@ -349,12 +339,11 @@ export default function AiChatbotsIndex({ chatbots, knowledgeBases }) {
                         <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{t('ai.chatbots_subtitle')}</p>
                     </div>
                     {(
-                        <button
+                        <Button
                             onClick={() => setShowCreate(true)}
-                            className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition shadow-sm"
                         >
-                            <Plus className="h-4 w-4" /> {t('ai.new_chatbot')}
-                        </button>
+                            <Plus className="h-4 w-4 mr-1.5" /> {t('ai.new_chatbot')}
+                        </Button>
                     )}
                 </div>
 
@@ -403,57 +392,52 @@ export default function AiChatbotsIndex({ chatbots, knowledgeBases }) {
             </div>
 
             {/* Create modal */}
-            {showCreate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={e => e.target === e.currentTarget && setShowCreate(false)}>
-                    <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl overflow-hidden">
-                        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-neutral-100 dark:border-neutral-800">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center">
-                                    <Bot className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-                                </div>
-                                <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{t('ai.new_chatbot')}</h3>
+            <Modal show={showCreate} onClose={() => setShowCreate(false)} maxWidth="sm">
+                <Modal.Header
+                    title={
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-900/30 flex items-center justify-center">
+                                <Bot className="h-4 w-4 text-brand-600 dark:text-brand-400" />
                             </div>
-                            <button onClick={() => setShowCreate(false)} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition rounded-lg p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                <X className="h-4 w-4" />
-                            </button>
+                            <span className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{t('ai.new_chatbot')}</span>
+                        </div>
+                    }
+                    onClose={() => setShowCreate(false)}
+                />
+                <form onSubmit={handleCreate}>
+                    <Modal.Body className="space-y-4">
+                        <div>
+                            <Input
+                                label={t('ai.chatbot_name')}
+                                type="text"
+                                value={data.name}
+                                onChange={e => setData('name', e.target.value)}
+                                required
+                                autoFocus
+                                placeholder={t('ai.chatbot_name_placeholder')}
+                                error={errors.name}
+                            />
                         </div>
 
-                        <form onSubmit={handleCreate} className="px-6 py-5 space-y-4">
-                            <div>
-                                <Input
-                                    label={t('ai.chatbot_name')}
-                                    type="text"
-                                    value={data.name}
-                                    onChange={e => setData('name', e.target.value)}
-                                    required
-                                    autoFocus
-                                    placeholder={t('ai.chatbot_name_placeholder')}
-                                    error={errors.name}
-                                />
-                            </div>
-
-                            <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('ai.chatbot_create_hint')}</p>
-
-                            <div className="flex gap-2 pt-1">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition"
-                                >
-                                    {processing ? t('ai.creating') : t('ai.create_chatbot')}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowCreate(false)}
-                                    className="rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 py-2.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
-                                >
-                                    {t('common.cancel')}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                        <p className="text-xs text-neutral-400 dark:text-neutral-500">{t('ai.chatbot_create_hint')}</p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setShowCreate(false)}
+                        >
+                            {t('common.cancel')}
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={processing}
+                        >
+                            {processing ? t('ai.creating') : t('ai.create_chatbot')}
+                        </Button>
+                    </Modal.Footer>
+                </form>
+            </Modal>
         </ClientLayout>
     );
 }

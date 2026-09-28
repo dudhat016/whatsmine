@@ -1,6 +1,7 @@
 import { Head, useForm, router } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import Input from '@/Components/ui/Input';
+import Checkbox from '@/Components/ui/Checkbox';
 import { useState } from 'react';
 import { UserPlus, Trash2, ArrowLeft, Search, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -126,15 +127,13 @@ export default function SegmentContacts({ segment, segmentContacts, availableCon
                             {availableContacts.map(contact => {
                                 const isSelected = selected.includes(contact.id);
                                 return (
-                                    <label key={contact.id} className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition ${isSelected ? 'bg-brand-50 dark:bg-brand-900/20' : ''}`}>
-                                        <input
-                                            type="checkbox"
+                                    <div key={contact.id} onClick={() => toggleSelect(contact.id)} className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition ${isSelected ? 'bg-brand-50 dark:bg-brand-900/20' : ''}`}>
+                                        <Checkbox
                                             checked={isSelected}
                                             onChange={() => toggleSelect(contact.id)}
-                                            className="rounded border-neutral-300 dark:border-neutral-600 text-brand-600 focus:ring-brand-500"
                                         />
                                         <ContactRow contact={contact} />
-                                    </label>
+                                    </div>
                                 );
                             })}
                         </div>

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Percent, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useConfirm } from '@/context/ConfirmationContext';
-import { Input } from '@/Components/ui';
+import { Input, Button, Card, Checkbox } from '@/Components/ui';
 
 function TaxRateForm({ taxRate = null, onClose }) {
     const { t } = useTranslation();
@@ -67,24 +67,26 @@ function TaxRateForm({ taxRate = null, onClose }) {
                     required
                     error={errors.percentage}
                 />
-                <div className="flex items-center gap-4 pt-2">
-                    <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                        <input type="checkbox" checked={data.inclusive} onChange={e => setData('inclusive', e.target.checked)} className="rounded" />
-                        {t('admin.tax_inclusive')}
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                        <input type="checkbox" checked={data.enabled} onChange={e => setData('enabled', e.target.checked)} className="rounded" />
-                        {t('common.enabled')}
-                    </label>
+                <div className="flex items-center gap-6 pt-2">
+                    <Checkbox
+                        label={t('admin.tax_inclusive')}
+                        checked={data.inclusive}
+                        onChange={e => setData('inclusive', e.target.checked)}
+                    />
+                    <Checkbox
+                        label={t('common.enabled')}
+                        checked={data.enabled}
+                        onChange={e => setData('enabled', e.target.checked)}
+                    />
                 </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700">
+            <div className="flex justify-end gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                <Button type="button" variant="secondary" size="sm" onClick={onClose}>
                     {t('common.cancel')}
-                </button>
-                <button type="submit" disabled={processing} className="px-4 py-2 text-sm bg-brand-500 text-white rounded-soft hover:bg-brand-600 shadow-soft disabled:opacity-50 transition-all duration-150">
+                </Button>
+                <Button type="submit" variant="primary" size="sm" disabled={processing}>
                     {taxRate ? t('admin.tax_update') : t('admin.tax_create')}
-                </button>
+                </Button>
             </div>
         </form>
     );
@@ -118,21 +120,21 @@ export default function TaxRatesIndex({ taxRates }) {
                             <p className="text-sm text-neutral-500 dark:text-neutral-400">{t('admin.tax_rates_subtitle')}</p>
                         </div>
                     </div>
-                    <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white text-sm rounded-soft hover:bg-brand-600 shadow-soft transition-all duration-150">
-                        <Plus className="h-4 w-4" /> {t('admin.tax_add')}
-                    </button>
+                    <Button onClick={() => setShowCreate(true)} variant="primary" size="sm" icon={Plus}>
+                        {t('admin.tax_add')}
+                    </Button>
                 </div>
 
                 {showCreate && (
-                    <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-6">
+                    <Card className="p-6">
                         <h2 className="text-base font-semibold text-neutral-900 dark:text-white mb-4">{t('admin.tax_new')}</h2>
                         <TaxRateForm onClose={() => setShowCreate(false)} />
-                    </div>
+                    </Card>
                 )}
 
-                <div className="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+                <Card className="overflow-hidden">
                     <table className="w-full text-sm">
-                        <thead className="bg-neutral-50 dark:bg-neutral-700">
+                        <thead className="bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
                             <tr>
                                 <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-300">{t('common.name')}</th>
                                 <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-300">{t('admin.tax_country')}</th>
@@ -143,7 +145,7 @@ export default function TaxRatesIndex({ taxRates }) {
                                 <th className="px-4 py-3"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+                        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
                             {taxRates?.map(rate => (
                                 <tr key={rate.id}>
                                     {editing?.id === rate.id ? (
@@ -185,7 +187,7 @@ export default function TaxRatesIndex({ taxRates }) {
                             )}
                         </tbody>
                     </table>
-                </div>
+                </Card>
             </div>
         </AdminLayout>
     );

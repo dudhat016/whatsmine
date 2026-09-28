@@ -99,6 +99,7 @@ Route::middleware(['verified'])->group(function () {
     // Media Library
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
+    Route::post('/media/bulk-destroy', [MediaController::class, 'bulkDestroy'])->name('media.bulk-destroy');
     Route::delete('/media/{medium}', [MediaController::class, 'destroy'])->name('media.destroy');
 
     // Onboarding Wizard

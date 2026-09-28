@@ -1,10 +1,7 @@
 import React, { useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
-import { X, Trash2 } from 'lucide-react';
-import Input from '@/Components/ui/Input';
-import Select from '@/Components/ui/Select';
-import DatePicker from '@/Components/ui/DatePicker';
-import Button from '@/Components/ui/Button';
+import { Trash2 } from 'lucide-react';
+import { Modal, Input, Select, DatePicker, Button } from '@/Components/ui';
 import { useConfirm } from '@/context/ConfirmationContext';
 
 export default function OpportunityModal({
@@ -18,8 +15,6 @@ export default function OpportunityModal({
     contacts,
     users,
 }) {
-    if (!isOpen) return null;
-
     const isEdit = !!deal;
     const { confirm } = useConfirm();
 
@@ -121,20 +116,14 @@ export default function OpportunityModal({
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-lg rounded-soft-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-soft-lg overflow-hidden flex flex-col max-h-[90vh]">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800">
-                    <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">
-                        {isEdit ? 'Edit Opportunity' : 'Create Opportunity'}
-                    </h3>
-                    <button onClick={onClose} className="p-1 rounded-soft text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
+        <Modal show={isOpen} onClose={onClose} maxWidth="lg">
+            <Modal.Header
+                title={isEdit ? 'Edit Opportunity' : 'Create Opportunity'}
+                onClose={onClose}
+            />
 
-                {/* Form Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-4 max-h-[70vh] overflow-y-auto">
                     {/* Deal Title Input */}
                     <Input
                         label="Opportunity Name *"
@@ -233,45 +222,43 @@ export default function OpportunityModal({
                             />
                         </div>
                     )}
+                </Modal.Body>
 
-                    {/* Footer Actions */}
-                    <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                        {isEdit ? (
-                            <Button
-                                type="button"
-                                variant="danger"
-                                size="sm"
-                                onClick={handleDelete}
-                                className="flex items-center gap-1.5"
-                            >
-                                <Trash2 className="h-4 w-4" />
-                                Delete
-                            </Button>
-                        ) : (
-                            <div />
-                        )}
+                <Modal.Footer className="justify-between">
+                    {isEdit ? (
+                        <Button
+                            type="button"
+                            variant="danger"
+                            size="sm"
+                            onClick={handleDelete}
+                            leftIcon={<Trash2 className="h-4 w-4" />}
+                        >
+                            Delete
+                        </Button>
+                    ) : (
+                        <div />
+                    )}
 
-                        <div className="flex items-center gap-2">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                onClick={onClose}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="primary"
-                                size="sm"
-                                disabled={processing}
-                            >
-                                {isEdit ? 'Save Changes' : 'Create Opportunity'}
-                            </Button>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={onClose}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="sm"
+                            loading={processing}
+                        >
+                            {isEdit ? 'Save Changes' : 'Create Opportunity'}
+                        </Button>
                     </div>
-                </form>
-            </div>
-        </div>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }

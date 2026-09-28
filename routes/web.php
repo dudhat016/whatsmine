@@ -63,6 +63,7 @@ Route::post('/s/{slug}/checkout', [PublicStorefrontController::class, 'checkout'
 
 Route::get('/d/{token}', [PublicStorefrontController::class, 'digitalVault'])->name('public.storefront.vault');
 Route::get('/d/{token}/download', [PublicStorefrontController::class, 'downloadDigitalFile'])->name('public.storefront.download');
+Route::get('/d/{token}/success', [PublicStorefrontController::class, 'paymentSuccess'])->name('public.storefront.payment.success');
 
 // Home / Landing
 Route::get('/', [LandingController::class, 'index'])->name('home');
@@ -149,6 +150,7 @@ Route::prefix('b')->name('public.booking.')->group(function () {
     Route::get('/{slug}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'showWidget'])->name('widget');
     Route::get('/{slug}/slots', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'getSlots'])->name('slots');
     Route::post('/{slug}/book', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'processBooking'])->name('book');
+    Route::get('/payment/success/{token}', [\App\Modules\Calendars\Http\Controllers\PublicBookingController::class, 'paymentSuccess'])->name('payment.success');
 });
 
 // Auth routes

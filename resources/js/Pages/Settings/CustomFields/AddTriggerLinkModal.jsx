@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Link2, Sparkles, ExternalLink } from 'lucide-react';
+import { Link2, Sparkles, ExternalLink } from 'lucide-react';
 import { router } from '@inertiajs/react';
-import { Input } from '@/Components/ui';
+import { Modal, Button, Input } from '@/Components/ui';
 
 export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null }) {
     const [name, setName] = useState('');
@@ -23,8 +23,6 @@ export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null
             setIsAutoSlug(true);
         }
     }, [linkToEdit, isOpen]);
-
-    if (!isOpen) return null;
 
     const handleNameChange = (e) => {
         const val = e.target.value;
@@ -51,25 +49,19 @@ export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null
             slug: slug.trim() || name.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'),
         };
 
-        if (linkToEdit) {
-            router.put(route('client.trigger_links.update', linkToEdit.id), payload, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setProcessing(false);
-                    onClose();
-                },
-                onError: () => setProcessing(false),
-            });
-        } else {
-            router.post(route('client.trigger_links.store'), payload, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setProcessing(false);
-                    onClose();
-                },
-                onError: () => setProcessing(false),
-            });
-        }
+        const targetRoute = linkToEdit
+            ? route('client.trigger_links.update', linkToEdit.id)
+            : route('client.trigger_links.store');
+        const method = linkToEdit ? router.put : router.post;
+
+        method(targetRoute, payload, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setProcessing(false);
+                onClose();
+            },
+            onError: () => setProcessing(false),
+        });
     };
 
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -77,10 +69,9 @@ export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null
     const displayToken = `{{ trigger_links.${slug || 'link_slug'} }}`;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150">
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50 dark:bg-neutral-900/50">
+        <Modal show={isOpen} onClose={onClose} maxWidth="lg">
+            <Modal.Header
+                title={
                     <div className="flex items-center gap-2.5">
                         <div className="p-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-xl border border-indigo-200/50 dark:border-indigo-800/40">
                             <Link2 className="w-5 h-5" />
@@ -94,16 +85,12 @@ export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+                }
+                onClose={onClose}
+            />
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit}>
+                <Modal.Body className="space-y-4">
                     <Input
                         label="Link Name *"
                         type="text"
@@ -164,25 +151,24 @@ export default function AddTriggerLinkModal({ isOpen, onClose, linkToEdit = null
                             </div>
                         </div>
                     </div>
+                </Modal.Body>
 
-                    <div className="pt-2 flex items-center justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition cursor-pointer"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={processing || !name.trim() || !targetUrl.trim()}
-                            className="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
-                        >
-                            <span>{linkToEdit ? 'Save Changes' : 'Create Trigger Link'}</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <Modal.Footer>
+                    <Button variant="secondary" size="sm" type="button" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        type="submit"
+                        loading={processing}
+                        disabled={!name.trim() || !targetUrl.trim()}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                        {linkToEdit ? 'Save Changes' : 'Create Trigger Link'}
+                    </Button>
+                </Modal.Footer>
+            </form>
+        </Modal>
     );
 }

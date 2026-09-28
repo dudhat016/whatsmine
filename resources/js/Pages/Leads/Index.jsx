@@ -1,7 +1,7 @@
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import ClientLayout from '@/Layouts/ClientLayout';
 import EmptyState from '@/Components/EmptyState';
-import { Input } from '@/Components/ui';
+import { Input, Modal, Button, Checkbox } from '@/Components/ui';
 import { Search, MapPin, UserPlus, Trash2, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -71,9 +71,9 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
                         <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{t('leads.subtitle')}</p>
                     </div>
                     {(
-                        <button onClick={() => setShowScraper(true)} className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 transition">
-                            <Search className="h-4 w-4" /> {t('leads.new_search')}
-                        </button>
+                        <Button onClick={() => setShowScraper(true)}>
+                            <Search className="h-4 w-4 mr-1.5" /> {t('leads.new_search')}
+                        </Button>
                     )}
                 </div>
 
@@ -113,7 +113,12 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
                     <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700 text-sm">
                         <thead className="bg-neutral-50 dark:bg-neutral-800">
                             <tr>
-                                <th className="px-3 py-3 w-8"><input type="checkbox" onChange={e => setSelected(e.target.checked ? leads.data.map(l => l.id) : [])} className="rounded" /></th>
+                                <th className="px-3 py-3 w-8">
+                                    <Checkbox
+                                        checked={leads.data.length > 0 && selected.length === leads.data.length}
+                                        onChange={e => setSelected(e.target.checked ? leads.data.map(l => l.id) : [])}
+                                    />
+                                </th>
                                 {TABLE_HEADERS.map((h, i) => (
                                     <th key={i} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">{h.labelKey ? t(h.labelKey) : ''}</th>
                                 ))}
@@ -122,7 +127,12 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
                         <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
                             {leads.data.map(lead => (
                                     <tr key={lead.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
-                                        <td className="px-3 py-3"><input type="checkbox" checked={selected.includes(lead.id)} onChange={() => toggleSelect(lead.id)} className="rounded" /></td>
+                                        <td className="px-3 py-3">
+                                            <Checkbox
+                                                checked={selected.includes(lead.id)}
+                                                onChange={() => toggleSelect(lead.id)}
+                                            />
+                                        </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-start gap-1.5">
                                                 <MapPin className="h-3.5 w-3.5 text-neutral-400 mt-0.5 shrink-0" />
@@ -159,53 +169,51 @@ export default function LeadsIndex({ leads, scrapeJobs }) {
             </div>
 
             {/* Scraper Modal */}
-            {showScraper && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-md rounded-xl bg-white dark:bg-neutral-900 p-6 shadow-xl space-y-4">
-                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{t('leads.search_businesses')}</h3>
-                        <form onSubmit={handleScrape} className="space-y-3">
-                            <div>
-                                <Input
-                                    type="text"
-                                    label={t('leads.business_type_keyword')}
-                                    value={data.keyword}
-                                    onChange={e => setData('keyword', e.target.value)}
-                                    required
-                                    placeholder={t('leads.keyword_placeholder')}
-                                />
-                            </div>
-                            <div>
-                                <Input
-                                    type="text"
-                                    label={t('leads.city_location')}
-                                    value={data.location}
-                                    onChange={e => setData('location', e.target.value)}
-                                    required
-                                    placeholder={t('leads.location_placeholder')}
-                                />
-                            </div>
-                            <div>
-                                <Input
-                                    type="number"
-                                    label={t('leads.radius_meters')}
-                                    min={100}
-                                    max={50000}
-                                    value={data.radius_meters}
-                                    onChange={e => setData('radius_meters', Number(e.target.value))}
-                                />
-                            </div>
-                            <div className="flex gap-2 pt-2">
-                                <button type="submit" disabled={processing} className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition">
-                                    <Search className="h-4 w-4" /> {processing ? t('leads.queuing') : t('leads.start_scrape')}
-                                </button>
-                                <button type="button" onClick={() => setShowScraper(false)} className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-4 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition">
-                                    {t('common.cancel')}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <Modal show={showScraper} onClose={() => setShowScraper(false)} maxWidth="md">
+                <Modal.Header title={t('leads.search_businesses')} onClose={() => setShowScraper(false)} />
+                <form onSubmit={handleScrape}>
+                    <Modal.Body className="space-y-3">
+                        <div>
+                            <Input
+                                type="text"
+                                label={t('leads.business_type_keyword')}
+                                value={data.keyword}
+                                onChange={e => setData('keyword', e.target.value)}
+                                required
+                                placeholder={t('leads.keyword_placeholder')}
+                            />
+                        </div>
+                        <div>
+                            <Input
+                                type="text"
+                                label={t('leads.city_location')}
+                                value={data.location}
+                                onChange={e => setData('location', e.target.value)}
+                                required
+                                placeholder={t('leads.location_placeholder')}
+                            />
+                        </div>
+                        <div>
+                            <Input
+                                type="number"
+                                label={t('leads.radius_meters')}
+                                min={100}
+                                max={50000}
+                                value={data.radius_meters}
+                                onChange={e => setData('radius_meters', Number(e.target.value))}
+                            />
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button type="button" variant="secondary" onClick={() => setShowScraper(false)}>
+                            {t('common.cancel')}
+                        </Button>
+                        <Button type="submit" disabled={processing}>
+                            <Search className="h-4 w-4 mr-1.5" /> {processing ? t('leads.queuing') : t('leads.start_scrape')}
+                        </Button>
+                    </Modal.Footer>
+                </form>
+            </Modal>
         </ClientLayout>
     );
 }

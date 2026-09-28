@@ -23,8 +23,10 @@ Route::middleware(['web', 'client-app'])->prefix('app/ecommerce')->name('client.
 
     // Products + inventory
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
     Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::post('/products/{product}/duplicate', [ProductController::class, 'duplicate'])->name('products.duplicate');

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input } from '@/Components/ui';
+import { Input, Checkbox, Button } from '@/Components/ui';
 import ClientLayout from '@/Layouts/ClientLayout';
 import { Head, router, useForm, usePage, Link } from '@inertiajs/react';
 import { Webhook, Plus, Pencil, Trash2, RefreshCw, Play, Eye, ChevronRight, Check, X } from 'lucide-react';
@@ -66,27 +66,27 @@ function EndpointForm({ endpoint = null, onClose }) {
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">{t('webhook.events_label')}</label>
                 <div className="grid grid-cols-2 gap-2">
                     {EVENTS.map(ev => (
-                        <label key={ev} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={data.events.includes(ev)}
-                                onChange={() => toggleEvent(ev)}
-                                className="rounded"
-                            />
-                            <code className="text-xs">{ev}</code>
-                        </label>
+                        <Checkbox
+                            key={ev}
+                            label={<code className="text-xs">{ev}</code>}
+                            checked={data.events.includes(ev)}
+                            onChange={() => toggleEvent(ev)}
+                        />
                     ))}
                 </div>
             </div>
-            <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                <input type="checkbox" checked={data.enabled} onChange={e => setData('enabled', e.target.checked)} className="rounded" />
-                {t('common.enabled')}
-            </label>
-            <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg">{t('common.cancel')}</button>
-                <button type="submit" disabled={processing} className="px-4 py-2 text-sm bg-brand-500 text-white rounded-soft hover:bg-brand-600 shadow-soft disabled:opacity-50 transition-all duration-150">
+            <Checkbox
+                label={t('common.enabled')}
+                checked={data.enabled}
+                onChange={e => setData('enabled', e.target.checked)}
+            />
+            <div className="flex justify-end gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                <Button type="button" variant="secondary" size="sm" onClick={onClose}>
+                    {t('common.cancel')}
+                </Button>
+                <Button type="submit" variant="primary" size="sm" disabled={processing}>
                     {endpoint ? t('webhook.update_endpoint') : t('webhook.create_endpoint')}
-                </button>
+                </Button>
             </div>
         </form>
     );
