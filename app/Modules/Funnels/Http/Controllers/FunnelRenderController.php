@@ -92,6 +92,7 @@ class FunnelRenderController extends Controller
         }
 
         // Inject runtime context (workspaceSlug, funnelSlug, stepId, api endpoints)
+        $isCustomDomain = $request->attributes->has('custom_domain');
         $contextScript = '<script>window.__FUNNEL_CONTEXT__ = ' . json_encode([
             'workspaceSlug' => $workspaceSlug,
             'funnelSlug'    => $funnelSlug,
@@ -100,12 +101,22 @@ class FunnelRenderController extends Controller
             'pageId'        => $page->id,
             'variant'       => $assignedVariant,
             'endpoints'     => [
-                'optin'        => url("/f/{$workspaceSlug}/{$funnelSlug}/optin"),
-                'step1Lead'    => url("/f/{$workspaceSlug}/{$funnelSlug}/step-1-lead"),
-                'checkout'     => url("/f/{$workspaceSlug}/{$funnelSlug}/checkout"),
-                'upsellAction' => url("/f/{$workspaceSlug}/{$funnelSlug}/upsell-action"),
+                'optin'        => $isCustomDomain ? url('/optin') : url("/f/{$workspaceSlug}/{$funnelSlug}/optin"),
+                'step1Lead'    => $isCustomDomain ? url('/step-1-lead') : url("/f/{$workspaceSlug}/{$funnelSlug}/step-1-lead"),
+                'checkout'     => $isCustomDomain ? url('/checkout') : url("/f/{$workspaceSlug}/{$funnelSlug}/checkout"),
+                'upsellAction' => $isCustomDomain ? url('/upsell-action') : url("/f/{$workspaceSlug}/{$funnelSlug}/upsell-action"),
             ]
         ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) . ';</script>';
+
+        $customDomain = $request->attributes->get('custom_domain');
+        if ($customDomain && !empty($customDomain->settings['custom_head_scripts'])) {
+            $customScripts = $customDomain->settings['custom_head_scripts'];
+            $html = str_ireplace('</head>', $customScripts . "\n</head>", $html);
+        }
+        if ($customDomain && !empty($customDomain->settings['custom_css'])) {
+            $customCss = "<style>\n" . $customDomain->settings['custom_css'] . "\n</style>";
+            $html = str_ireplace('</head>', $customCss . "\n</head>", $html);
+        }
 
         if (stripos($html, '</head>') !== false) {
             $html = str_ireplace('</head>', $contextScript . "\n</head>", $html);

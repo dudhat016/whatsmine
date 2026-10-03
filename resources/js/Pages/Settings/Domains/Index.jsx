@@ -161,17 +161,23 @@ export default function DomainsIndex({
         }
     };
 
-    const handleDeleteDomain = (domain) => {
-        confirm({
+    const handleDeleteDomain = async (domain) => {
+        const isConfirmed = await confirm({
             title: `Remove Custom Domain`,
             message: `Are you sure you want to disconnect '${domain.domain}'? Traffic sent to this domain will no longer be routed to your funnels or app portal.`,
             confirmText: 'Yes, Remove Domain',
-            confirmVariant: 'danger',
-            onConfirm: async () => {
+            variant: 'danger',
+        });
+
+        if (isConfirmed) {
+            try {
                 await axios.delete(route('client.settings.domains.destroy', domain.id));
                 setDomainList(prev => prev.filter(item => item.id !== domain.id));
+                router.reload({ preserveScroll: true });
+            } catch (err) {
+                console.error('Failed to remove custom domain:', err);
             }
-        });
+        }
     };
 
     const getTypeMeta = (type) => {

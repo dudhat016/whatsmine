@@ -42,6 +42,59 @@ Route::get('/f/{workspaceSlug}/{funnelSlug}/{stepSlug}', [FunnelRenderController
     ->name('funnel.public.step')
     ->middleware('throttle:120,1');
 
+// ─── Custom Domain Direct Action Routes ───────────────────────────────────────
+Route::post('/step-1-lead', function (\Illuminate\Http\Request $request) {
+    $customDomain = $request->attributes->get('custom_domain');
+    if ($customDomain && $customDomain->type === 'funnel' && $customDomain->target_id) {
+        $funnel = \App\Modules\Funnels\Models\Funnel::find($customDomain->target_id);
+        if ($funnel) {
+            return app(FunnelRenderController::class)->captureStep1Lead($request, (string)$funnel->workspace_id, $funnel->slug);
+        }
+    }
+    abort(404);
+})->middleware('throttle:60,1');
+
+Route::post('/optin', function (\Illuminate\Http\Request $request) {
+    $customDomain = $request->attributes->get('custom_domain');
+    if ($customDomain && $customDomain->type === 'funnel' && $customDomain->target_id) {
+        $funnel = \App\Modules\Funnels\Models\Funnel::find($customDomain->target_id);
+        if ($funnel) {
+            return app(FunnelRenderController::class)->submitOptin($request, (string)$funnel->workspace_id, $funnel->slug);
+        }
+    }
+    abort(404);
+})->middleware('throttle:60,1');
+
+Route::post('/checkout', function (\Illuminate\Http\Request $request) {
+    $customDomain = $request->attributes->get('custom_domain');
+    if ($customDomain && $customDomain->is_verified) {
+        if ($customDomain->type === 'funnel' && $customDomain->target_id) {
+            $funnel = \App\Modules\Funnels\Models\Funnel::find($customDomain->target_id);
+            if ($funnel) {
+                return app(FunnelRenderController::class)->processCheckout($request, (string)$funnel->workspace_id, $funnel->slug);
+            }
+        }
+        if ($customDomain->type === 'ecommerce' && $customDomain->target_id) {
+            $store = \App\Modules\Ecommerce\Models\EcommerceStore::find($customDomain->target_id);
+            if ($store) {
+                return app(PublicStorefrontController::class)->checkout($request, $store->slug);
+            }
+        }
+    }
+    abort(404);
+})->middleware('throttle:60,1');
+
+Route::post('/upsell-action', function (\Illuminate\Http\Request $request) {
+    $customDomain = $request->attributes->get('custom_domain');
+    if ($customDomain && $customDomain->type === 'funnel' && $customDomain->target_id) {
+        $funnel = \App\Modules\Funnels\Models\Funnel::find($customDomain->target_id);
+        if ($funnel) {
+            return app(FunnelRenderController::class)->processUpsellAction($request, (string)$funnel->workspace_id, $funnel->slug);
+        }
+    }
+    abort(404);
+})->middleware('throttle:60,1');
+
 use App\Modules\Funnels\Http\Controllers\FunnelShareController;
 
 // Funnel Share Preview & 1-Click Import (public / authenticated)

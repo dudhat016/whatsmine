@@ -67,7 +67,7 @@ class LandingController extends Controller
                 $store = \App\Modules\Ecommerce\Models\EcommerceStore::find($customDomain->target_id);
                 if ($store && $store->slug) {
                     return app(\App\Modules\Ecommerce\Http\Controllers\PublicStorefrontController::class)
-                        ->index(request(), $store->slug);
+                        ->index($store->slug);
                 }
             }
 
@@ -76,7 +76,7 @@ class LandingController extends Controller
                 $calendar = \App\Modules\Calendars\Models\BookingCalendar::find($customDomain->target_id);
                 if ($calendar && $calendar->slug && class_exists(\App\Modules\Calendars\Http\Controllers\PublicBookingController::class)) {
                     return app(\App\Modules\Calendars\Http\Controllers\PublicBookingController::class)
-                        ->show(request(), $calendar->slug);
+                        ->showWidget($calendar->slug);
                 }
             }
 

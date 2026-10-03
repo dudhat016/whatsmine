@@ -16,8 +16,25 @@ use Stripe\StripeClient;
 
 class PublicStorefrontController extends Controller
 {
-    public function index(string $slug): Response
+    public function index(string $slug): mixed
     {
+        $customDomain = request()->attributes->get('custom_domain');
+        if ($customDomain && $customDomain->is_verified) {
+            if ($customDomain->type === 'funnel' && $customDomain->target_id) {
+                $funnel = \App\Modules\Funnels\Models\Funnel::find($customDomain->target_id);
+                if ($funnel) {
+                    return app(\App\Modules\Funnels\Http\Controllers\FunnelRenderController::class)
+                        ->show(request(), (string)$funnel->workspace_id, $funnel->slug, $slug);
+                }
+            }
+            if ($customDomain->type === 'ecommerce' && $customDomain->target_id) {
+                $store = EcommerceStore::find($customDomain->target_id);
+                if ($store) {
+                    return $this->show($store->slug, $slug);
+                }
+            }
+        }
+
         $store = $this->resolveStore($slug);
 
         $products = EcommerceProduct::where('store_id', $store->id)
@@ -65,6 +82,17 @@ class PublicStorefrontController extends Controller
 
     public function checkout(Request $request, string $slug)
     {
+        $customDomain = $request->attributes->get('custom_domain');
+        if ($customDomain && $customDomain->is_verified) {
+            if ($customDomain->type === 'funnel' && $customDomain->target_id) {
+                $funnel = \App\Modules\Funnels\Models\Funnel::find($customDomain->target_id);
+                if ($funnel) {
+                    return app(\App\Modules\Funnels\Http\Controllers\FunnelRenderController::class)
+                        ->processCheckout($request, (string)$funnel->workspace_id, $funnel->slug);
+                }
+            }
+        }
+
         $store = $this->resolveStore($slug);
 
         $validated = $request->validate([
@@ -472,6 +500,18 @@ class PublicStorefrontController extends Controller
         }
         if (!empty($creds['stripe_secret'])) {
             return $creds['stripe_secret'];
+        }
+
+        try {
+            $dbGateway = \App\Models\PaymentGatewayConfig::where('gateway', 'stripe')->where('enabled', true)->first();
+            if ($dbGateway) {
+                $dbCreds = $dbGateway->getActiveCredentials();
+                if (!empty($dbCreds['secret_key'])) {
+                    return $dbCreds['secret_key'];
+                }
+            }
+        } catch (\Throwable) {
+            // fallback if table is not accessible
         }
 
         return config('billing.gateways.stripe.secret_key') ?: env('STRIPE_SECRET');
